@@ -152,7 +152,7 @@ export function SectionNav({ active, onSelect }: { active: NavKey; onSelect: (ke
       <AdSlot
         slot={ADSENSE_SLOTS.builderNav}
         name="Builder nav"
-        className="mt-1 hidden flex-col items-center gap-1 px-3 pb-3 md:flex"
+        className="mt-1 flex flex-col items-center gap-1 px-3 pb-3"
       />
     </>
   );

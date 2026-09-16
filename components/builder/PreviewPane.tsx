@@ -52,7 +52,7 @@ export function PreviewPane({ printable = false }: { printable?: boolean }) {
           <AdSlot
             slot={ADSENSE_SLOTS.builderPreview}
             name="Builder preview"
-            className="mt-6 hidden flex-col items-center gap-1 md:flex"
+            className="mt-6 flex flex-col items-center gap-1"
           />
         )}
       </div>

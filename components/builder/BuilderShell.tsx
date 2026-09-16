@@ -269,7 +269,7 @@ export function BuilderShell() {
     <div className="print-unclip flex h-[100dvh] flex-col overflow-hidden">
       <Navbar />
       <div className="print-unclip flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
-        <aside className="no-print shrink-0 border-b border-[var(--color-border)] md:h-full md:min-h-0 md:w-64 md:overflow-y-auto md:border-b-0 md:border-r">
+        <aside className="no-print sticky top-0 z-20 shrink-0 border-b border-[var(--color-border)] bg-[var(--color-paper)] md:static md:h-full md:min-h-0 md:w-64 md:overflow-y-auto md:border-b-0 md:border-r">
           <SectionNav active={activeKey} onSelect={selectSection} />
         </aside>
 
@@ -277,6 +277,11 @@ export function BuilderShell() {
           <main ref={formPaneRef} className="print-unclip min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-6 sm:px-8">
             <div className="mx-auto max-w-3xl">
               <ExportSection />
+              <AdSlot
+                slot={ADSENSE_SLOTS.builderPreview}
+                name="Builder preview"
+                className="mt-8 mb-4 flex min-h-[8.5rem] flex-col items-center gap-1 md:hidden"
+              />
             </div>
           </main>
         ) : (
@@ -303,9 +308,14 @@ export function BuilderShell() {
                   <AdSlot
                     slot={ADSENSE_SLOTS.builderSectionFooter}
                     name={`Section footer — ${activeKey}`}
-                    className="mt-6 flex flex-col items-center gap-1"
+                    className="mt-6 hidden flex-col items-center gap-1 md:flex"
                   />
                 )}
+                <AdSlot
+                  slot={ADSENSE_SLOTS.builderPreview}
+                  name="Builder preview"
+                  className="mt-8 mb-4 flex min-h-[8.5rem] flex-col items-center gap-1 md:hidden"
+                />
               </div>
             </main>
             {/* Side-by-side preview is a desktop affordance only — on mobile
@@ -316,7 +326,7 @@ export function BuilderShell() {
               <AdSlot
                 slot={ADSENSE_SLOTS.builderPreviewTop}
                 name="Builder preview top"
-                className="mb-4 shrink-0 flex-col items-center gap-1"
+                className="mb-4 flex shrink-0 flex-col items-center gap-1"
               />
               <div className="min-h-0 flex-1">
                 <PreviewPane />
