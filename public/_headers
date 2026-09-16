@@ -7,5 +7,16 @@
 /ads.txt
   Content-Type: text/plain; charset=utf-8
 
+# Next static export writes these without a .png extension. Wrangler MIME-sniffs
+# by extension, so without this, nosniff would block the share image and icons.
+/opengraph-image
+  Content-Type: image/png
+
+/apple-icon
+  Content-Type: image/png
+
+/icon
+  Content-Type: image/png
+
 /_next/static/*
   Cache-Control: public, max-age=31536000, immutable
