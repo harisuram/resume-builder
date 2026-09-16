@@ -4,7 +4,8 @@ import { resolve } from "node:path";
 
 /** `output: "export"` cannot emit a POST /api/optimize route. That file is
  * only for `next dev`. Stash it for the production static build; Cloudflare
- * Pages serves the same path from functions/api/optimize.ts. */
+ * serves the same path from workers/index.ts (or functions/api/optimize.ts
+ * on a Pages project). */
 const apiDir = resolve("app/api");
 const stashDir = resolve(".next-export-stash/api");
 

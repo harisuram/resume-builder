@@ -36,8 +36,8 @@ async function postOptimize(body: unknown): Promise<Record<string, unknown>> {
 }
 
 /** Rewrites one experience entry's bullets for ATS-friendliness via the
- * server-side Groq proxy at /api/optimize (a Cloudflare Pages Function —
- * the API key never reaches the browser). */
+ * server-side Groq proxy at /api/optimize (a Cloudflare Worker — the API
+ * key never reaches the browser). */
 export async function optimizeExperienceBullets({ role, company, bullets }: OptimizeBulletsInput): Promise<string[]> {
   const body = await postOptimize({ role, company, bullets });
   if (!Array.isArray(body.bullets) || body.bullets.some((b) => typeof b !== "string")) {

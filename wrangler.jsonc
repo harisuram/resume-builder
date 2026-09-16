@@ -1,0 +1,27 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  // Static HTML/CSS/JS is served from the CDN without invoking this Worker, so
+  // page views do not count against the free plan's 100k Worker requests/day.
+  // Only `/api/*` runs Worker code (Groq ATS rewrite).
+  "name": "resume-builder",
+  "main": "workers/index.ts",
+  "compatibility_date": "2026-09-16",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+  },
+  "placement": {
+    "mode": "smart",
+  },
+  "assets": {
+    "directory": "./out",
+    "html_handling": "auto-trailing-slash",
+    "run_worker_first": ["/api/*"],
+  },
+  "vars": {
+    // Non-secret. Override in the dashboard if you pick a different Groq model.
+    // GROQ_API_KEY is a secret: `npx wrangler secret put GROQ_API_KEY`
+    "GROQ_MODEL": "openai/gpt-oss-120b",
+  },
+}

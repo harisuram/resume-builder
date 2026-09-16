@@ -1,24 +1,14 @@
 import { handleOptimizePost, jsonResponse } from "../../lib/optimizeServer";
+import { isThrottled } from "../../lib/optimizeThrottle";
 
 interface Env {
   GROQ_API_KEY?: string;
   GROQ_MODEL?: string;
 }
 
-// Best-effort per-IP throttle. State is scoped to one warm isolate, not
-// shared globally — it thins out a single spammy client, it isn't a hard cap.
-const WINDOW_MS = 60_000;
-const MAX_PER_WINDOW = 5;
-const hits = new Map<string, number[]>();
-
-function isThrottled(ip: string): boolean {
-  const now = Date.now();
-  const recent = (hits.get(ip) ?? []).filter((t) => now - t < WINDOW_MS);
-  recent.push(now);
-  hits.set(ip, recent);
-  return recent.length > MAX_PER_WINDOW;
-}
-
+/** Pages adapter — same handler as `workers/index.ts`. Prefer `wrangler deploy`
+ * (Workers + static assets) on the free plan; this file keeps a Git-connected
+ * Pages project working if that is how the site is already hosted. */
 export async function onRequestPost(context: { request: Request; env: Env }): Promise<Response> {
   const { request, env } = context;
   const ip = request.headers.get("cf-connecting-ip") ?? "unknown";

@@ -23,9 +23,9 @@ key stays on the server (`GROQ_API_KEY`, never `NEXT_PUBLIC_`).
 2. Paste a key from [console.groq.com/keys](https://console.groq.com/keys).
 3. Restart `npm run dev`.
 
-Production: set `GROQ_API_KEY` as a **secret** in the Cloudflare Pages
-dashboard. The static export does not include the Next.js route; Pages serves
-`functions/api/optimize.ts` instead.
+Production: set `GROQ_API_KEY` as a **secret** (`npx wrangler secret put GROQ_API_KEY`).
+The static export does not include the Next.js route; the Worker at
+`workers/index.ts` serves `/api/optimize` instead.
 
 ## Testing
 
@@ -44,9 +44,10 @@ enabled/disabled/no-fill states.
 ## Architecture notes
 
 - **Static export.** `next build` sets `output: "export"` (via `scripts/build.mjs`).
-  The app ships as static HTML/CSS/JS on Cloudflare Pages. The one exception is
-  `/api/optimize` (Groq ATS rewrite): a Pages Function in production, and a
-  Next.js POST route under `next dev` only.
+  The app ships as static HTML/CSS/JS on Cloudflare Workers assets. The one
+  exception is `/api/optimize` (Groq ATS rewrite): a Worker in production
+  (`run_worker_first`: `/api/*` only, so page views stay on the free CDN),
+  and a Next.js POST route under `next dev` only.
 - **State** lives in a single Zustand store (`lib/store.ts`) shared by every
   form and the live preview, so edits reflect instantly with no prop drilling.
 - **Templates** (`components/templates/`) are config-driven: three layout
@@ -92,28 +93,51 @@ so Google can verify the site as an authorized seller. Note that a brand-new
 AdSense account still needs Google's manual site review before any ad
 actually serves — this wiring is necessary but not sufficient for that.
 
-## Deploying to Cloudflare Pages
+## Deploying to Cloudflare (free plan)
 
-**Dashboard (recommended):** connect the repo in the Cloudflare Pages
-dashboard with:
-- Build command: `npm run build`
-- Build output directory: `out`
+This app is a **static export** plus one tiny Worker for `/api/optimize`. That
+split is what makes the free plan fit: HTML/CSS/JS is served from the CDN
+(unlimited) and only the Groq ATS-rewrite calls count as Worker requests
+(100,000/day on the free plan).
 
-**CLI:**
+**Build variables** (`NEXT_PUBLIC_*`) are baked in at `next build`. **Secrets**
+(`GROQ_API_KEY`) are Worker secrets at runtime.
+
+### Dashboard (recommended)
+
+1. [Workers & Pages](https://dash.cloudflare.com/?to=/:account/workers-and-pages) → Create → connect this GitHub repo.
+2. Framework preset: **None**. Build command: `npm run build`. Deploy command: leave default (`npx wrangler deploy`).
+3. Set **build** environment variables:
+   - `NEXT_PUBLIC_SITE_URL` — your real domain (`https://example.com`)
+   - AdSense `NEXT_PUBLIC_ADSENSE_*` vars if you want ads on
+4. After the first deploy, set the Groq secret (Settings → Variables and Secrets):
+   - `GROQ_API_KEY` — encrypt / secret (never a plain text var)
+   - `GROQ_MODEL` is already defaulted in `wrangler.jsonc`
+
+Free-plan notes:
+- Static assets do **not** invoke the Worker (`run_worker_first` is only `/api/*`).
+- Groq is I/O-bound, so it stays under the free 10 ms CPU budget.
+- Skip extra products (KV, D1, R2, Workers AI) — they are unused and would
+  add quota you do not need.
+
+### CLI
 
 ```bash
-npm run build
-npx wrangler pages deploy out
+npx wrangler login
+npx wrangler secret put GROQ_API_KEY
+npm run deploy
 ```
 
-Set `NEXT_PUBLIC_SITE_URL` (in Pages' environment variables, or a local
-`.env.local` for builds) to your real domain before deploying — it's used for
-canonical URLs, Open Graph tags, and `sitemap.xml`/`robots.txt`. It defaults
-to a placeholder `.pages.dev` URL otherwise. See `.env.example` for the full
-list of optional variables, including AdSense.
+`npm run deploy` runs `next build` then `wrangler deploy`. Dry-run without
+uploading: `npm run deploy:dry-run`.
 
-`public/_headers` sets a one-year immutable cache on `_next/static/*`, so
-repeat visits barely touch the network.
+`public/_headers` sets security headers and a one-year immutable cache on
+`_next/static/*`, so repeat visits barely touch the network.
+
+If the site is already a **Pages** project, you can keep using it: build
+command `npm run build`, output directory `out`. `functions/api/optimize.ts`
+still serves Groq there. New projects should use Workers (above) — Cloudflare
+is not adding features to Pages.
 
 ## Project structure
 
@@ -125,5 +149,7 @@ components/builder/    The wizard: section nav, forms, preview, export
 components/templates/  Template registry, layout shells, shared render atoms
 components/ui/         Small shared UI primitives (Button, Field, Switch, ...)
 lib/                   Data model, Zustand store, section config, localStorage/ads config
+workers/               Cloudflare Worker for POST /api/optimize (free-plan CDN for the rest)
+functions/             Pages Function adapter if the site is still on Pages
 test-utils/            Shared fixtures for tests (not part of the app bundle)
 ```

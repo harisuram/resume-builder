@@ -243,6 +243,53 @@ describe("ResumePreviewFrame", () => {
       expect(item.style.marginTop).toBe("40px");
     });
 
+    it("does not clear that nudge when only the preview column's height changes", () => {
+      // Soft skills (or any last section) pushing the stack over a page used
+      // to resize the viewport, re-enter measure, wipe marginTop, then
+      // re-apply it — the right-hand preview glittered. Height-only resizes
+      // must leave simulation styles alone; download never ran this path.
+      const resizeCallbacks: Array<() => void> = [];
+      const OriginalRO = global.ResizeObserver;
+      global.ResizeObserver = class {
+        constructor(cb: ResizeObserverCallback) {
+          resizeCallbacks.push(() => cb([] as unknown as ResizeObserverEntry[], this as unknown as ResizeObserver));
+        }
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      } as typeof ResizeObserver;
+
+      try {
+        const { container, rerender } = render(<ResumePreviewFrame data={threeProjects()} />);
+        const item = container.querySelector('[data-item-key="projects:2"]') as HTMLElement;
+        setBox(item, { top: PAGE_HEIGHT_PX - 40, height: 120 });
+        setBox(container.querySelector(".resume-scale-stage")!, { top: 0, height: 1400 });
+        rerender(<ResumePreviewFrame data={threeProjects()} />);
+        expect(item.style.marginTop).toBe("40px");
+
+        const assignments: string[] = [];
+        const proto = Object.getPrototypeOf(item.style);
+        const descriptor = Object.getOwnPropertyDescriptor(proto, "marginTop");
+        const originalSet = descriptor?.set;
+        if (originalSet) {
+          Object.defineProperty(item.style, "marginTop", {
+            configurable: true,
+            get: descriptor.get?.bind(item.style),
+            set(value: string) {
+              assignments.push(value);
+              originalSet.call(this, value);
+            },
+          });
+        }
+
+        for (const fire of resizeCallbacks) fire();
+        expect(item.style.marginTop).toBe("40px");
+        expect(assignments).toEqual([]);
+      } finally {
+        global.ResizeObserver = OriginalRO;
+      }
+    });
+
     it("offers the straddling entry rather than its whole section", async () => {
       const onToggleSectionBreak = jest.fn();
       const onToggleItemBreak = jest.fn();

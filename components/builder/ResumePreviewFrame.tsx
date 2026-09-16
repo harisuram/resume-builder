@@ -79,6 +79,18 @@ function inRailColumn(el: HTMLElement): boolean {
   return Boolean(el.closest("[data-resume-column='rail']"));
 }
 
+function markersEqual(a: LineMarker[], b: LineMarker[]): boolean {
+  if (a.length !== b.length) return false;
+  return a.every((left, i) => {
+    const right = b[i];
+    return left.section === right.section && left.index === right.index && left.label === right.label && Math.abs(left.y - right.y) < 0.5;
+  });
+}
+
+function writeMarginTop(el: HTMLElement, value: string) {
+  if (el.style.marginTop !== value) el.style.marginTop = value;
+}
+
 /**
  * The single rendering surface shared by the live preview and the export
  * path — never a second export-only copy, so a download can't visually
@@ -123,8 +135,18 @@ export function ResumePreviewFrame({
     const stage = stageRef.current;
     if (!viewport || !stage) return;
 
-    function measure() {
+    // Observe the viewport's *width* only. This effect writes the viewport
+    // height (scaled page stack) and mutates the stage (page snapping,
+    // avoid-break margins). Watching those — or remasuring on height-only
+    // resizes — re-enters measure, clears margins, and glitters. Soft skills
+    // (or any last section) is enough extra height to trip a scrollbar;
+    // download never runs this path so it stays stable.
+    let lastWidth = Number.NaN;
+
+    function measure(reason: "data" | "resize") {
       const containerWidth = viewport!.clientWidth;
+      if (reason === "resize" && containerWidth === lastWidth) return;
+      lastWidth = containerWidth;
       const nextScale = containerWidth > 0 ? Math.min(containerWidth / PAGE_WIDTH, 1) : 1;
 
       // Sections and the individual entries inside them, in document order —
@@ -134,7 +156,7 @@ export function ResumePreviewFrame({
       // Undo any previous simulation before recomputing from scratch —
       // otherwise a section un-forced since the last pass would keep
       // whatever margin was last applied to it.
-      for (const el of breakEls) el.style.marginTop = "";
+      for (const el of breakEls) writeMarginTop(el, "");
 
       // Simulate on screen what `break-before: page` (applied in the print
       // stylesheet to the same [data-force-break] elements) will really do
@@ -147,7 +169,7 @@ export function ResumePreviewFrame({
         const top = offsetTopIn(el, stage!);
         const target = Math.ceil((top - 0.5) / PAGE_HEIGHT) * PAGE_HEIGHT;
         const extra = target - top;
-        if (extra > 0.5) el.style.marginTop = `${extra}px`;
+        if (extra > 0.5) writeMarginTop(el, `${extra}px`);
       }
 
       // Detect splits before the avoid-break nudge below. That nudge is
@@ -192,7 +214,7 @@ export function ResumePreviewFrame({
         if (Math.floor(top / PAGE_HEIGHT) === Math.floor((bottom - 0.5) / PAGE_HEIGHT)) continue;
         const target = Math.ceil((top + 0.5) / PAGE_HEIGHT) * PAGE_HEIGHT;
         const extra = target - top;
-        if (extra > 0.5) el.style.marginTop = `${extra}px`;
+        if (extra > 0.5) writeMarginTop(el, `${extra}px`);
       }
 
       // Sidebar / split templates paint a page-tall rail or column. The
@@ -203,28 +225,29 @@ export function ResumePreviewFrame({
       // band. The snapped value is always >= content, so nothing clips.
       const paged = stage!.querySelectorAll<HTMLElement>(".resume-sidebar-page, .resume-split-page");
       for (const page of paged) {
-        page.style.minHeight = "";
-        page.style.height = "";
         const snapped = `${heightToPageMultiple(contentHeightPx(page))}px`;
-        page.style.minHeight = snapped;
-        page.style.height = snapped;
+        if (page.style.height !== snapped) {
+          page.style.minHeight = snapped;
+          page.style.height = snapped;
+        }
       }
 
       // offsetHeight is the stage's natural layout height at PAGE_WIDTH —
       // transforms are paint-only, so it's unaffected by the scale itself.
       const nextNaturalHeight = stage!.offsetHeight;
-      setScale(nextScale);
-      setStageHeight(nextNaturalHeight * nextScale);
-      setNaturalHeight(nextNaturalHeight);
+      const nextStageHeight = nextNaturalHeight * nextScale;
+      const splitList = [...nextSplits.values()];
 
-      setSplits([...nextSplits.values()]);
-      setForced(nextForced);
+      setScale((prev) => (prev === nextScale ? prev : nextScale));
+      setStageHeight((prev) => (Math.abs(prev - nextStageHeight) < 0.5 ? prev : nextStageHeight));
+      setNaturalHeight((prev) => (Math.abs(prev - nextNaturalHeight) < 0.5 ? prev : nextNaturalHeight));
+      setSplits((prev) => (markersEqual(prev, splitList) ? prev : splitList));
+      setForced((prev) => (markersEqual(prev, nextForced) ? prev : nextForced));
     }
 
-    measure();
-    const observer = new ResizeObserver(measure);
+    measure("data");
+    const observer = new ResizeObserver(() => measure("resize"));
     observer.observe(viewport);
-    observer.observe(stage);
     return () => observer.disconnect();
   }, [data]);
 

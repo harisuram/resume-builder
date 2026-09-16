@@ -1,11 +1,12 @@
-# Copy to .dev.vars — Cloudflare Pages Functions read this file, not .env.local.
+# Copy to .dev.vars — Wrangler and Pages Functions read this file, not .env.local.
 # `next dev` uses GROQ_API_KEY from .env.local instead.
 #
 # Get a free key at https://console.groq.com/keys
 #
-# In production, set GROQ_API_KEY as a secret in the Cloudflare Pages
-# project's dashboard (Settings > Environment variables), not in this file.
+# In production, set GROQ_API_KEY as a Worker secret:
+#   npx wrangler secret put GROQ_API_KEY
+# Do not put the key in wrangler.jsonc.
 GROQ_API_KEY=
 
-# Optional — defaults to openai/gpt-oss-120b if unset.
+# Optional — wrangler.jsonc already defaults this. Override here for local wrangler dev.
 GROQ_MODEL=

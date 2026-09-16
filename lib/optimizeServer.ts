@@ -1,7 +1,7 @@
 import { AI_LIMIT_MESSAGE } from "./ai";
 
-/** Shared Groq rewrite used by the Next.js `next dev` route and the
- * Cloudflare Pages Function. The API key never reaches the browser. */
+/** Shared Groq rewrite used by the Next.js `next dev` route, the Cloudflare
+ * Worker, and the Pages Function adapter. The API key never reaches the browser. */
 
 export const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 export const DEFAULT_MODEL = "openai/gpt-oss-120b";
@@ -100,7 +100,7 @@ async function groqChat(
   if (!env.GROQ_API_KEY) {
     return {
       status: 503,
-      error: "AI optimization isn't configured. Add GROQ_API_KEY to .env.local (local) or Cloudflare Pages secrets (production).",
+      error: "AI optimization isn't configured. Add GROQ_API_KEY to .env.local (local) or as a Cloudflare Worker secret (production).",
     };
   }
 

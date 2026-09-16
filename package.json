@@ -2,12 +2,17 @@
   "name": "resume-builder",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "node scripts/build.mjs",
     "start": "npx serve@latest out",
     "lint": "eslint",
-    "deploy": "npm run build && npx wrangler pages deploy out",
+    "deploy": "npm run build && wrangler deploy",
+    "deploy:dry-run": "npm run build && wrangler deploy --dry-run --outdir=.wrangler/dry-run",
+    "cf-typegen": "wrangler types workers/env.d.ts --include-runtime false --strict-vars false",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
@@ -32,6 +37,7 @@
     "jest": "^30.5.1",
     "jest-environment-jsdom": "^30.5.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.40.3"
   }
 }

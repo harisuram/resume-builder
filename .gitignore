@@ -37,8 +37,10 @@ yarn-error.log*
 # Stashed by scripts/build.mjs so the POST /api/optimize route isn't exported
 .next-export-stash/
 
-# Cloudflare Pages Functions local secrets (see .dev.vars.example)
+# Cloudflare Wrangler local state + Function/Worker secrets
 .dev.vars
+.wrangler/
+worker-configuration.d.ts
 
 # vercel
 .vercel
