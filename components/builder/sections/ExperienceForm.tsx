@@ -7,6 +7,8 @@ import { AiLimitError, optimizeExperienceBullets } from "@/lib/ai";
 import { useBuilderStore } from "@/lib/store";
 import { showToast } from "@/lib/toast";
 import type { Experience } from "@/lib/types";
+import { useTouchedFields } from "@/lib/useTouchedFields";
+import { getExperienceErrors, MAX_BULLET_LENGTH, MAX_FIELD_LENGTH } from "@/lib/validation";
 import { ItemCard, useFocusNewIndex } from "./ItemCard";
 import { SectionFormHeader } from "./SectionFormHeader";
 import { SkippedNotice } from "./SkippedNotice";
@@ -36,6 +38,7 @@ export function ExperienceForm({
   const { focusIndex, focusNew } = useFocusNewIndex();
   const [aiAvailable, setAiAvailable] = useState(true);
   const [optimizingIndex, setOptimizingIndex] = useState<number | null>(null);
+  const { touch, errorFor } = useTouchedFields();
 
   const skipped = status === "skipped";
 
@@ -75,36 +78,54 @@ export function ExperienceForm({
       ) : (
         <>
       <div className="flex flex-col gap-3">
-        {items.map((exp, i) => (
+        {items.map((exp, i) => {
+          const errors = getExperienceErrors(exp);
+          const companyError = errorFor(`${i}.company`, errors.company);
+          const roleError = errorFor(`${i}.role`, errors.role);
+          const endError = errorFor(`${i}.endDate`, errors.endDate);
+          return (
           <ItemCard key={i} autoFocus={i === focusIndex} onRemove={() => removeListItem(sectionKey, i)}>
             <div className="grid gap-3 sm:grid-cols-2">
-              <FieldGroup label="Company / organization">
+              <FieldGroup label="Company / organization" htmlFor={`${sectionKey}-${i}-company`} required error={companyError}>
                 <TextInput
+                  id={`${sectionKey}-${i}-company`}
                   value={exp.company}
                   onChange={(e) => updateListItem(sectionKey, i, { company: e.target.value })}
+                  onBlur={touch(`${i}.company`)}
                   placeholder="Acme Corp"
+                  maxLength={MAX_FIELD_LENGTH}
+                  invalid={Boolean(companyError)}
                 />
               </FieldGroup>
-              <FieldGroup label="Role / title">
+              <FieldGroup label="Role / title" htmlFor={`${sectionKey}-${i}-role`} required error={roleError}>
                 <TextInput
+                  id={`${sectionKey}-${i}-role`}
                   value={exp.role}
                   onChange={(e) => updateListItem(sectionKey, i, { role: e.target.value })}
+                  onBlur={touch(`${i}.role`)}
                   placeholder="Software Engineer Intern"
+                  maxLength={MAX_FIELD_LENGTH}
+                  invalid={Boolean(roleError)}
                 />
               </FieldGroup>
               <div className="grid grid-cols-2 gap-3">
-                <FieldGroup label="Start date">
+                <FieldGroup label="Start date" htmlFor={`${sectionKey}-${i}-start`}>
                   <TextInput
+                    id={`${sectionKey}-${i}-start`}
                     type="month"
                     value={exp.startDate}
                     onChange={(e) => updateListItem(sectionKey, i, { startDate: e.target.value })}
+                    onBlur={touch(`${i}.startDate`)}
                   />
                 </FieldGroup>
-                <FieldGroup label="End date">
+                <FieldGroup label="End date" htmlFor={`${sectionKey}-${i}-end`} error={endError}>
                   <TextInput
+                    id={`${sectionKey}-${i}-end`}
                     type="month"
                     value={exp.endDate ?? ""}
                     onChange={(e) => updateListItem(sectionKey, i, { endDate: e.target.value || undefined })}
+                    onBlur={touch(`${i}.endDate`)}
+                    invalid={Boolean(endError)}
                   />
                 </FieldGroup>
               </div>
@@ -115,27 +136,41 @@ export function ExperienceForm({
                 What did you do? (one line per bullet)
               </p>
               <div className="flex flex-col gap-2">
-                {exp.bullets.map((bullet, bi) => (
-                  <div key={bi} className="flex items-center gap-2">
-                    <TextInput
-                      value={bullet}
-                      onChange={(e) => {
-                        const next = [...exp.bullets];
-                        next[bi] = e.target.value;
-                        setBullets(i, next);
-                      }}
-                      placeholder="Shipped a feature that increased signups by 12%"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setBullets(i, exp.bullets.filter((_, idx) => idx !== bi))}
-                      aria-label="Remove bullet"
-                      className="shrink-0 text-[12px] text-[var(--color-ink-faint)] transition-colors hover:text-[var(--color-accent)]"
-                    >
-                      ×
-                    </button>
+                {exp.bullets.map((bullet, bi) => {
+                  const bulletError = errorFor(`${i}.bullet.${bi}`, errors.bullets[bi]);
+                  return (
+                  <div key={bi}>
+                    <div className="flex items-center gap-2">
+                      <TextInput
+                        value={bullet}
+                        onChange={(e) => {
+                          const next = [...exp.bullets];
+                          next[bi] = e.target.value;
+                          setBullets(i, next);
+                        }}
+                        onBlur={touch(`${i}.bullet.${bi}`)}
+                        placeholder="Shipped a feature that increased signups by 12%"
+                        maxLength={MAX_BULLET_LENGTH}
+                        invalid={Boolean(bulletError)}
+                        aria-label={`Bullet ${bi + 1}`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setBullets(i, exp.bullets.filter((_, idx) => idx !== bi))}
+                        aria-label="Remove bullet"
+                        className="shrink-0 text-[12px] text-[var(--color-ink-faint)] transition-colors hover:text-[var(--color-accent)]"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    {bulletError ? (
+                      <p role="alert" className="mt-1 text-[11.5px] text-red-600">
+                        {bulletError}
+                      </p>
+                    ) : null}
                   </div>
-                ))}
+                  );
+                })}
               </div>
               <div className="mt-2 flex items-center gap-3">
                 <button
@@ -159,7 +194,8 @@ export function ExperienceForm({
               </div>
             </div>
           </ItemCard>
-        ))}
+          );
+        })}
       </div>
 
       <Button

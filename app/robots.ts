@@ -1,16 +1,24 @@
 import type { MetadataRoute } from "next";
+import { SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-static";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://resume-builder.pages.dev";
-
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: {
-      userAgent: "*",
-      allow: "/",
-      disallow: ["/builder"],
-    },
+    rules: [
+      {
+        // AdSense review/fill crawlers need every page that hosts a slot,
+        // including /builder (which regular bots should crawl but not index).
+        userAgent: ["Mediapartners-Google", "AdsBot-Google", "AdsBot-Google-Mobile"],
+        allow: "/",
+      },
+      {
+        userAgent: "*",
+        allow: "/",
+        // /builder stays crawlable so Google can honor its noindex tag.
+        disallow: ["/api/"],
+      },
+    ],
     sitemap: `${SITE_URL}/sitemap.xml`,
   };
 }

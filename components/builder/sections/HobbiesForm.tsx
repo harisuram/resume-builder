@@ -9,6 +9,7 @@ export function HobbiesForm() {
       title="Hobbies"
       help="Interests worth listing if they add something the rest of the resume doesn't."
       placeholder="Add a hobby, press Enter"
+      itemLabel="hobby"
     />
   );
 }

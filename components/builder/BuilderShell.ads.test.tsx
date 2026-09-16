@@ -19,6 +19,7 @@ describe("BuilderShell section-footer ads", () => {
     expect(screen.queryByText(/Section footer —/)).not.toBeInTheDocument();
 
     const steps: [string, string][] = [
+      ["Certifications", "Section footer — certifications"],
       ["Patents", "Section footer — patents"],
       ["Languages", "Section footer — languages"],
       ["Hobbies", "Section footer — hobbies"],

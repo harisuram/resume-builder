@@ -5,6 +5,7 @@ import * as adsLib from "../../lib/ads";
 jest.mock("../../lib/ads", () => ({
   __esModule: true,
   ADSENSE_CLIENT_ID: "",
+  adsenseClientAttr: (id: string) => (id.startsWith("ca-") ? id : id ? `ca-${id}` : ""),
 }));
 
 function setClientId(value: string) {
@@ -35,6 +36,9 @@ describe("AdSlot", () => {
     expect(ins).toBeInTheDocument();
     expect(ins).toHaveAttribute("data-ad-client", "ca-pub-123");
     expect(ins).toHaveAttribute("data-ad-slot", "9876");
+    expect(ins).toHaveAttribute("data-ad-format", "auto");
+    expect(ins).toHaveAttribute("data-full-width-responsive", "true");
+    expect(ins).toHaveStyle({ display: "block" });
     expect(container.querySelector(".no-print")).toBeInTheDocument();
   });
 
@@ -62,13 +66,14 @@ describe("AdSlot", () => {
     expect(() => render(<AdSlot slot="9876" />)).not.toThrow();
   });
 
-  it("collapses the whole wrapper — label included — when Google reports no fill", async () => {
+  it("hides the Advertisement label when Google reports no fill, but keeps the ins for crawlers", async () => {
     setClientId("ca-pub-123");
-    const { container } = render(<AdSlot slot="9876" />);
+    const { container, queryByText } = render(<AdSlot slot="9876" />);
     const ins = container.querySelector("ins.adsbygoogle")!;
     ins.setAttribute("data-ad-status", "unfilled");
 
-    await waitFor(() => expect(container).toBeEmptyDOMElement());
+    await waitFor(() => expect(queryByText("Advertisement")).not.toBeInTheDocument());
+    expect(container.querySelector("ins.adsbygoogle")).toBeInTheDocument();
   });
 
   it("does not collapse when Google reports a fill", async () => {

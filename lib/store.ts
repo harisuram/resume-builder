@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { create } from "zustand";
 import { resolveSectionOrder } from "./persona";
 import { itemBreakKey, parseItemBreakKey } from "./resume";
-import { isBasicInfoValid } from "./validation";
+import { isBasicInfoValid, isSectionValid } from "./validation";
 import type {
   AdditionalItem,
   BasicInfo,
@@ -54,16 +54,7 @@ export function hasBasicInfoContent(basicInfo: BasicInfo): boolean {
 }
 
 function deriveStatus(key: SectionKey, sections: Partial<ResumeSections>): SectionStatus {
-  const value = sections[key];
-  if (key === "summary") {
-    return typeof value === "string" && value.trim().length > 0 ? "complete" : "not_started";
-  }
-  if (key === "additional") {
-    return value && typeof value === "object" && "items" in value && value.items.length > 0
-      ? "complete"
-      : "not_started";
-  }
-  return Array.isArray(value) && value.length > 0 ? "complete" : "not_started";
+  return isSectionValid(key, sections) ? "complete" : "not_started";
 }
 
 /** Whether Clear would actually drop something. Broader than `complete`: a

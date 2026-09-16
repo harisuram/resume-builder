@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/Button";
 import { FieldGroup, Select, TextInput } from "@/components/ui/Field";
 import { useBuilderStore } from "@/lib/store";
 import { LANGUAGE_LEVELS, type Language, type LanguageLevel } from "@/lib/types";
+import { useTouchedFields } from "@/lib/useTouchedFields";
+import { getLanguageErrors, MAX_FIELD_LENGTH } from "@/lib/validation";
 import { ItemCard, useFocusNewIndex } from "./ItemCard";
 import { SectionFormHeader } from "./SectionFormHeader";
 import { SkippedNotice } from "./SkippedNotice";
@@ -18,6 +20,7 @@ export function LanguagesForm() {
   const removeListItem = useBuilderStore((s) => s.removeListItem);
   const skipped = status === "skipped";
   const { focusIndex, focusNew } = useFocusNewIndex();
+  const { touch, errorFor } = useTouchedFields();
 
   return (
     <div className="flex flex-col gap-5">
@@ -27,14 +30,20 @@ export function LanguagesForm() {
       ) : (
         <>
           <div className="flex flex-col gap-3">
-            {items.map((lang, i) => (
+            {items.map((lang, i) => {
+              const nameError = errorFor(`${i}.name`, getLanguageErrors(lang).name);
+              return (
               <ItemCard key={i} autoFocus={i === focusIndex} onRemove={() => removeListItem("languages", i)}>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <FieldGroup label="Language">
+                  <FieldGroup label="Language" htmlFor={`language-${i}-name`} required error={nameError}>
                     <TextInput
+                      id={`language-${i}-name`}
                       value={lang.name}
                       onChange={(e) => updateListItem("languages", i, { name: e.target.value })}
+                      onBlur={touch(`${i}.name`)}
                       placeholder="Spanish"
+                      maxLength={MAX_FIELD_LENGTH}
+                      invalid={Boolean(nameError)}
                     />
                   </FieldGroup>
                   <FieldGroup label="Proficiency" htmlFor={`language-level-${i}`}>
@@ -53,7 +62,8 @@ export function LanguagesForm() {
                   </FieldGroup>
                 </div>
               </ItemCard>
-            ))}
+              );
+            })}
           </div>
           <Button
             variant="secondary"

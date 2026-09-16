@@ -6,29 +6,59 @@ import type {
   TextareaHTMLAttributes,
 } from "react";
 
-const CONTROL_CLASSES =
-  "w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[13.5px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-faint)] transition duration-150 ease-out outline-none focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/15";
+const CONTROL_BASE =
+  "w-full rounded-md border bg-[var(--color-surface)] px-3 py-2 text-[13.5px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-faint)] transition duration-150 ease-out outline-none focus:ring-2";
+
+const VALID_BORDER =
+  "border-[var(--color-border)] focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]/15";
+
+const INVALID_BORDER = "border-red-500 focus:border-red-500 focus:ring-red-500/20";
+
+function controlClassName(className: string, invalid?: boolean) {
+  return `${CONTROL_BASE} ${invalid ? INVALID_BORDER : VALID_BORDER} ${className}`;
+}
 
 function Label({ className = "", ...props }: LabelHTMLAttributes<HTMLLabelElement>) {
   return (
     <label
-      className={`mb-1.5 block text-[12px] font-medium tracking-wide text-[var(--color-ink-soft)] ${className}`}
+      className={`block text-[12px] font-medium tracking-wide text-[var(--color-ink-soft)] ${className}`}
       {...props}
     />
   );
 }
 
-export function TextInput({ className = "", ...props }: InputHTMLAttributes<HTMLInputElement>) {
-  return <input className={`${CONTROL_CLASSES} ${className}`} {...props} />;
+type InvalidProp = { invalid?: boolean };
+
+export function TextInput({
+  className = "",
+  invalid,
+  ...props
+}: InputHTMLAttributes<HTMLInputElement> & InvalidProp) {
+  return <input className={controlClassName(className, invalid)} aria-invalid={invalid || undefined} {...props} />;
 }
 
-export function TextArea({ className = "", ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <textarea className={`${CONTROL_CLASSES} resize-y ${className}`} {...props} />;
-}
-
-export function Select({ className = "", children, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
+export function TextArea({
+  className = "",
+  invalid,
+  ...props
+}: TextareaHTMLAttributes<HTMLTextAreaElement> & InvalidProp) {
   return (
-    <select className={`${CONTROL_CLASSES} ${className}`} {...props}>
+    <textarea
+      className={`${controlClassName(className, invalid)} resize-y`}
+      aria-invalid={invalid || undefined}
+      {...props}
+    />
+  );
+}
+
+export function Select({
+  className = "",
+  invalid,
+  children,
+  ...props
+}: SelectHTMLAttributes<HTMLSelectElement> & InvalidProp) {
+  return (
+    <select className={controlClassName(className, invalid)} aria-invalid={invalid || undefined} {...props}>
       {children}
     </select>
   );
@@ -38,6 +68,7 @@ export function FieldGroup({
   label,
   hint,
   error,
+  required,
   children,
   htmlFor,
 }: {
@@ -47,15 +78,24 @@ export function FieldGroup({
    * paired with an onBlur-driven "touched" flag so it only appears once the
    * user has actually left the field. */
   error?: string;
+  required?: boolean;
   children: ReactNode;
   htmlFor?: string;
 }) {
+  const errorId = htmlFor ? `${htmlFor}-error` : undefined;
   return (
     <div>
-      <Label htmlFor={htmlFor}>{label}</Label>
+      <div className="mb-1.5 flex items-center gap-1">
+        <Label htmlFor={htmlFor}>{label}</Label>
+        {required ? (
+          <span className="text-[12px] text-red-600" aria-hidden="true">
+            *
+          </span>
+        ) : null}
+      </div>
       {children}
       {error ? (
-        <p role="alert" className="mt-1 text-[11.5px] text-red-600">
+        <p role="alert" id={errorId} className="mt-1 text-[11.5px] text-red-600">
           {error}
         </p>
       ) : (
@@ -64,3 +104,5 @@ export function FieldGroup({
     </div>
   );
 }
+
+export { PhoneField } from "./PhoneField";

@@ -1,4 +1,4 @@
-# Letterform
+# Free Resume Builder
 
 A resume builder with every section available and none required — skip what
 doesn't belong, then pick a template. Next.js (App Router) + TypeScript +
@@ -67,7 +67,7 @@ Five slots:
 - **Export page** — between the save/download card and the preview, on the
   Template & export step only.
 - **Section footer** — below the Back/Next/Skip row, on Photo, Summary,
-  Key achievements, Skills, Patents, Languages, Hobbies, Soft skills, and
+  Key achievements, Skills, Certifications, Patents, Languages, Hobbies, Soft skills, and
   Additional (one shared slot id — only ever one of these is on screen at
   a time).
 
@@ -105,8 +105,9 @@ repeat visits barely touch the network.
 ## Project structure
 
 ```
-app/                   Routes: landing page, /builder (noindex), sitemap, robots, ads.txt
+app/                   Routes: landing, how-to, private, templates, ATS, privacy, about; /builder (noindex); sitemap, robots, ads.txt
 components/ads/        AdSlot — the one place that knows how to render (or skip) an ad
+components/site/       Marketing chrome (header, footer) shared by indexable pages
 components/builder/    The wizard: section nav, forms, preview, export
 components/templates/  Template registry, layout shells, shared render atoms
 components/ui/         Small shared UI primitives (Button, Field, Switch, ...)

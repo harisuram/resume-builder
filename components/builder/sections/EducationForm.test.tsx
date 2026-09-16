@@ -45,6 +45,29 @@ describe("EducationForm", () => {
     expect(useBuilderStore.getState().sectionStatus.education).toBe("complete");
   });
 
+  it("shows required-field errors after blur", async () => {
+    render(<EducationForm />);
+    await userEvent.click(screen.getByText("+ Add education"));
+    await userEvent.click(screen.getByPlaceholderText("University of Texas at Austin"));
+    await userEvent.tab();
+    expect(screen.getByText("Enter the school or institution.")).toBeInTheDocument();
+  });
+
+  it("flags an end date that is before the start date", async () => {
+    act(() => {
+      useBuilderStore.getState().addListItem("education", {
+        institution: "MIT",
+        degree: "B.S.",
+        startDate: "2022-01",
+        endDate: "2021-01",
+      });
+    });
+    render(<EducationForm />);
+    await userEvent.click(screen.getByLabelText("End date"));
+    await userEvent.tab();
+    expect(screen.getByText("End date cannot be before the start date.")).toBeInTheDocument();
+  });
+
   it("removes an entry", async () => {
     act(() => {
       useBuilderStore.getState().addListItem("education", { institution: "MIT", degree: "B.S.", startDate: "2020-01" });

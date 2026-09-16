@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ADSENSE_CLIENT_ID } from "@/lib/ads";
+import { ADSENSE_CLIENT_ID, adsenseClientAttr } from "@/lib/ads";
 
 declare global {
   interface Window {
@@ -19,12 +19,16 @@ type AdFormat = "auto" | "fluid";
  *    so the layout's ad positions are visible before real credentials exist.
  *  - the slot id isn't set: same as above.
  *  - Google itself reports no fill for this request (`data-ad-status="unfilled"`,
- *    set async once AdSense processes the slot): collapse the whole wrapper,
- *    not just the ad unit, so no leftover blank space or "Advertisement" label
- *    is left behind.
+ *    set async once AdSense processes the slot): hide the "Advertisement" label
+ *    so no leftover blank chrome is left behind, but keep the `ins.adsbygoogle`
+ *    in the DOM. Google's crawler looks for that tag; unmounting it after a
+ *    no-fill (the usual state before a site is approved) makes the slot
+ *    invisible to review.
  *
- * Never rendered in the printed/exported resume — every call site keeps ads
- * out of that path, and `no-print` is a defensive second layer here.
+ * The `<ins>` attributes match AdSense's generated display-ad snippet so the
+ * crawler can recognize a real unit. Never rendered in the printed/exported
+ * resume — every call site keeps ads out of that path, and `no-print` is a
+ * defensive second layer here.
  */
 export function AdSlot({
   slot,
@@ -44,8 +48,9 @@ export function AdSlot({
   className?: string;
 }) {
   const insRef = useRef<HTMLModElement>(null);
-  const [collapsed, setCollapsed] = useState(false);
-  const enabled = Boolean(ADSENSE_CLIENT_ID && slot);
+  const [unfilled, setUnfilled] = useState(false);
+  const client = adsenseClientAttr(ADSENSE_CLIENT_ID);
+  const enabled = Boolean(client && slot);
 
   useEffect(() => {
     if (!enabled) return;
@@ -53,6 +58,8 @@ export function AdSlot({
     if (!node) return;
 
     try {
+      // Queue the request even if the loader script hasn't run yet — that's
+      // the official snippet's pattern (`adsbygoogle = window.adsbygoogle || []`).
       (window.adsbygoogle = window.adsbygoogle || []).push({});
     } catch {
       // AdSense script blocked (ad blocker, offline, not yet approved) — the
@@ -60,7 +67,7 @@ export function AdSlot({
     }
 
     const observer = new MutationObserver(() => {
-      if (node.getAttribute("data-ad-status") === "unfilled") setCollapsed(true);
+      if (node.getAttribute("data-ad-status") === "unfilled") setUnfilled(true);
     });
     observer.observe(node, { attributes: true, attributeFilter: ["data-ad-status"] });
     return () => observer.disconnect();
@@ -86,16 +93,16 @@ export function AdSlot({
     );
   }
 
-  if (collapsed) return null;
-
   return (
     <div className={`no-print ${className}`}>
-      <span className="text-[10px] uppercase tracking-wide text-[var(--color-ink-faint)]">Advertisement</span>
+      {!unfilled && (
+        <span className="text-[10px] uppercase tracking-wide text-[var(--color-ink-faint)]">Advertisement</span>
+      )}
       <ins
         ref={insRef}
-        className="adsbygoogle block w-full"
+        className="adsbygoogle"
         style={{ display: "block" }}
-        data-ad-client={ADSENSE_CLIENT_ID}
+        data-ad-client={client}
         data-ad-slot={slot}
         data-ad-format={format}
         data-full-width-responsive="true"

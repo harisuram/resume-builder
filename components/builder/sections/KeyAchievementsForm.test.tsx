@@ -25,6 +25,14 @@ describe("KeyAchievementsForm", () => {
     expect(useBuilderStore.getState().sectionStatus.keyAchievements).toBe("complete");
   });
 
+  it("asks for text after an empty achievement is blurred", async () => {
+    render(<KeyAchievementsForm />);
+    await userEvent.click(screen.getByText("+ Add achievement"));
+    await userEvent.click(screen.getByPlaceholderText("Grew the customer base by 40% in under a year"));
+    await userEvent.tab();
+    expect(screen.getByText("Enter an achievement, or remove this line.")).toBeInTheDocument();
+  });
+
   it("supports multiple achievements, edited independently", async () => {
     act(() => useBuilderStore.getState().setKeyAchievements(["First win", "Second win"]));
     render(<KeyAchievementsForm />);

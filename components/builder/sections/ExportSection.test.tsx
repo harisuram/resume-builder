@@ -24,8 +24,65 @@ function renderExport() {
   );
 }
 
+function addContentSection() {
+  act(() => {
+    useBuilderStore.getState().setSkills(["TypeScript"]);
+  });
+}
+
 describe("ExportSection", () => {
+  it("hides the save question and download until at least one content section is filled", () => {
+    renderExport();
+    expect(
+      screen.queryByText("Save this resume on this device so you can pick it up again later?"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Yes, save it" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Download PDF" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("File name")).not.toBeInTheDocument();
+    expect(screen.queryByText("Choose an option above first.")).not.toBeInTheDocument();
+  });
+
+  it("asks to save once a content section is added", () => {
+    renderExport();
+    addContentSection();
+    expect(
+      screen.getByText("Save this resume on this device so you can pick it up again later?"),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Download PDF" })).toBeDisabled();
+    expect(screen.getByText("Choose an option above first.")).toBeInTheDocument();
+  });
+
+  it("hides the save question and download again if the last content section is cleared", () => {
+    addContentSection();
+    renderExport();
+    expect(
+      screen.getByText("Save this resume on this device so you can pick it up again later?"),
+    ).toBeInTheDocument();
+
+    act(() => {
+      useBuilderStore.getState().setSkills([]);
+    });
+
+    expect(
+      screen.queryByText("Save this resume on this device so you can pick it up again later?"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Download PDF" })).not.toBeInTheDocument();
+  });
+
+  it("does not ask when the only filled section is skipped", () => {
+    act(() => {
+      useBuilderStore.getState().setSkills(["TypeScript"]);
+      useBuilderStore.getState().toggleSkipSection("skills");
+    });
+    renderExport();
+    expect(
+      screen.queryByText("Save this resume on this device so you can pick it up again later?"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Download PDF" })).not.toBeInTheDocument();
+  });
+
   it("disables Download until a save choice is made", () => {
+    addContentSection();
     renderExport();
     expect(screen.getByRole("button", { name: "Download PDF" })).toBeDisabled();
     expect(screen.getByText("Choose an option above first.")).toBeInTheDocument();
@@ -38,6 +95,7 @@ describe("ExportSection", () => {
   });
 
   it("saves to localStorage and prints when consenting", async () => {
+    addContentSection();
     renderExport();
     await userEvent.click(screen.getByRole("button", { name: "Yes, save it" }));
     expect(screen.getByRole("button", { name: "Download PDF" })).toBeEnabled();
@@ -52,6 +110,7 @@ describe("ExportSection", () => {
   });
 
   it("does not save when declining", async () => {
+    addContentSection();
     renderExport();
     await userEvent.click(screen.getByRole("button", { name: "No, don’t save" }));
     await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
@@ -66,11 +125,12 @@ describe("ExportSection", () => {
       "resumeData",
       JSON.stringify({
         basicInfo: { name: "Existing", email: "", phone: "", location: "", links: {} },
-        sections: {},
+        sections: { skills: ["TypeScript"] },
         sectionStatus: {},
         templateId: "jakes-resume",
       }),
     );
+    addContentSection();
     renderExport();
 
     expect(screen.queryByRole("button", { name: "Yes, save it" })).not.toBeInTheDocument();
@@ -82,6 +142,7 @@ describe("ExportSection", () => {
 
   it("keeps the existing saved copy up to date when downloading without re-asking", async () => {
     localStorage.setItem("resumeData", JSON.stringify({ basicInfo: { name: "Stale" } }));
+    addContentSection();
     renderExport();
     await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
 
@@ -104,6 +165,7 @@ describe("ExportSection", () => {
     (window.print as jest.Mock).mockImplementationOnce(() => {
       throw new Error("blocked");
     });
+    addContentSection();
     renderExport();
     await userEvent.click(screen.getByRole("button", { name: "Yes, save it" }));
     await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
@@ -114,6 +176,7 @@ describe("ExportSection", () => {
     const spy = jest.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
       throw new DOMException("quota", "QuotaExceededError");
     });
+    addContentSection();
     renderExport();
     await userEvent.click(screen.getByRole("button", { name: "Yes, save it" }));
     await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
@@ -123,11 +186,13 @@ describe("ExportSection", () => {
 
   describe("editable file name", () => {
     it("defaults to a slug of the resume's name", () => {
+      addContentSection();
       renderExport();
       expect(screen.getByLabelText("File name")).toHaveValue("jamie_rivera");
     });
 
     it("lets the user type freely (no slugifying mid-keystroke) and slugifies on blur", async () => {
+      addContentSection();
       renderExport();
       const input = screen.getByLabelText("File name");
       await userEvent.clear(input);
@@ -141,6 +206,7 @@ describe("ExportSection", () => {
     it("sets document.title to the edited name during print, then restores it", async () => {
       const originalTitle = document.title;
       document.title = "Build your resume";
+      addContentSection();
       renderExport();
 
       const input = screen.getByLabelText("File name");
@@ -160,6 +226,7 @@ describe("ExportSection", () => {
     });
 
     it("keeps the edited name even if the resume's own name field changes afterward", async () => {
+      addContentSection();
       renderExport();
       const input = screen.getByLabelText("File name");
       await userEvent.clear(input);
@@ -174,6 +241,7 @@ describe("ExportSection", () => {
     });
 
     it("falls back to 'resume' if cleared entirely", async () => {
+      addContentSection();
       renderExport();
       const input = screen.getByLabelText("File name");
       await userEvent.clear(input);

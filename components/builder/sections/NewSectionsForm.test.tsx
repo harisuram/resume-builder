@@ -37,6 +37,14 @@ describe("LanguagesForm", () => {
     await userEvent.selectOptions(screen.getByLabelText("Proficiency"), "Native");
     expect(useBuilderStore.getState().sections.languages![0]).toEqual({ name: "French", level: "Native" });
   });
+
+  it("shows an error when the language name is left blank", async () => {
+    render(<LanguagesForm />);
+    await userEvent.click(screen.getByText("+ Add language"));
+    await userEvent.click(screen.getByPlaceholderText("Spanish"));
+    await userEvent.tab();
+    expect(screen.getByText("Enter the language.")).toBeInTheDocument();
+  });
 });
 
 describe("HobbiesForm", () => {

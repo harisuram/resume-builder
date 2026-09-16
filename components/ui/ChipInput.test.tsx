@@ -61,4 +61,12 @@ describe("ChipInput", () => {
     await userEvent.tab();
     expect(screen.getByText("Go")).toBeInTheDocument();
   });
+
+  it("shows an error instead of adding a duplicate chip", async () => {
+    render(<Controlled initial={["TypeScript"]} />);
+    const input = screen.getByPlaceholderText("Add a skill, press Enter");
+    await userEvent.type(input, "TypeScript{Enter}");
+    expect(screen.getByRole("alert")).toHaveTextContent("already on the list");
+    expect(screen.getAllByText("TypeScript")).toHaveLength(1);
+  });
 });

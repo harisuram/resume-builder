@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Source_Serif_4 } from "next/font/google";
 import Script from "next/script";
-import { ADSENSE_CLIENT_ID, isAdsenseConfigured } from "@/lib/ads";
+import { ADSENSE_CLIENT_ID, adsenseClientAttr, isAdsenseConfigured } from "@/lib/ads";
+import { HOME_DESCRIPTION, HOME_TITLE, SITE_NAME } from "@/lib/seo";
+import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 const inter = Inter({
@@ -16,33 +18,32 @@ const sourceSerif = Source_Serif_4({
   display: "swap",
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://resume-builder.pages.dev";
-
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Letterform — a free, private resume builder",
-    template: "%s — Letterform",
+    default: HOME_TITLE,
+    template: `%s — ${SITE_NAME}`,
   },
-  description:
-    "Build a resume from only the sections you need. Skip the rest, pick a template, download a PDF. Free, private, no account.",
+  description: HOME_DESCRIPTION,
+  robots: { index: true, follow: true },
   openGraph: {
-    title: "Letterform — a free, private resume builder",
-    description:
-      "Build a resume from only the sections you need. Skip the rest, pick a template, download a PDF. Free, private, no account.",
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
     url: SITE_URL,
-    siteName: "Letterform",
+    siteName: SITE_NAME,
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Letterform — a free, private resume builder",
-    description:
-      "Build a resume from only the sections you need. Skip the rest, pick a template, download a PDF. Free, private, no account.",
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
   },
-  alternates: {
-    canonical: "/",
-  },
+  // Google's site-connection meta — crawlers look for this in <head> even
+  // when the adsbygoogle script is still loading. Only emitted when a real
+  // publisher id is configured at build time.
+  ...(isAdsenseConfigured()
+    ? { other: { "google-adsense-account": adsenseClientAttr(ADSENSE_CLIENT_ID) } }
+    : {}),
 };
 
 export const viewport: Viewport = {
@@ -60,15 +61,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           only covers this node's own attributes — it does not hide mismatches
           in children. */}
       <body className="flex min-h-full flex-col antialiased" suppressHydrationWarning>
-        {children}
         {isAdsenseConfigured() && (
           <Script
+            id="adsense"
             async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT_ID}`}
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientAttr(ADSENSE_CLIENT_ID)}`}
             crossOrigin="anonymous"
-            strategy="afterInteractive"
+            strategy="beforeInteractive"
           />
         )}
+        {children}
       </body>
     </html>
   );

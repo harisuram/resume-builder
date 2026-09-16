@@ -13,19 +13,24 @@ export function PhotoForm() {
   const setPhoto = useBuilderStore((s) => s.setPhoto);
   const inputRef = useRef<HTMLInputElement>(null);
   const [pendingSource, setPendingSource] = useState<string | null>(null);
+  const [error, setError] = useState<string | undefined>();
 
   function handleFile(file: File | undefined) {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      showToast("That file doesn't look like an image.");
+      setError("That file doesn't look like an image.");
       return;
     }
     if (file.size > MAX_FILE_BYTES) {
-      showToast("That image is too large — try one under 8MB.");
+      setError("That image is too large — try one under 8MB.");
       return;
     }
+    setError(undefined);
     const reader = new FileReader();
-    reader.onerror = () => showToast("Couldn't read that image. Try another file.");
+    reader.onerror = () => {
+      setError("Couldn't read that image. Try another file.");
+      showToast("Couldn't read that image. Try another file.");
+    };
     reader.onload = () => setPendingSource(reader.result as string);
     reader.readAsDataURL(file);
   }
@@ -68,6 +73,11 @@ export function PhotoForm() {
               </Button>
             )}
           </div>
+          {error ? (
+            <p role="alert" className="text-[11.5px] text-red-600">
+              {error}
+            </p>
+          ) : null}
         </div>
       </div>
 

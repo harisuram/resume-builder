@@ -28,11 +28,11 @@ export function Logo({
     <span className={`inline-flex items-center gap-2 ${className}`}>
       <NibIcon className="h-5 w-5 shrink-0 text-[var(--color-accent)]" />
       <span
-        className={`font-display font-semibold tracking-tight text-[var(--color-ink)] ${
-          size === "sm" ? "text-[16px]" : "text-[17px]"
+        className={`whitespace-nowrap font-display font-semibold tracking-tight text-[var(--color-ink)] ${
+          size === "sm" ? "text-[14px] sm:text-[16px]" : "text-[15px] sm:text-[17px]"
         }`}
       >
-        Letterform
+        Free Resume Builder
       </span>
     </span>
   );

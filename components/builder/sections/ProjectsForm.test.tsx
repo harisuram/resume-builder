@@ -27,6 +27,22 @@ describe("ProjectsForm", () => {
     expect(project.link).toBe("github.com/me/project");
   });
 
+  it("shows an error for a missing name after blur", async () => {
+    render(<ProjectsForm />);
+    await userEvent.click(screen.getByText("+ Add project"));
+    await userEvent.click(screen.getByPlaceholderText("Resume Builder"));
+    await userEvent.tab();
+    expect(screen.getByText("Enter the project name.")).toBeInTheDocument();
+  });
+
+  it("flags a project link that is not a URL", async () => {
+    act(() => useBuilderStore.getState().addListItem("projects", { name: "P", description: "D", link: "not a url" }));
+    render(<ProjectsForm />);
+    await userEvent.click(screen.getByPlaceholderText("github.com/you/project"));
+    await userEvent.tab();
+    expect(screen.getByText(/Enter a valid project link/)).toBeInTheDocument();
+  });
+
   it("adds technologies via the chip input", async () => {
     act(() => useBuilderStore.getState().addListItem("projects", { name: "P", description: "D" }));
     render(<ProjectsForm />);

@@ -22,6 +22,13 @@ describe("SummaryForm", () => {
     expect(useBuilderStore.getState().sectionStatus.summary).toBe("complete");
   });
 
+  it("does not show a length error for a normal summary", async () => {
+    render(<SummaryForm />);
+    await userEvent.type(screen.getByRole("textbox"), "Backend engineer.");
+    await userEvent.tab();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
   it("shows a skipped notice when skipped", () => {
     act(() => {
       useBuilderStore.getState().toggleSkipSection("summary");

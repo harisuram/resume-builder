@@ -39,13 +39,14 @@ function stepLabel(key: NavKey): string {
 
 /** Steps with a slot below their Back/Next/Skip row — a named set rather
  * than "every step," so ad density doesn't scale with how many sections the
- * wizard happens to have. The five trailing optional sections share this
- * with photo / summary / skills / key achievements. */
+ * wizard happens to have. Photo / summary / skills / key achievements /
+ * certifications share this with the trailing optional sections. */
 const FOOTER_AD_STEPS = new Set<NavKey>([
   "photo",
   "summary",
   "skills",
   "keyAchievements",
+  "certifications",
   "patents",
   "languages",
   "hobbies",
@@ -211,10 +212,16 @@ export function BuilderShell() {
         ? Boolean(photo)
         : isContentSection(activeKey) && hasSectionContent(activeKey, sections);
   const nextBlockedReason =
-    hasNextStep && !stepValid && activeKey === "basicInfo"
-      ? basicInfo.name.trim() && basicInfo.email.trim() && basicInfo.location.trim()
-        ? "Fix the highlighted field before continuing."
-        : "Fill in your name, email, and location to continue."
+    hasNextStep && !stepValid
+      ? activeKey === "basicInfo"
+        ? basicInfo.name.trim() && basicInfo.email.trim() && basicInfo.location.trim()
+          ? "Fix the highlighted fields before continuing."
+          : "Fill in your name, email, and location to continue."
+        : isContentSection(activeKey)
+          ? hasSectionContent(activeKey, sections)
+            ? "Fix the highlighted fields before continuing."
+            : "Fill in this section, or skip it, to continue."
+          : undefined
       : undefined;
 
   function goBack() {

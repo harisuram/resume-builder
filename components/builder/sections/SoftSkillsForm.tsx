@@ -9,6 +9,7 @@ export function SoftSkillsForm() {
       title="Soft skills"
       help="How you work with people — communication, leadership, mentoring."
       placeholder="Add a soft skill, press Enter"
+      itemLabel="soft skill"
     />
   );
 }

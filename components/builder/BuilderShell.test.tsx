@@ -138,6 +138,7 @@ describe("BuilderShell", () => {
   it("renders the export step full-width with only the section nav aside (no separate preview aside)", async () => {
     const { container } = render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
+    act(() => useBuilderStore.getState().setSkills(["TypeScript"]));
     await userEvent.click(screen.getByText("Template & export"));
 
     expect(screen.getByRole("heading", { name: "Template & export" })).toBeInTheDocument();

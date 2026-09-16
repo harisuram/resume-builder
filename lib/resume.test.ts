@@ -1,6 +1,7 @@
 import {
   forcedItemIndices,
   getRenderableSections,
+  hasAddedSection,
   hasForcedPageBreak,
   hasSummary,
   itemBreakKey,
@@ -17,6 +18,27 @@ function makeData(overrides: Partial<ResumeData> = {}): ResumeData {
     ...overrides,
   };
 }
+
+describe("hasAddedSection", () => {
+  it("is false when no content section is filled", () => {
+    expect(hasAddedSection(makeData({ sections: { skills: [] } }))).toBe(false);
+  });
+
+  it("is true once any content section has something to render", () => {
+    expect(hasAddedSection(makeData({ sections: { skills: ["TypeScript"] } }))).toBe(true);
+  });
+
+  it("is false when the only filled section is skipped", () => {
+    expect(
+      hasAddedSection(
+        makeData({
+          sections: { skills: ["TypeScript"] },
+          sectionStatus: { skills: "skipped" },
+        }),
+      ),
+    ).toBe(false);
+  });
+});
 
 describe("getRenderableSections", () => {
   it("excludes sections with no content", () => {

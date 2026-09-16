@@ -1,8 +1,52 @@
-import { ADSENSE_CLIENT_ID, isAdsenseConfigured } from "./ads";
+import {
+  ADSENSE_CLIENT_ID,
+  adsTxtBody,
+  adsenseClientAttr,
+  adsensePublisherId,
+  isAdsenseConfigured,
+  isPlaceholderAdId,
+} from "./ads";
 
 describe("ads config", () => {
   it("defaults to unconfigured when no env vars are set", () => {
     expect(ADSENSE_CLIENT_ID).toBe("");
     expect(isAdsenseConfigured()).toBe(false);
+  });
+});
+
+describe("isPlaceholderAdId", () => {
+  it("treats empty and all-zero example ids as unset", () => {
+    expect(isPlaceholderAdId("")).toBe(true);
+    expect(isPlaceholderAdId("ca-pub-0000000000000000")).toBe(true);
+    expect(isPlaceholderAdId("0000000000")).toBe(true);
+  });
+
+  it("accepts a real publisher or slot id", () => {
+    expect(isPlaceholderAdId("ca-pub-1234567890123456")).toBe(false);
+    expect(isPlaceholderAdId("1234567890")).toBe(false);
+  });
+});
+
+describe("adsenseClientAttr / adsensePublisherId", () => {
+  it("normalizes to ca-pub- for the script, ins, and meta tag", () => {
+    expect(adsenseClientAttr("ca-pub-1234567890123456")).toBe("ca-pub-1234567890123456");
+    expect(adsenseClientAttr("pub-1234567890123456")).toBe("ca-pub-1234567890123456");
+  });
+
+  it("strips ca- for the ads.txt publisher id", () => {
+    expect(adsensePublisherId("ca-pub-1234567890123456")).toBe("pub-1234567890123456");
+    expect(adsensePublisherId("pub-1234567890123456")).toBe("pub-1234567890123456");
+  });
+});
+
+describe("adsTxtBody", () => {
+  it("returns an empty body when there is no client id", () => {
+    expect(adsTxtBody("")).toBe("");
+  });
+
+  it("returns the IAB line Google looks up at /ads.txt", () => {
+    expect(adsTxtBody("ca-pub-1234567890123456")).toBe(
+      "google.com, pub-1234567890123456, DIRECT, f08c47fec0942fa0\n",
+    );
   });
 });

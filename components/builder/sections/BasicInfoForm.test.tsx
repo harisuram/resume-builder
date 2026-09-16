@@ -37,11 +37,28 @@ describe("BasicInfoForm", () => {
 
   it("defaults the country code to +1 and lets it be changed", async () => {
     render(<BasicInfoForm />);
-    const select = screen.getByLabelText("Phone country code") as HTMLSelectElement;
-    expect(select.value).toBe("+1");
-
-    await userEvent.selectOptions(select, "United Kingdom");
+    await userEvent.click(screen.getByLabelText("Phone country code"));
+    await userEvent.click(screen.getByRole("option", { name: /United Kingdom/ }));
     expect(useBuilderStore.getState().basicInfo.phoneCountryCode).toBe("+44");
+  });
+
+  it("keeps the country code and phone number in a single split control", () => {
+    render(<BasicInfoForm />);
+    const trigger = screen.getByLabelText("Phone country code");
+    const phone = screen.getByLabelText("Phone");
+    expect(trigger.tagName).toBe("BUTTON");
+    expect(trigger.className).toContain("w-[7.75rem]");
+    expect(phone.className).toContain("min-w-0");
+    expect(phone.className).toContain("flex-1");
+  });
+
+  it("opens a seven-row scrollable country list", async () => {
+    render(<BasicInfoForm />);
+    await userEvent.click(screen.getByLabelText("Phone country code"));
+    const list = screen.getByRole("listbox", { name: "Country codes" });
+    expect(list.style.maxHeight).toBe("252px");
+    expect(list.className).toContain("overflow-y-auto");
+    expect(screen.getAllByRole("option").length).toBeGreaterThan(7);
   });
 
   it("updates links independently of each other", async () => {

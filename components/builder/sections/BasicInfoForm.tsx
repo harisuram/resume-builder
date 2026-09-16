@@ -1,21 +1,29 @@
 "use client";
 
-import { useState } from "react";
-import { FieldGroup, Select, TextInput } from "@/components/ui/Field";
+import { FieldGroup, PhoneField, TextInput } from "@/components/ui/Field";
 import { COUNTRY_CODES, DEFAULT_DIAL_CODE } from "@/lib/countryCodes";
+import { useTouchedFields } from "@/lib/useTouchedFields";
 import { useBuilderStore } from "@/lib/store";
 import { getBasicInfoErrors, MAX_FIELD_LENGTH, sanitizePhoneDigits } from "@/lib/validation";
 
-type TouchedField = "name" | "email" | "phone" | "location" | "linkedin" | "github" | "portfolio";
+function iso2ForDialCode(dialCode: string): string {
+  return COUNTRY_CODES.find((country) => country.dialCode === dialCode)?.iso2 ?? "US";
+}
 
 export function BasicInfoForm() {
   const basicInfo = useBuilderStore((s) => s.basicInfo);
   const updateBasicInfo = useBuilderStore((s) => s.updateBasicInfo);
   const updateLinks = useBuilderStore((s) => s.updateLinks);
-  const [touched, setTouched] = useState<Partial<Record<TouchedField, boolean>>>({});
+  const { touch, errorFor } = useTouchedFields();
 
   const errors = getBasicInfoErrors(basicInfo);
-  const touch = (field: TouchedField) => () => setTouched((t) => ({ ...t, [field]: true }));
+  const nameError = errorFor("name", errors.name);
+  const emailError = errorFor("email", errors.email);
+  const phoneError = errorFor("phone", errors.phone);
+  const locationError = errorFor("location", errors.location);
+  const linkedinError = errorFor("linkedin", errors.links.linkedin);
+  const githubError = errorFor("github", errors.links.github);
+  const portfolioError = errorFor("portfolio", errors.links.portfolio);
 
   return (
     <div className="flex flex-col gap-5">
@@ -27,7 +35,7 @@ export function BasicInfoForm() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <FieldGroup label="Full name" htmlFor="name" error={touched.name ? errors.name : undefined}>
+        <FieldGroup label="Full name" htmlFor="name" required error={nameError}>
           <TextInput
             id="name"
             value={basicInfo.name}
@@ -36,9 +44,10 @@ export function BasicInfoForm() {
             placeholder="Jordan Lee"
             autoComplete="name"
             maxLength={MAX_FIELD_LENGTH}
+            invalid={Boolean(nameError)}
           />
         </FieldGroup>
-        <FieldGroup label="Email" htmlFor="email" error={touched.email ? errors.email : undefined}>
+        <FieldGroup label="Email" htmlFor="email" required error={emailError}>
           <TextInput
             id="email"
             type="email"
@@ -48,35 +57,25 @@ export function BasicInfoForm() {
             placeholder="jordan@email.com"
             autoComplete="email"
             maxLength={MAX_FIELD_LENGTH}
+            invalid={Boolean(emailError)}
           />
         </FieldGroup>
-        <FieldGroup label="Phone" htmlFor="phone" error={touched.phone ? errors.phone : undefined}>
-          <div className="flex gap-2">
-            <Select
-              aria-label="Phone country code"
-              value={basicInfo.phoneCountryCode ?? DEFAULT_DIAL_CODE}
-              onChange={(e) => updateBasicInfo({ phoneCountryCode: e.target.value })}
-              className="w-[6.5rem] shrink-0"
-            >
-              {COUNTRY_CODES.map((country) => (
-                <option key={country.iso2} value={country.dialCode}>
-                  {country.dialCode} {country.iso2}
-                </option>
-              ))}
-            </Select>
-            <TextInput
-              id="phone"
-              type="tel"
-              inputMode="numeric"
-              value={basicInfo.phone}
-              onChange={(e) => updateBasicInfo({ phone: sanitizePhoneDigits(e.target.value) })}
-              onBlur={touch("phone")}
-              placeholder="5550100199"
-              autoComplete="tel-national"
-            />
-          </div>
+        <FieldGroup label="Phone" htmlFor="phone" error={phoneError}>
+          <PhoneField
+            id="phone"
+            invalid={Boolean(phoneError)}
+            countryIso2={iso2ForDialCode(basicInfo.phoneCountryCode ?? DEFAULT_DIAL_CODE)}
+            countries={COUNTRY_CODES}
+            onCountryIso2Change={(iso2) => {
+              const country = COUNTRY_CODES.find((item) => item.iso2 === iso2);
+              if (country) updateBasicInfo({ phoneCountryCode: country.dialCode });
+            }}
+            phone={basicInfo.phone}
+            onPhoneChange={(value) => updateBasicInfo({ phone: sanitizePhoneDigits(value) })}
+            onBlur={touch("phone")}
+          />
         </FieldGroup>
-        <FieldGroup label="Location" htmlFor="location" error={touched.location ? errors.location : undefined}>
+        <FieldGroup label="Location" htmlFor="location" required error={locationError}>
           <TextInput
             id="location"
             value={basicInfo.location}
@@ -85,6 +84,7 @@ export function BasicInfoForm() {
             placeholder="Austin, TX"
             autoComplete="address-level2"
             maxLength={MAX_FIELD_LENGTH}
+            invalid={Boolean(locationError)}
           />
         </FieldGroup>
       </div>
@@ -92,31 +92,34 @@ export function BasicInfoForm() {
       <div>
         <p className="mb-2 text-[12px] font-medium tracking-wide text-[var(--color-ink-soft)]">Links (optional)</p>
         <div className="grid gap-4 sm:grid-cols-3">
-          <FieldGroup label="LinkedIn" error={touched.linkedin ? errors.links.linkedin : undefined}>
+          <FieldGroup label="LinkedIn" error={linkedinError}>
             <TextInput
               value={basicInfo.links.linkedin ?? ""}
               onChange={(e) => updateLinks({ linkedin: e.target.value })}
               onBlur={touch("linkedin")}
               placeholder="linkedin.com/in/jordan"
               maxLength={MAX_FIELD_LENGTH}
+              invalid={Boolean(linkedinError)}
             />
           </FieldGroup>
-          <FieldGroup label="GitHub" error={touched.github ? errors.links.github : undefined}>
+          <FieldGroup label="GitHub" error={githubError}>
             <TextInput
               value={basicInfo.links.github ?? ""}
               onChange={(e) => updateLinks({ github: e.target.value })}
               onBlur={touch("github")}
               placeholder="github.com/jordan"
               maxLength={MAX_FIELD_LENGTH}
+              invalid={Boolean(githubError)}
             />
           </FieldGroup>
-          <FieldGroup label="Portfolio" error={touched.portfolio ? errors.links.portfolio : undefined}>
+          <FieldGroup label="Portfolio" error={portfolioError}>
             <TextInput
               value={basicInfo.links.portfolio ?? ""}
               onChange={(e) => updateLinks({ portfolio: e.target.value })}
               onBlur={touch("portfolio")}
               placeholder="jordanlee.dev"
               maxLength={MAX_FIELD_LENGTH}
+              invalid={Boolean(portfolioError)}
             />
           </FieldGroup>
         </div>

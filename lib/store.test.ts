@@ -124,6 +124,13 @@ describe("list section CRUD (education/experience/projects/certifications)", () 
     expect(state.sectionStatus.education).toBe("complete");
   });
 
+  it("does not mark a list section complete until required fields are filled", () => {
+    useBuilderStore.getState().addListItem("education", { institution: "", degree: "", startDate: "" });
+    expect(useBuilderStore.getState().sectionStatus.education).toBe("not_started");
+    useBuilderStore.getState().updateListItem("education", 0, { institution: "MIT", degree: "B.S." });
+    expect(useBuilderStore.getState().sectionStatus.education).toBe("complete");
+  });
+
   it("addListItem appends a second item after the first", () => {
     const { addListItem } = useBuilderStore.getState();
     addListItem("education", EDU);

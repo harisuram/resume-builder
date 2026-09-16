@@ -21,6 +21,14 @@ export function getRenderableSections(data: ResumeData): SectionKey[] {
   return resolveSectionOrder(data.sectionOrder).filter((key) => hasSectionContent(data, key));
 }
 
+/** True once the user has filled in at least one content section (not
+ * skipped, with something to render). Basic info and photo don't count —
+ * those aren't skippable sections. Drives whether the export step offers
+ * to save a copy on this device. */
+export function hasAddedSection(data: ResumeData): boolean {
+  return getRenderableSections(data).length > 0;
+}
+
 /** Whether a content section has anything worth putting on the page.
  * Additional is an object (heading + items), not an array, so it can't
  * share the Array.isArray check the rest of the list sections use. */

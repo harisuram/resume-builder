@@ -13,7 +13,7 @@ beforeEach(() => {
 describe("Navbar", () => {
   it("always shows the brand and a 'Start new resume' button", () => {
     render(<Navbar />);
-    expect(screen.getByText("Letterform")).toBeInTheDocument();
+    expect(screen.getByText("Free Resume Builder")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Start new resume" })).toBeInTheDocument();
   });
 

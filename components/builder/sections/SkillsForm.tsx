@@ -9,6 +9,7 @@ export function SkillsForm() {
       title="Skills"
       help="Technical languages, tools, and frameworks worth listing."
       placeholder="Add a skill, press Enter"
+      itemLabel="skill"
     />
   );
 }

@@ -10,22 +10,24 @@ import { GET } from "./route";
 
 jest.mock("../../lib/ads", () => ({
   __esModule: true,
-  ADSENSE_CLIENT_ID: "",
   isAdsenseConfigured: jest.fn(),
+  adsTxtBody: jest.fn(),
 }));
 
 describe("GET /ads.txt", () => {
   it("returns an empty body when AdSense isn't configured", async () => {
     (adsLib.isAdsenseConfigured as jest.Mock).mockReturnValue(false);
-    const res = GET();
+    const res = await GET();
     expect(await res.text()).toBe("");
   });
 
   it("returns the standard ads.txt line with the publisher id when configured", async () => {
     (adsLib.isAdsenseConfigured as jest.Mock).mockReturnValue(true);
-    (adsLib as { ADSENSE_CLIENT_ID: string }).ADSENSE_CLIENT_ID = "ca-pub-1234567890123456";
-    const res = GET();
+    (adsLib.adsTxtBody as jest.Mock).mockReturnValue(
+      "google.com, pub-1234567890123456, DIRECT, f08c47fec0942fa0\n",
+    );
+    const res = await GET();
     expect(await res.text()).toBe("google.com, pub-1234567890123456, DIRECT, f08c47fec0942fa0\n");
-    expect(res.headers.get("Content-Type")).toBe("text/plain");
+    expect(res.headers.get("Content-Type")).toBe("text/plain; charset=utf-8");
   });
 });

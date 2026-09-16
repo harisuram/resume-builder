@@ -1,16 +1,12 @@
 import type { MetadataRoute } from "next";
+import { INDEXABLE_PATHS, absoluteUrl } from "@/lib/site";
 
 export const dynamic = "force-static";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://resume-builder.pages.dev";
-
 export default function sitemap(): MetadataRoute.Sitemap {
-  return [
-    {
-      url: SITE_URL,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 1,
-    },
-  ];
+  return INDEXABLE_PATHS.map((path) => ({
+    url: absoluteUrl(path),
+    changeFrequency: path === "/" ? "monthly" : "yearly",
+    priority: path === "/" ? 1 : 0.7,
+  }));
 }

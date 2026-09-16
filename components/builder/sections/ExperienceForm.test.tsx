@@ -45,6 +45,14 @@ describe.each([
     expect(list[0].bullets).toEqual([""]);
   });
 
+  it("shows required-field errors after blur", async () => {
+    render(<ExperienceForm sectionKey={sectionKey} title={title} help="help" />);
+    await userEvent.click(screen.getByText(new RegExp(`\\+ Add (experience|role)`)));
+    await userEvent.click(screen.getByPlaceholderText("Acme Corp"));
+    await userEvent.tab();
+    expect(screen.getByText("Enter the company or organization.")).toBeInTheDocument();
+  });
+
   it("adds and removes bullets", async () => {
     act(() => {
       useBuilderStore.getState().addListItem(sectionKey, { company: "Acme", role: "Eng", startDate: "2020-01", bullets: [""] });
