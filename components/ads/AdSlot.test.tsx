@@ -42,6 +42,18 @@ describe("AdSlot", () => {
     expect(container.firstElementChild).toHaveClass("h-0", "overflow-hidden");
   });
 
+  it("does not apply display:none when the caller passes Tailwind hidden", async () => {
+    setClientId("ca-pub-123");
+    const { container, getByText } = render(<AdSlot slot="9876" className="mt-6 hidden flex-col md:flex" />);
+    const ins = container.querySelector("ins.adsbygoogle")!;
+    ins.setAttribute("data-ad-status", "filled");
+
+    await waitFor(() => expect(getByText("Advertisement")).toBeInTheDocument());
+    expect(container.firstElementChild).not.toHaveClass("hidden");
+    expect(container.firstElementChild).toHaveClass("mt-6", "flex-col", "md:flex");
+    expect(ins).toHaveStyle({ display: "block" });
+  });
+
   it("stays collapsed and unlabeled until Google reports a fill", () => {
     setClientId("ca-pub-123");
     const { container, queryByText } = render(<AdSlot slot="9876" />);

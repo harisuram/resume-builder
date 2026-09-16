@@ -160,8 +160,9 @@ describe("BuilderShell", () => {
 
     const asides = container.querySelectorAll("aside");
     const previewAside = asides[asides.length - 1];
-    expect(previewAside.className).toContain("hidden");
-    expect(previewAside.className).toContain("md:flex");
+    expect(previewAside.className.split(/\s+/)).toContain("w-0");
+    expect(previewAside.className.split(/\s+/)).not.toContain("hidden");
+    expect(previewAside.className).toContain("md:w-[420px]");
     expect(previewAside.className).toContain("md:overflow-hidden");
     expect(previewAside.className).toContain("min-h-0");
     expect(container.querySelector("main")!.className).not.toContain("hidden");

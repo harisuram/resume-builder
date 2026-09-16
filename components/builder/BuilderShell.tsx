@@ -40,22 +40,19 @@ function stepLabel(key: NavKey): string {
   return getSectionMeta(key).label;
 }
 
-/** Steps with a slot below their Back/Next/Skip row — a named set rather
- * than "every step," so ad density doesn't scale with how many sections the
- * wizard happens to have. Photo / summary / skills / key achievements /
- * certifications share this with the trailing optional sections. */
-const FOOTER_AD_STEPS = new Set<NavKey>([
-  "photo",
-  "summary",
-  "skills",
-  "keyAchievements",
-  "certifications",
-  "patents",
-  "languages",
-  "hobbies",
-  "softSkills",
-  "additional",
-]);
+/** AdsBot fetches `/builder` once and does not click the wizard, so every
+ * builder unit has to be in this first view (and in the pre-hydrate HTML). */
+function BuilderAdCrawlerTree() {
+  return (
+    <div data-ad-crawler="">
+      <AdSlot slot={ADSENSE_SLOTS.builderNav} name="Builder nav" />
+      <AdSlot slot={ADSENSE_SLOTS.builderPreviewTop} name="Builder preview top" />
+      <AdSlot slot={ADSENSE_SLOTS.builderPreview} name="Builder preview" />
+      <AdSlot slot={ADSENSE_SLOTS.builderSectionFooter} name="Section footer" />
+      <AdSlot slot={ADSENSE_SLOTS.builderExport} name="Export page" />
+    </div>
+  );
+}
 
 /** Whether the current step has to be resolved (filled in, or explicitly
  * skipped) before "Next" will advance past it. Basic info has no skip
@@ -266,8 +263,9 @@ export function BuilderShell() {
 
   if (!hydrated) {
     return (
-      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--color-paper)]">
+      <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-[var(--color-paper)]">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-border)] border-t-[var(--color-accent)]" />
+        <BuilderAdCrawlerTree />
       </div>
     );
   }
@@ -311,17 +309,20 @@ export function BuilderShell() {
                   onSkip={goSkip}
                   onClear={goClear}
                 />
-                {FOOTER_AD_STEPS.has(activeKey) && (
-                  <AdSlot
-                    slot={ADSENSE_SLOTS.builderSectionFooter}
-                    name={`Section footer — ${activeKey}`}
-                    className="mt-6 hidden flex-col items-center gap-1 md:flex"
-                  />
-                )}
+                <AdSlot
+                  slot={ADSENSE_SLOTS.builderSectionFooter}
+                  name={`Section footer — ${activeKey}`}
+                  className="mt-6 flex flex-col items-center gap-1"
+                />
                 <AdSlot
                   slot={ADSENSE_SLOTS.builderPreview}
                   name="Builder preview"
                   className="mt-8 mb-4 flex min-h-[8.5rem] flex-col items-center gap-1 md:hidden"
+                />
+                <AdSlot
+                  slot={ADSENSE_SLOTS.builderExport}
+                  name="Export page"
+                  className="mt-6 flex flex-col items-center gap-1"
                 />
               </div>
             </main>
@@ -329,7 +330,7 @@ export function BuilderShell() {
                 the export step is where the preview is read. Height is
                 capped to this column so a long resume scrolls here instead
                 of stretching the whole builder. */}
-            <aside className="hidden min-h-0 w-full border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-ink)_3.5%,var(--color-paper))] px-5 py-6 sm:px-8 md:flex md:w-[420px] md:shrink-0 md:flex-col md:overflow-hidden md:border-l">
+            <aside className="flex min-h-0 w-0 overflow-hidden border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-ink)_3.5%,var(--color-paper))] p-0 md:w-[420px] md:shrink-0 md:flex-col md:overflow-hidden md:border-l md:px-8 md:py-6">
               <AdSlot
                 slot={ADSENSE_SLOTS.builderPreviewTop}
                 name="Builder preview top"

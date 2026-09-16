@@ -1,3 +1,4 @@
+import { renderToString } from "react-dom/server";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { dismissBuilderTour } from "@/lib/builderTour";
@@ -15,6 +16,26 @@ beforeEach(() => {
 });
 
 describe("BuilderShell section-footer ads", () => {
+  it("puts every builder ad unit in the first view so AdsBot does not have to click the wizard", async () => {
+    render(<BuilderShell />);
+    await screen.findByRole("heading", { name: "Basic info" });
+    expect(screen.getByText("Builder nav")).toBeInTheDocument();
+    expect(screen.getByText("Builder preview top")).toBeInTheDocument();
+    expect(screen.getAllByText("Builder preview").length).toBeGreaterThan(0);
+    expect(screen.getByText("Section footer — basicInfo")).toBeInTheDocument();
+    expect(screen.getByText("Export page")).toBeInTheDocument();
+  });
+
+  it("keeps those units in the pre-hydrate HTML Google's crawler fetches", () => {
+    const html = renderToString(<BuilderShell />);
+    expect(html).toContain("data-ad-crawler");
+    expect(html).toContain("Builder nav");
+    expect(html).toContain("Builder preview top");
+    expect(html).toContain("Builder preview");
+    expect(html).toContain("Section footer");
+    expect(html).toContain("Export page");
+  });
+
   it("shows a preview-column ad above the live résumé, except on export", async () => {
     render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
@@ -27,10 +48,10 @@ describe("BuilderShell section-footer ads", () => {
     expect(screen.getByText("Builder preview")).toBeInTheDocument();
   });
 
-  it("shows the footer ad on the new optional sections, and not on Basic info", async () => {
+  it("keeps the footer ad on Basic info and the optional sections", async () => {
     render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
-    expect(screen.queryByText(/Section footer —/)).not.toBeInTheDocument();
+    expect(screen.getByText("Section footer — basicInfo")).toBeInTheDocument();
 
     const steps: [string, string][] = [
       ["Certifications", "Section footer — certifications"],

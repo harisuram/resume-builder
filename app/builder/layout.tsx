@@ -7,7 +7,7 @@ const BUILDER_DESCRIPTION =
 export const metadata: Metadata = {
   title: "Build your resume",
   description: BUILDER_DESCRIPTION,
-  robots: { index: false, follow: false },
+  robots: { index: false, follow: true },
   alternates: { canonical: "/builder" },
   openGraph: {
     title: "Build your resume",

@@ -167,7 +167,7 @@ export function ExportSection() {
       <AdSlot
         slot={ADSENSE_SLOTS.builderExport}
         name="Export page"
-        className="hidden flex-col items-center gap-1 md:flex"
+        className="flex flex-col items-center gap-1"
       />
 
       <PreviewPane printable />

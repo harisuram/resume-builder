@@ -56,9 +56,16 @@ export function AdSlot({
 
   if (!enabled) return null;
 
+  // Never apply Tailwind `hidden` (`display: none`). AdsBot skips those units,
+  // and a filled ad that is display:none also violates AdSense's hidden-ads rule.
+  const shownClass = className
+    .split(/\s+/)
+    .filter((token) => token && token !== "hidden")
+    .join(" ");
+
   return (
     <div
-      className={`no-print ${visible ? className : "h-0 overflow-hidden"}`}
+      className={`no-print ${visible ? shownClass : "h-0 overflow-hidden"}`}
       aria-hidden={visible ? undefined : true}
       aria-label={visible ? name : undefined}
     >

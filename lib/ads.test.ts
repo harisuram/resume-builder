@@ -1,5 +1,6 @@
 import {
   ADSENSE_CLIENT_ID,
+  ADSENSE_SLOTS,
   adsTxtBody,
   adsenseClientAttr,
   adsensePublisherId,
@@ -11,6 +12,17 @@ describe("ads config", () => {
   it("defaults to unconfigured when no env vars are set", () => {
     expect(ADSENSE_CLIENT_ID).toBe("");
     expect(isAdsenseConfigured()).toBe(false);
+  });
+
+  it("exposes every slot AdsBot needs to find", () => {
+    expect(Object.keys(ADSENSE_SLOTS)).toEqual([
+      "landing",
+      "builderPreview",
+      "builderPreviewTop",
+      "builderNav",
+      "builderExport",
+      "builderSectionFooter",
+    ]);
   });
 });
 
