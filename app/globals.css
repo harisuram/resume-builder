@@ -1,0 +1,467 @@
+@import "tailwindcss";
+
+:root {
+  --color-paper: #faf7f0;
+  --color-surface: #ffffff;
+  --color-ink: #1b1812;
+  --color-ink-soft: #57524a;
+  --color-ink-faint: #8a8377;
+  --color-border: #e4dfd2;
+  --color-accent: #7a2e2e;
+  --color-accent-ink: #ffffff;
+  --color-accent-tint: #f4e6e1;
+  --color-focus: #2f5d55;
+}
+
+:root[data-theme="dark"] {
+  --color-paper: #16140f;
+  --color-surface: #201d17;
+  --color-ink: #f2ede2;
+  --color-ink-soft: #c9c2b3;
+  --color-ink-faint: #8d8677;
+  --color-border: #3a352a;
+  --color-accent: #d98f83;
+  --color-accent-ink: #201108;
+  --color-accent-tint: #362420;
+  --color-focus: #7fc2b5;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-paper: #16140f;
+    --color-surface: #201d17;
+    --color-ink: #f2ede2;
+    --color-ink-soft: #c9c2b3;
+    --color-ink-faint: #8d8677;
+    --color-border: #3a352a;
+    --color-accent: #d98f83;
+    --color-accent-ink: #201108;
+    --color-accent-tint: #362420;
+    --color-focus: #7fc2b5;
+  }
+}
+
+@theme inline {
+  --color-paper: var(--color-paper);
+  --color-surface: var(--color-surface);
+  --color-ink: var(--color-ink);
+  --color-ink-soft: var(--color-ink-soft);
+  --color-ink-faint: var(--color-ink-faint);
+  --color-border: var(--color-border);
+  --color-accent: var(--color-accent);
+  --color-accent-ink: var(--color-accent-ink);
+  --color-accent-tint: var(--color-accent-tint);
+  --color-focus: var(--color-focus);
+  --font-display: var(--font-source-serif), Georgia, serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+}
+
+html {
+  color-scheme: light dark;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+
+/* Google's own documented fix for a no-fill ad request: collapse it
+   instantly rather than leaving a blank box. AdSlot's MutationObserver
+   additionally collapses the surrounding wrapper (label included). */
+ins.adsbygoogle[data-ad-status="unfilled"] {
+  display: none !important;
+}
+
+/* Only the live preview should ever hit paper — resume documents render on
+   white regardless of the app's own theme, light or dark. A resume-scoped
+   token set (rather than the app's own --color-* tokens above) is what lets
+   a single template (JSON Resume Vitae) offer its own light/dark toggle
+   without dragging the builder chrome's theme along with it. */
+.resume-surface {
+  --r-bg: #ffffff;
+  --r-ink: #1b1812;
+  --r-ink-soft: #57524a;
+  --r-ink-faint: #8a8377;
+  --r-border: #e4dfd2;
+  background: var(--r-bg);
+  color: var(--r-ink);
+}
+
+.resume-surface[data-resume-theme="dark"] {
+  --r-bg: #1c1a16;
+  --r-ink: #f0ece2;
+  --r-ink-soft: #cfc8b8;
+  --r-ink-faint: #948d7d;
+  --r-border: #3a352a;
+}
+
+/* Sidebar templates paint a colored rail. `min-h-full` is a no-op in print
+   (html/body are height:auto) and on the preview stage (no parent height),
+   so the rail stopped at the last sidebar section and left a white band
+   down the rest of the A4 page. One full page is the floor; longer
+   resumes grow past it and the rail stretches with them. The page
+   gradient keeps that strip even where the rail's own box ends. */
+.resume-sidebar-page {
+  position: relative;
+  width: 760px;
+  min-height: 297mm;
+  /* 34% of a 760px background, not 34% of the sheet — a percentage of a
+     wider page (or a second overlay) is what made the leftover fill look
+     like a different-width rail. */
+  background-image: linear-gradient(to right, var(--resume-rail-bg) 34%, var(--r-bg) 34%);
+  background-size: 760px 100%;
+  background-repeat: no-repeat;
+}
+.resume-sidebar-page:has(.resume-sidebar-columns--right) {
+  background-image: linear-gradient(to left, var(--resume-rail-bg) 34%, var(--r-bg) 34%);
+}
+.resume-sidebar-columns {
+  height: 100%;
+  min-height: 297mm;
+}
+.resume-sidebar-rail {
+  align-self: stretch;
+}
+/* Screen: thead is print-only. tbody/tr become flex wrappers so the cells
+   keep the same two-column layout as before this was a <table>, and
+   offsetTop on sections still measures from the scaled preview stage. */
+.resume-sidebar-page-pad {
+  display: none;
+}
+.resume-sidebar-columns tbody,
+.resume-sidebar-columns tr {
+  display: flex;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  align-items: stretch;
+}
+.resume-sidebar-columns--right tbody,
+.resume-sidebar-columns--right tr {
+  flex-direction: row-reverse;
+}
+
+.resume-split-page-pad {
+  display: none;
+}
+.resume-split-columns tbody,
+.resume-split-columns tr {
+  display: flex;
+  width: 100%;
+  align-items: stretch;
+}
+.resume-split-narrow {
+  width: 32%;
+  vertical-align: top;
+}
+.resume-split-wide {
+  width: 68%;
+  vertical-align: top;
+}
+
+/* Matches PAGE_WIDTH_PX in lib/page.ts (and ResumePreviewFrame) — pinning
+   the printed page to the same width the preview was laid out and scaled
+   from keeps wrapping/columns/pagination identical between the two.
+   Margin is 0 so Chromium/Safari have no band in which to stamp the date,
+   document title, and page URL (the "Headers and footers" chrome).
+   Page height is the full A4 box (PAGE_HEIGHT_PX). */
+@page {
+  size: A4;
+  margin: 0;
+  @top-left { content: none; }
+  @top-center { content: none; }
+  @top-right { content: none; }
+  @bottom-left { content: none; }
+  @bottom-center { content: none; }
+  @bottom-right { content: none; }
+}
+@page {
+  size: A4;
+  margin: 0;
+  @top-left { content: none; }
+  @top-center { content: none; }
+  @top-right { content: none; }
+  @bottom-left { content: none; }
+  @bottom-center { content: none; }
+  @bottom-right { content: none; }
+}
+
+@media print {
+  html,
+  body {
+    background: #ffffff !important;
+    /* html.h-full / body.min-h-full lock the document to the viewport.
+       Print needs the full resume height or only a blank first page box
+       is emitted. */
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  #resume-print-root,
+  #resume-print-root * {
+    visibility: visible;
+    /* Browsers drop background colors/images from print output unless a
+       page opts back in — without this, every accent sidebar, header band,
+       avatar, skill chip, and boxed section heading prints as plain white
+       even though they render with color in the on-screen preview. */
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* On-screen the resume lives inside overflow:auto/hidden flex panes and a
+     CSS-scaled preview stage. Print hides the chrome with visibility, which
+     collapses those flex boxes to a 0-width clip — `width: 100%` on the
+     stage then resolved to 0 and Chrome painted an empty page. Punch through
+     the clip, drop the scale, and pin PAGE_WIDTH in px instead. */
+  .print-unclip {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    transform: none !important;
+    filter: none !important;
+  }
+
+  .resume-scale-viewport,
+  .resume-scale-stage {
+    position: static !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    transform: none !important;
+    width: 760px !important;
+    max-width: 760px !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+  }
+
+  /* Taken out of flow so the hidden siblings above don't leave blank
+     reserved space where the app chrome used to be. Width is pinned to
+     PAGE_WIDTH (760px) rather than stretched to fill the page box —
+     stretching to 100% made every percentage-based column reflow
+     differently than what the preview actually showed. */
+  #resume-print-root {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: auto;
+    width: 760px;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    transform: none;
+  }
+
+  #resume-print-root:has(.resume-sidebar-page) {
+    min-height: 297mm;
+  }
+
+  .resume-sidebar-page {
+    position: relative !important;
+    display: block !important;
+    width: 760px !important;
+    max-width: 760px !important;
+    min-height: 297mm;
+    overflow: visible !important;
+    background-image: linear-gradient(to right, var(--resume-rail-bg) 34%, #ffffff 34%) !important;
+    background-size: 760px 100% !important;
+    background-repeat: no-repeat !important;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+  .resume-sidebar-page:has(.resume-sidebar-columns--right) {
+    background-image: linear-gradient(to left, var(--resume-rail-bg) 34%, #ffffff 34%) !important;
+  }
+
+  /* Flex columns fragment independently: page 2 kept overflowing main
+     content, dropped the rail, and started flush with the paper because
+     padding-top does not clone onto later fragments. Printing as a table
+     repeats the 32px header-group on every sheet and lets both cells
+     continue as one row. The page is stretched to a whole number of A4
+     sheets in ResumePreviewFrame; leftover space is the same 34%-of-760
+     stripe as the rail cell, not a second overlay. */
+  .resume-sidebar-columns {
+    display: table !important;
+    width: 760px !important;
+    height: 100% !important;
+    min-height: 100%;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    table-layout: fixed;
+    background: none !important;
+  }
+  .resume-sidebar-columns--right {
+    direction: rtl;
+  }
+  .resume-sidebar-page-pad {
+    display: table-header-group !important;
+  }
+  .resume-sidebar-columns tbody {
+    display: table-row-group !important;
+  }
+  .resume-sidebar-columns tr {
+    display: table-row !important;
+  }
+  .resume-sidebar-columns--right .resume-sidebar-page-pad {
+    direction: rtl;
+  }
+  .resume-sidebar-pad-rail,
+  .resume-sidebar-pad-main {
+    display: table-cell;
+    height: 32px;
+    padding: 0;
+    font-size: 0;
+    line-height: 0;
+  }
+  .resume-sidebar-rail,
+  .resume-main-column {
+    display: table-cell !important;
+    vertical-align: top;
+    direction: ltr;
+    /* Header-group supplies the top inset on every page, including page 1. */
+    padding-top: 0 !important;
+    break-inside: auto;
+  }
+  .resume-sidebar-pad-rail,
+  .resume-sidebar-pad-main {
+    direction: ltr;
+  }
+  .resume-sidebar-rail,
+  .resume-sidebar-pad-rail {
+    width: 34% !important;
+    background: var(--resume-rail-bg) !important;
+  }
+  .resume-main-column,
+  .resume-sidebar-pad-main {
+    width: 66% !important;
+  }
+  .resume-sidebar-rail > * + *,
+  .resume-main-column > * + * {
+    margin-top: 1.25rem !important;
+  }
+
+  .resume-split-columns {
+    display: table !important;
+    width: 100% !important;
+    margin-top: 0 !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    table-layout: fixed;
+  }
+  .resume-split-page-pad {
+    display: table-header-group !important;
+  }
+  .resume-split-columns tbody {
+    display: table-row-group !important;
+  }
+  .resume-split-columns tr {
+    display: table-row !important;
+  }
+  .resume-split-pad-narrow,
+  .resume-split-pad-wide {
+    height: 28px;
+    padding: 0;
+    font-size: 0;
+    line-height: 0;
+  }
+  .resume-sidebar-rail > * + *,
+  .resume-main-column > * + * {
+    margin-top: 1.25rem !important;
+  }
+  .resume-split-narrow,
+  .resume-split-wide {
+    display: table-cell !important;
+    vertical-align: top;
+    break-inside: auto;
+  }
+  .resume-split-narrow {
+    width: 32% !important;
+  }
+  .resume-split-wide {
+    width: 68% !important;
+  }
+  /* Inner flex wrappers (gap-4 columns) do not fragment; a forced
+     section inside them would drag the rest of the column to page 2. */
+  .resume-split-narrow > div,
+  .resume-split-wide > div {
+    display: block !important;
+  }
+  .resume-split-narrow > div > * + *,
+  .resume-split-wide > div > * + * {
+    margin-top: 1rem !important;
+  }
+
+  .resume-page-body {
+    /* Flex columns do not fragment across printed pages: Chrome keeps the
+       whole body together and dumps it onto page 2, leaving page 1 as just
+       the (dark) header. The preview is a continuous flow, so the dashed
+       page lines then point at the wrong entries after download. Block
+       layout paginates the same way the preview measures. */
+    display: block !important;
+    break-inside: auto;
+  }
+  .resume-page-body.gap-4 > * + * {
+    margin-top: 1rem !important;
+  }
+  .resume-page-body.gap-5 > * + * {
+    margin-top: 1.25rem !important;
+  }
+  .resume-dark-header {
+    break-inside: avoid;
+    break-after: auto;
+  }
+
+  /* ResumePreviewFrame simulates "move to next page" on screen by nudging a
+     forced section (or a single list entry within one) down with an inline
+     margin-top, since break-before:page (below) has no visible effect
+     outside paginated media. Real pagination needs none of that extra
+     space, so it's cancelled here — otherwise a forced element would get
+     pushed twice: once by this leftover margin, once by the genuine page
+     break. */
+  [data-section-key],
+  [data-item-key] {
+    margin-top: 0 !important;
+    break-before: auto;
+  }
+
+  [data-section-key][data-force-break="true"],
+  [data-item-key][data-force-break="true"] {
+    break-before: page;
+  }
+
+  /* Rail sections live in the continuous sidebar, not the paginated main
+     column. Honoring break-before:page there punches a hole in the colored
+     strip and can split the table row independently of the resume body. */
+  [data-resume-column="rail"] [data-force-break="true"] {
+    break-before: auto !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
