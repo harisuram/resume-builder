@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { OgMark } from "@/components/site/OgMark";
+import { BRAND } from "@/lib/brand";
 
 export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
@@ -15,10 +16,10 @@ export default function AppleIcon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#faf7f0",
+          background: BRAND.paper,
         }}
       >
-        <OgMark size={140} />
+        <OgMark size={132} />
       </div>
     ),
     { ...size },

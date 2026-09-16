@@ -12,11 +12,11 @@ export const metadata: Metadata = {
 
 export default function NotFound() {
   return (
-    <div className="flex flex-1 flex-col bg-[var(--color-paper)]">
+    <div className="marketing-shell flex flex-1 flex-col">
       <SiteHeader />
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-6 py-20 sm:px-10">
-        <p className="text-[12px] font-medium uppercase tracking-[0.2em] text-[var(--color-ink-faint)]">404</p>
-        <h1 className="mt-4 font-display text-[32px] font-semibold text-[var(--color-ink)]">
+        <p className="text-[12px] font-medium uppercase tracking-[0.2em] text-[var(--color-accent)]">404</p>
+        <h1 className="mt-4 font-display text-[32px] font-semibold tracking-tight text-[var(--color-ink)]">
           That page isn’t here.
         </h1>
         <p className="mt-4 text-[15px] leading-relaxed text-[var(--color-ink-soft)]">

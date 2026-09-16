@@ -65,7 +65,7 @@ export function TemplatePicker({
         aria-controls={listId}
         aria-label="Choose a template"
         onClick={() => setOpen((current) => !current)}
-        className="flex w-full items-center justify-between gap-2 rounded-sm border border-[var(--color-border)] bg-[var(--color-paper)] py-1.5 pl-3 pr-2.5 text-left transition duration-150 ease-out hover:bg-[var(--color-surface)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]"
+        className="flex w-full items-center justify-between gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] py-1.5 pl-3 pr-2.5 text-left shadow-card transition duration-150 ease-out hover:border-[var(--color-accent)]/35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]"
         style={{ borderBottomWidth: 2, borderBottomColor: theme.accent }}
       >
         <span className="min-w-0">
@@ -84,7 +84,7 @@ export function TemplatePicker({
           id={listId}
           role="listbox"
           aria-label="Templates"
-          className="absolute inset-x-0 z-20 mt-1.5 max-h-64 overflow-y-auto rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)] py-1 shadow-[0_8px_24px_rgba(27,24,18,0.12)]"
+          className="absolute inset-x-0 z-20 mt-1.5 max-h-64 overflow-y-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] py-1 shadow-card"
         >
           {TEMPLATE_LIST.map((option) => {
             const selected = option.id === value;

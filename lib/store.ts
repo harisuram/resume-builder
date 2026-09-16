@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { create } from "zustand";
-import { resolveSectionOrder } from "./persona";
+import { resolveSectionOrder, SECTION_ORDER } from "./persona";
 import { itemBreakKey, parseItemBreakKey } from "./resume";
 import { isBasicInfoValid, isSectionValid } from "./validation";
 import type {
@@ -70,6 +70,24 @@ export function hasSectionContent(key: SectionKey, sections: Partial<ResumeSecti
     return typeof value === "string" && value.trim().length > 0;
   }
   return Array.isArray(value) && value.length > 0;
+}
+
+const CONTENT_KEYS: SectionKey[] = ["summary", ...SECTION_ORDER];
+
+/** True if the user has typed anything in basic info, added a photo, or
+ * put a value in any content section — including a skipped section that
+ * still has leftover text. Used to tell a first visit from a returning draft. */
+export function hasAnyResumeValue(data: {
+  basicInfo?: BasicInfo | null;
+  photo?: string | null;
+  sections?: Partial<ResumeSections>;
+} | null | undefined): boolean {
+  if (!data) return false;
+  if (data.photo) return true;
+  if (data.basicInfo && hasBasicInfoContent(data.basicInfo)) return true;
+  const sections = data.sections;
+  if (!sections) return false;
+  return CONTENT_KEYS.some((key) => hasSectionContent(key, sections));
 }
 
 /** Keeps forced entry page breaks pointing at the entries the user actually

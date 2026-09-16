@@ -88,7 +88,7 @@ export function SectionNav({ active, onSelect }: { active: NavKey; onSelect: (ke
           skipped={summaryStatus === "skipped"}
           onClick={() => onSelect("summary")}
           trailing={
-            <div className="hidden shrink-0 items-center gap-2 md:flex">
+            <div className="hidden shrink-0 items-center gap-2 md:flex" data-tour="skip-switch">
               <span
                 className="h-1.5 w-1.5 shrink-0 rounded-full transition-colors duration-150"
                 style={{ background: DOT_COLOR[summaryStatus] }}
@@ -124,6 +124,7 @@ export function SectionNav({ active, onSelect }: { active: NavKey; onSelect: (ke
                       onMoveDown={() => moveSection(key, "down")}
                       canMoveUp={index > 0}
                       canMoveDown={index < contentKeys.length - 1}
+                      tourAnchor={index === 1}
                     />
                     <span
                       className="h-1.5 w-1.5 shrink-0 rounded-full transition-colors duration-150"
@@ -167,15 +168,21 @@ function MoveButtons({
   onMoveDown,
   canMoveUp,
   canMoveDown,
+  tourAnchor = false,
 }: {
   label: string;
   onMoveUp: () => void;
   onMoveDown: () => void;
   canMoveUp: boolean;
   canMoveDown: boolean;
+  tourAnchor?: boolean;
 }) {
   return (
-    <div className="hidden shrink-0 flex-col md:flex" onClick={(e) => e.stopPropagation()}>
+    <div
+      data-tour={tourAnchor ? "section-sort" : undefined}
+      className="hidden shrink-0 flex-col md:flex"
+      onClick={(e) => e.stopPropagation()}
+    >
       <button
         type="button"
         onClick={onMoveUp}
@@ -247,17 +254,17 @@ function NavRow({
 }) {
   return (
     <div
-      className={`flex shrink-0 items-center justify-between gap-2 rounded-md pr-2 text-[13px] font-medium transition-colors duration-150 ease-out md:w-full ${
+      className={`flex shrink-0 items-center justify-between gap-2 rounded-lg pr-2 text-[13px] font-medium transition-colors duration-150 ease-out md:w-full ${
         active
           ? "bg-[var(--color-accent-tint)] text-[var(--color-accent)]"
-          : "text-[var(--color-ink-soft)] hover:bg-[var(--color-border)]/40 hover:text-[var(--color-ink)]"
+          : "text-[var(--color-ink-soft)] hover:bg-[var(--color-accent-tint)]/60 hover:text-[var(--color-ink)]"
       }`}
     >
       {/* A plain div wraps this rather than the row itself being a <button>
           — the row's trailing content (the skip Switch) is its own
           interactive button, and a <button> can't contain another
           <button> without breaking HTML validity and event handling. */}
-      <button type="button" onClick={onClick} className="flex flex-1 items-center gap-2 rounded-md px-3 py-2 text-left">
+      <button type="button" onClick={onClick} className="flex flex-1 items-center gap-2 rounded-lg px-3 py-2 text-left">
         {/* The mobile strip has no room for the status dot, skip Switch, or
             "Optional" badge, so the label's own color is all that's left to
             carry "this won't be on the resume" — it reverts to the row's

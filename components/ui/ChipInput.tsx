@@ -71,7 +71,7 @@ export function ChipInput({
       <div className="relative">
         <div
           data-field-control=""
-          className={`rounded-md border bg-[var(--color-surface)] p-2 transition duration-150 ease-out focus-within:ring-2 ${
+          className={`rounded-lg border bg-[var(--color-surface)] p-2 transition duration-150 ease-out focus-within:ring-2 ${
             error
               ? "border-red-500 focus-within:border-red-500 focus-within:ring-red-500/20"
               : "border-[var(--color-border)] focus-within:border-[var(--color-accent)] focus-within:ring-[var(--color-accent)]/15"
@@ -81,7 +81,7 @@ export function ChipInput({
             {values.map((value, i) => (
               <span
                 key={i}
-                className="group flex items-center gap-1 rounded-full bg-[var(--color-accent-tint)] px-2 py-0.5 text-[12px] text-[var(--color-ink)] transition-colors"
+                className="group flex items-center gap-1 rounded-full bg-[var(--color-accent-tint)] px-2 py-0.5 text-[12px] text-[var(--color-accent)] transition-colors"
               >
                 {value}
                 <button

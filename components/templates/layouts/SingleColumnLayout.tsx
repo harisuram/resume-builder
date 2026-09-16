@@ -18,7 +18,7 @@ export function SingleColumnLayout({
   resumeTheme?: "light" | "dark";
 }) {
   const sections = getRenderableSections(data);
-  const fontClass = theme.fontDisplay === "serif" ? "font-display" : "font-sans";
+  const fontClass = theme.fontDisplay === "serif" ? "font-serif" : "font-sans";
   const nameSizeClass = theme.headingStyle === "tracked" ? "tracking-wide" : "";
 
   // With a photo the header becomes a two-column row — name and contact keep

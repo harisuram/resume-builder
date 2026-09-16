@@ -105,14 +105,14 @@ export function ExportSection() {
   return (
     <div className="flex flex-col gap-6">
       <div className="no-print">
-        <h2 className="font-display text-[20px] font-semibold text-[var(--color-ink)]">Template &amp; export</h2>
+        <h2 className="font-display text-[20px] font-semibold tracking-tight text-[var(--color-ink)]">Template &amp; export</h2>
         <p className="mt-1 text-[13px] text-[var(--color-ink-soft)]">
           Pick a look, review it below, then download when it&rsquo;s ready.
         </p>
       </div>
 
       {addedSection && (
-        <div className="no-print rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+        <div className="no-print rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-card">
           {showSavePrompt && (
             <>
               <p className="text-[13.5px] font-medium text-[var(--color-ink)]">

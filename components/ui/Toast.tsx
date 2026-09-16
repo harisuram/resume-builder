@@ -55,7 +55,7 @@ export function ToastHost() {
         <div
           key={toast.id}
           role="alert"
-          className="pointer-events-auto flex items-start gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2.5 shadow-lg"
+          className="pointer-events-auto flex items-start gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2.5 shadow-card"
         >
           <ErrorIcon />
           <p className="flex-1 text-[13px] leading-snug text-[var(--color-ink)]">{toast.message}</p>

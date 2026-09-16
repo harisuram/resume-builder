@@ -1,4 +1,4 @@
-import { getTheme, TEMPLATES, tint } from "./theme";
+import { getTheme, isTemplateId, layoutLabel, requestedTemplateId, TEMPLATES, tint } from "./theme";
 
 describe("TEMPLATES", () => {
   it("has 21 templates", () => {
@@ -47,5 +47,33 @@ describe("tint", () => {
 
   it("defaults to a light mix weight", () => {
     expect(tint("#000")).toContain("12%");
+  });
+});
+
+describe("isTemplateId", () => {
+  it("accepts catalog ids and rejects anything else", () => {
+    expect(isTemplateId("bre-creative")).toBe(true);
+    expect(isTemplateId("does-not-exist")).toBe(false);
+  });
+});
+
+describe("layoutLabel", () => {
+  it("names the three layout families", () => {
+    expect(layoutLabel("single")).toBe("Single column");
+    expect(layoutLabel("sidebar")).toBe("Sidebar");
+    expect(layoutLabel("asymmetric")).toBe("Two column");
+  });
+});
+
+describe("requestedTemplateId", () => {
+  it("reads a known template from the query string", () => {
+    expect(requestedTemplateId("?template=bre-creative")).toBe("bre-creative");
+    expect(requestedTemplateId("template=jsonresume-vitae&x=1")).toBe("jsonresume-vitae");
+  });
+
+  it("ignores missing or unknown ids", () => {
+    expect(requestedTemplateId("")).toBeNull();
+    expect(requestedTemplateId("?q=bre-creative")).toBeNull();
+    expect(requestedTemplateId("?template=not-a-theme")).toBeNull();
   });
 });

@@ -1,6 +1,7 @@
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { saveResumeData } from "@/lib/storage";
+import { dismissBuilderTour } from "@/lib/builderTour";
 import { useBuilderStore } from "@/lib/store";
 import { useToastStore } from "@/lib/toast";
 import { makeFullResumeData } from "@/test-utils/fixtures";
@@ -8,8 +9,10 @@ import { BuilderShell } from "./BuilderShell";
 
 beforeEach(() => {
   localStorage.clear();
+  dismissBuilderTour();
   useBuilderStore.getState().resetStore();
   useToastStore.getState().clear();
+  window.history.replaceState({}, "", "/");
 });
 
 describe("BuilderShell", () => {
@@ -257,5 +260,28 @@ describe("BuilderShell", () => {
     localStorage.setItem("resumeData", "{not valid json");
     render(<BuilderShell />);
     expect(await screen.findByRole("alert")).toHaveTextContent(/Couldn't restore the saved resume/);
+  });
+
+  it("selects a gallery template from ?template= after hydrating", async () => {
+    window.history.replaceState({}, "", "/builder?template=bre-creative");
+    render(<BuilderShell />);
+    await screen.findByRole("heading", { name: "Basic info" });
+    expect(useBuilderStore.getState().templateId).toBe("bre-creative");
+  });
+
+  it("lets a gallery pick override the template on a saved resume", async () => {
+    saveResumeData(makeFullResumeData({ templateId: "jakes-resume" }));
+    window.history.replaceState({}, "", "/builder?template=deedy-reversed");
+    render(<BuilderShell />);
+    await screen.findByRole("heading", { name: "Basic info" });
+    expect(useBuilderStore.getState().templateId).toBe("deedy-reversed");
+    expect(useBuilderStore.getState().basicInfo.name).toBe("Alexandra Montgomery-Whitfield");
+  });
+
+  it("ignores an unknown ?template=", async () => {
+    window.history.replaceState({}, "", "/builder?template=not-a-theme");
+    render(<BuilderShell />);
+    await screen.findByRole("heading", { name: "Basic info" });
+    expect(useBuilderStore.getState().templateId).toBe("jakes-resume");
   });
 });

@@ -1,6 +1,6 @@
 import { BuilderCta } from "@/components/site/BuilderCta";
 import { Lead, MarketingPage, PageTitle } from "@/components/site/MarketingPage";
-import { TEMPLATES } from "@/components/templates/shared/theme";
+import { TemplatesGallery } from "@/components/site/TemplatesGallery";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/templates");
@@ -11,21 +11,12 @@ export default function TemplatesPage() {
       <div className="mx-auto w-full max-w-4xl">
         <PageTitle>Free resume templates (and CV layouts)</PageTitle>
         <Lead>
-          Twenty-one free resume templates, including curriculum vitae layouts. Switch designs in the live preview —
-          the PDF is the same view. This list is the gallery; the editor is where you actually pick one.
+          Twenty-one free resume templates, including curriculum vitae layouts. Open a preview to see the section
+          layout — names stay, content is a skeleton — then take that design into the editor. The PDF is the same
+          view.
         </Lead>
 
-        <ul className="mt-12 grid gap-4 sm:grid-cols-2">
-          {TEMPLATES.map((template) => (
-            <li
-              key={template.id}
-              className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-5"
-            >
-              <h2 className="font-display text-[16px] font-semibold text-[var(--color-ink)]">{template.name}</h2>
-              <p className="mt-1 text-[13px] leading-relaxed text-[var(--color-ink-soft)]">{template.description}</p>
-            </li>
-          ))}
-        </ul>
+        <TemplatesGallery />
 
         <p className="mt-10 text-[14.5px] leading-relaxed text-[var(--color-ink-soft)]">
           Make a resume with any of these, or use them as a free curriculum vitae. Empty sections are omitted, so a

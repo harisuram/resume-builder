@@ -22,7 +22,7 @@ export function SuggestionList({
       id={id}
       role="listbox"
       aria-label={label}
-      className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] py-1 shadow-lg"
+      className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] py-1 shadow-card"
     >
       {items.map((item, index) => {
         const isHighlighted = index === highlight;

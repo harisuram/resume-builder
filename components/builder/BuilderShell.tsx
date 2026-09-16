@@ -2,8 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AdSlot } from "@/components/ads/AdSlot";
+import { requestedTemplateId } from "@/components/templates/shared/theme";
 import { ADSENSE_SLOTS } from "@/lib/ads";
 import { hasSavedResumeData, loadResumeData } from "@/lib/storage";
+import { dismissBuilderTour, shouldOfferBuilderTour } from "@/lib/builderTour";
 import { isBasicInfoComplete, hasBasicInfoContent, hasSectionContent, useBuilderStore } from "@/lib/store";
 import { showToast } from "@/lib/toast";
 import { getSectionMeta } from "@/lib/persona";
@@ -25,6 +27,7 @@ import { SoftSkillsForm } from "./sections/SoftSkillsForm";
 import { AdditionalForm } from "./sections/AdditionalForm";
 import { SummaryForm } from "./sections/SummaryForm";
 import { Navbar } from "./Navbar";
+import { BuilderTour } from "./BuilderTour";
 import { getWizardOrder, type NavKey } from "./nav";
 import { PreviewPane } from "./PreviewPane";
 import { SectionFooterNav } from "./SectionFooterNav";
@@ -99,7 +102,7 @@ function MobilePreviewButton({ onClick }: { onClick: () => void }) {
       onClick={onClick}
       aria-label="Preview resume"
       title="Preview resume"
-      className="no-print fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-accent)] text-[var(--color-accent-ink)] shadow-lg transition duration-150 ease-out hover:brightness-110 active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)] md:hidden"
+      className="no-print fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-accent)] text-[var(--color-accent-ink)] shadow-cta transition duration-200 ease-out hover:-translate-y-px hover:brightness-110 active:translate-y-0 active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)] md:hidden"
     >
       <EyeIcon />
     </button>
@@ -167,6 +170,7 @@ export function BuilderShell() {
   const sectionOrder = useBuilderStore((s) => s.sectionOrder);
   const [activeKey, setActiveKey] = useState<NavKey>("basicInfo");
   const [hydrated, setHydrated] = useState(false);
+  const [tourOpen, setTourOpen] = useState(false);
   const formPaneRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -181,8 +185,11 @@ export function BuilderShell() {
         showToast("Couldn't restore the saved resume — the copy on this device looks damaged.");
       }
     }
+    const fromGallery = requestedTemplateId(window.location.search);
+    if (fromGallery) useBuilderStore.getState().setTemplateId(fromGallery);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setHydrated(true);
+    if (shouldOfferBuilderTour()) setTourOpen(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -266,10 +273,10 @@ export function BuilderShell() {
   }
 
   return (
-    <div className="print-unclip flex h-[100dvh] flex-col overflow-hidden">
+    <div className="print-unclip flex h-[100dvh] flex-col overflow-hidden" inert={tourOpen || undefined}>
       <Navbar />
       <div className="print-unclip flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
-        <aside className="no-print sticky top-0 z-20 shrink-0 border-b border-[var(--color-border)] bg-[var(--color-paper)] md:static md:h-full md:min-h-0 md:w-64 md:overflow-y-auto md:border-b-0 md:border-r">
+        <aside className="no-print sticky top-0 z-20 shrink-0 border-b border-[var(--color-border)] bg-[var(--color-surface)] md:static md:h-full md:min-h-0 md:w-64 md:overflow-y-auto md:border-b-0 md:border-r">
           <SectionNav active={activeKey} onSelect={selectSection} />
         </aside>
 
@@ -322,7 +329,7 @@ export function BuilderShell() {
                 the export step is where the preview is read. Height is
                 capped to this column so a long resume scrolls here instead
                 of stretching the whole builder. */}
-            <aside className="hidden min-h-0 w-full border-[var(--color-border)] bg-[var(--color-border)]/10 px-5 py-6 sm:px-8 md:flex md:w-[420px] md:shrink-0 md:flex-col md:overflow-hidden md:border-l">
+            <aside className="hidden min-h-0 w-full border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-ink)_3.5%,var(--color-paper))] px-5 py-6 sm:px-8 md:flex md:w-[420px] md:shrink-0 md:flex-col md:overflow-hidden md:border-l">
               <AdSlot
                 slot={ADSENSE_SLOTS.builderPreviewTop}
                 name="Builder preview top"
@@ -338,6 +345,13 @@ export function BuilderShell() {
 
       {activeKey !== "export" && <MobilePreviewButton onClick={() => selectSection("export")} />}
       <ToastHost />
+      <BuilderTour
+        open={tourOpen}
+        onDismiss={() => {
+          dismissBuilderTour();
+          setTourOpen(false);
+        }}
+      />
     </div>
   );
 }

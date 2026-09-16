@@ -38,6 +38,7 @@ export function PreviewPane({ printable = false }: { printable?: boolean }) {
       </div>
 
       <div
+        data-tour="page-separator"
         className={`print-unclip pb-4 ${nestedScroll ? "min-h-0 flex-1 overflow-y-auto overscroll-contain [scrollbar-gutter:stable]" : ""}`}
       >
         <ResumePreviewFrame

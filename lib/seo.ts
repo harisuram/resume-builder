@@ -18,11 +18,23 @@ export const ALTERNATE_NAMES = [
   "Free Curriculum Vitae",
   "Private Resume Builder",
   "Private Resume Creator",
+  "AI Resume Builder",
+  "Free AI Resume Maker",
+  "AI Resume Maker",
 ] as const;
 
-export const HOME_TITLE = "Free Resume Maker — Make a Resume Online, No Account";
+export const HOME_TITLE = "Free AI Resume Maker — Unlimited, No Account";
+/** Shown under the link in search results and browser/social previews. */
 export const HOME_DESCRIPTION =
-  "Make a resume or curriculum vitae with a free resume creator for any field — software, data, IT, pharmacy, architecture, construction, and more. Skip unused sections, pick templates, download a PDF. Private, no account.";
+  "The best free, unlimited AI-powered resume builder. Make a resume or CV for any field — no account, no limits. Pick a template and download a PDF.";
+
+export const SITE_KEYWORDS = [
+  "free resume builder",
+  "unlimited resume maker",
+  "best AI-powered resume builder",
+  "AI resume maker",
+  "free CV maker",
+] as const;
 
 export const FEATURES = [
   {
@@ -52,6 +64,8 @@ export const FEATURES = [
 ] as const;
 
 export const FEATURE_LIST = [
+  "Free and unlimited — no account, no download cap",
+  "Optional AI-powered ATS rewrite for experience bullets",
   "Choose only the resume sections you need",
   "Suggestions for roles and skills across software, data, IT, pharmacy, architecture, and construction",
   "Twenty-one resume templates with a live preview",
@@ -150,9 +164,9 @@ export const FOOTER_LINKS: { href: IndexablePath; label: string }[] = [
 ];
 
 export const FOOTER_TAGLINE =
-  "A free resume builder for any field — software, data, IT, pharmacy, architecture, construction, and more. Skip unused sections, pick a template, download a PDF.";
+  "The best free, unlimited AI-powered resume builder for any field — software, data, IT, pharmacy, architecture, construction, and more. Skip unused sections, pick a template, download a PDF.";
 
-export const FOOTER_NOTE = "Free · No account · Drafts stay in your browser until you save.";
+export const FOOTER_NOTE = "Free · Unlimited · AI-powered · No account";
 
 export const PAGE_META: Record<
   Exclude<IndexablePath, "/">,
@@ -161,32 +175,32 @@ export const PAGE_META: Record<
   "/how-to-make-a-resume": {
     title: "How to Make a Resume Free (No Account)",
     description:
-      "How to make a resume in about ten minutes: add your details, pick from suggestions for any field, skip unused sections, pick a template, and download a PDF. Free, no account.",
+      "How to make a resume with the best free, unlimited AI-powered builder: add your details, skip unused sections, pick a template, and download a PDF. No account.",
   },
   "/private": {
     title: "Safe, Private Resume Builder",
     description:
-      "A private resume builder and resume creator with no account. Drafts stay in your browser. Honest notes on ads and the optional ATS rewrite.",
+      "A private, free, unlimited resume builder with no account. Drafts stay in your browser. Honest notes on ads and the optional AI-powered ATS rewrite.",
   },
   "/templates": {
     title: "Free Resume Templates",
     description:
-      "Twenty-one free resume templates and curriculum vitae layouts. Make a resume, switch designs in a live preview, and download a PDF.",
+      "Twenty-one free, unlimited resume templates. Preview the best AI-powered layouts, switch designs live, and download a PDF — no account.",
   },
   "/ats": {
     title: "ATS-Friendly Resume Builder",
     description:
-      "Make an ATS-friendly resume with real headings, skipped empty sections, and an optional plain-text bullet rewrite. Free resume creator, no account.",
+      "Make an ATS-friendly resume with real headings and an optional AI-powered bullet rewrite. Free, unlimited resume creator — no account.",
   },
   "/privacy": {
     title: "Privacy",
     description:
-      "How this free resume builder handles data: browser storage, no account, optional ads, and the optional ATS rewrite. No resume hosting.",
+      "How this free, unlimited AI-powered resume builder handles data: browser storage, no account, optional ads, and the optional ATS rewrite.",
   },
   "/about": {
     title: "About",
     description:
-      "A free resume maker for software, data, IT, pharmacy, architecture, construction, and more. Skip unused sections, pick a template, download a PDF. No account.",
+      "The best free, unlimited AI-powered resume maker for any field. Skip unused sections, pick a template, download a PDF. No account.",
   },
 };
 

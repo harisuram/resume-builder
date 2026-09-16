@@ -28,7 +28,7 @@ export function BasicInfoForm() {
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <h2 className="font-display text-[20px] font-semibold text-[var(--color-ink)]">Basic info</h2>
+        <h2 className="font-display text-[20px] font-semibold tracking-tight text-[var(--color-ink)]">Basic info</h2>
         <p className="mt-1 text-[13px] text-[var(--color-ink-soft)]">
           The only required step — everything after this is optional.
         </p>

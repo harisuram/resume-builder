@@ -1,7 +1,8 @@
 import { ImageResponse } from "next/og";
 import { OgMark } from "@/components/site/OgMark";
+import { BRAND } from "@/lib/brand";
 
-/** PNG fallback of the nav nib for browsers that don't use the SVG favicon. */
+/** PNG fallback of the nav mark for browsers that don't use the SVG favicon. */
 export const size = { width: 64, height: 64 };
 export const contentType = "image/png";
 export const dynamic = "force-static";
@@ -16,10 +17,10 @@ export default function Icon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#faf7f0",
+          background: BRAND.paper,
         }}
       >
-        <OgMark size={56} />
+        <OgMark size={52} />
       </div>
     ),
     { ...size },

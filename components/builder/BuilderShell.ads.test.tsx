@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { dismissBuilderTour } from "@/lib/builderTour";
 import { useBuilderStore } from "@/lib/store";
 import { BuilderShell } from "./BuilderShell";
 
@@ -9,6 +10,7 @@ jest.mock("../ads/AdSlot", () => ({
 
 beforeEach(() => {
   localStorage.clear();
+  dismissBuilderTour();
   useBuilderStore.getState().resetStore();
 });
 

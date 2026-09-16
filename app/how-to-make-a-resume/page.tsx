@@ -16,13 +16,19 @@ export default function HowToMakeAResumePage() {
           making a CV or a free curriculum vitae.
         </Lead>
 
-        <ol className="mt-10 space-y-8">
+        <ol className="mt-10 space-y-4">
           {HOW_TO_STEPS.map((step, i) => (
-            <li id={`step-${i + 1}`} key={step.name} className="list-none">
-              <p className="text-[12px] font-medium uppercase tracking-[0.16em] text-[var(--color-ink-faint)]">
+            <li
+              id={`step-${i + 1}`}
+              key={step.name}
+              className="list-none rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-card sm:p-6"
+            >
+              <p className="text-[12px] font-medium uppercase tracking-[0.16em] text-[var(--color-accent)]">
                 Step {i + 1}
               </p>
-              <h2 className="mt-1 font-display text-[18px] font-semibold text-[var(--color-ink)]">{step.name}</h2>
+              <h2 className="mt-1 font-display text-[18px] font-semibold tracking-tight text-[var(--color-ink)]">
+                {step.name}
+              </h2>
               <p className="mt-2 text-[14.5px] leading-relaxed text-[var(--color-ink-soft)]">{step.text}</p>
             </li>
           ))}

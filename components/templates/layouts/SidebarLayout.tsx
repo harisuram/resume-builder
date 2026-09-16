@@ -13,7 +13,7 @@ export function SidebarLayout({ data, theme }: { data: ResumeData; theme: Templa
   const mainSections = sections.filter((k) => !NARROW_SECTION_KEYS.has(k));
   const solid = theme.sidebarStyle === "solid";
   const side = theme.sidebarSide ?? "left";
-  const fontClass = theme.fontDisplay === "serif" ? "font-display" : "font-sans";
+  const fontClass = theme.fontDisplay === "serif" ? "font-serif" : "font-sans";
   const railBg = solid ? theme.accent : tint(theme.accent, 8);
   const pageStyle = { "--resume-rail-bg": railBg } as CSSProperties;
   const right = side === "right";

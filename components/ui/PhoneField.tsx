@@ -170,7 +170,7 @@ export function PhoneField({
   return (
     <div
       data-field-control=""
-      className={`flex rounded-md border bg-[var(--color-surface)] transition duration-150 ease-out focus-within:ring-2 ${
+      className={`flex rounded-lg border bg-[var(--color-surface)] transition duration-150 ease-out focus-within:ring-2 ${
         invalid
           ? "border-red-500 focus-within:border-red-500 focus-within:ring-red-500/20"
           : "border-[var(--color-border)] focus-within:border-[var(--color-accent)] focus-within:ring-[var(--color-accent)]/15"
@@ -202,7 +202,7 @@ export function PhoneField({
               role="listbox"
               aria-label="Country codes"
               style={{ top: menuPos.top, left: menuPos.left, width: menuPos.width, maxHeight: LIST_MAX_HEIGHT_PX }}
-              className="fixed z-50 overflow-y-auto rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] py-1 shadow-lg"
+              className="fixed z-50 overflow-y-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] py-1 shadow-card"
             >
               {countries.map((country, index) => {
                 const isSelected = country.iso2 === selected.iso2;

@@ -22,10 +22,12 @@ export function MarketingPage({
   home?: boolean;
 }) {
   return (
-    <div className="flex flex-1 flex-col bg-[var(--color-paper)]">
+    <div className="marketing-shell flex flex-1 flex-col">
       {jsonLd ? <JsonLd data={jsonLd} /> : null}
       <SiteHeader home={home} />
-      <main className="flex flex-1 flex-col px-6 pb-20 pt-10 sm:px-10">{children}</main>
+      <main className={`flex min-w-0 flex-1 flex-col px-6 pb-24 sm:px-10 ${home ? "pt-12 sm:pt-16" : "pt-10"}`}>
+        {children}
+      </main>
       <SiteFooter />
     </div>
   );
@@ -37,7 +39,7 @@ export function Article({ children }: { children: React.ReactNode }) {
 
 export function PageTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h1 className="font-display text-[32px] font-semibold leading-[1.15] text-[var(--color-ink)] sm:text-[40px]">
+    <h1 className="font-display text-[32px] font-semibold tracking-tight leading-[1.15] text-[var(--color-ink)] sm:text-[40px]">
       {children}
     </h1>
   );
@@ -48,7 +50,7 @@ export function Lead({ children }: { children: React.ReactNode }) {
 }
 
 export function SectionHeading({ children }: { children: React.ReactNode }) {
-  return <h2 className="mt-10 font-display text-[18px] font-semibold text-[var(--color-ink)]">{children}</h2>;
+  return <h2 className="mt-10 font-display text-[18px] font-semibold tracking-tight text-[var(--color-ink)]">{children}</h2>;
 }
 
 export function Body({ children }: { children: React.ReactNode }) {

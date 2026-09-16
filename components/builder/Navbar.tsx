@@ -34,11 +34,16 @@ export function Navbar() {
   const [confirming, setConfirming] = useState(false);
 
   return (
-    <header className="no-print flex shrink-0 items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-paper)] px-4 py-3 sm:px-6">
+    <header className="no-print flex shrink-0 items-center justify-between gap-3 border-b border-[var(--color-border)] bg-[var(--color-surface)]/90 px-4 py-3 shadow-card backdrop-blur-xl sm:px-6">
       <Logo />
-      <Button variant="secondary" size="sm" onClick={() => setConfirming(true)}>
+      <Button variant="secondary" size="sm" onClick={() => setConfirming(true)} aria-label="Start new resume">
         <NewResumeIcon />
-        Start new resume
+        <span className="hidden sm:inline" aria-hidden="true">
+          Start new resume
+        </span>
+        <span className="sm:hidden" aria-hidden="true">
+          New
+        </span>
       </Button>
       <ConfirmDialog
         open={confirming}

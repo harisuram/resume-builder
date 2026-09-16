@@ -1,13 +1,20 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Source_Serif_4 } from "next/font/google";
+import { Geist, Inter, Source_Serif_4 } from "next/font/google";
 import Script from "next/script";
 import { ADSENSE_CLIENT_ID, adsenseClientAttr, isAdsenseConfigured } from "@/lib/ads";
-import { HOME_DESCRIPTION, HOME_TITLE, SITE_NAME } from "@/lib/seo";
+import { BRAND } from "@/lib/brand";
+import { HOME_DESCRIPTION, HOME_TITLE, SITE_KEYWORDS, SITE_NAME } from "@/lib/seo";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 const inter = Inter({
   variable: "--font-inter",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const geist = Geist({
+  variable: "--font-geist",
   subsets: ["latin"],
   display: "swap",
 });
@@ -20,11 +27,13 @@ const sourceSerif = Source_Serif_4({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  applicationName: SITE_NAME,
   title: {
     default: HOME_TITLE,
     template: `%s — ${SITE_NAME}`,
   },
   description: HOME_DESCRIPTION,
+  keywords: [...SITE_KEYWORDS],
   robots: { index: true, follow: true },
   openGraph: {
     title: HOME_TITLE,
@@ -48,14 +57,14 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#faf7f0" },
-    { media: "(prefers-color-scheme: dark)", color: "#16140f" },
+    { media: "(prefers-color-scheme: light)", color: BRAND.paper },
+    { media: "(prefers-color-scheme: dark)", color: BRAND.paperDark },
   ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${inter.variable} ${sourceSerif.variable} h-full`} suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${geist.variable} ${sourceSerif.variable} h-full`} data-scroll-behavior="smooth" suppressHydrationWarning>
       {/* Extensions (ColorZilla's cz-shortcut-listen, Grammarly, etc.) stamp
           attributes onto html/body before React hydrates. suppressHydrationWarning
           only covers this node's own attributes — it does not hide mismatches

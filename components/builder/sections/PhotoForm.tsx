@@ -38,7 +38,7 @@ export function PhotoForm() {
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <h2 className="font-display text-[20px] font-semibold text-[var(--color-ink)]">Photo</h2>
+        <h2 className="font-display text-[20px] font-semibold tracking-tight text-[var(--color-ink)]">Photo</h2>
         <p className="mt-1 text-[13px] text-[var(--color-ink-soft)]">
           Optional — shows up on templates with a photo slot. Common on resumes outside the US; skip it if your
           target companies don&rsquo;t expect one.

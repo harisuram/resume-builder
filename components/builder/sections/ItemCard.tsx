@@ -38,7 +38,7 @@ export function ItemCard({
   return (
     <div
       ref={rootRef}
-      className="relative rounded-lg border border-[var(--color-border)] p-4 transition-colors duration-150 ease-out hover:border-[var(--color-ink-faint)]"
+      className="relative rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-card transition-colors duration-150 ease-out hover:border-[var(--color-accent)]/30"
     >
       <button
         type="button"

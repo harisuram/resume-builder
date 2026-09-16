@@ -277,3 +277,21 @@ export const TEMPLATES: TemplateTheme[] = [
 export function getTheme(id: string): TemplateTheme {
   return TEMPLATES.find((t) => t.id === id) ?? TEMPLATES[0];
 }
+
+export function isTemplateId(id: string): boolean {
+  return TEMPLATES.some((t) => t.id === id);
+}
+
+export function layoutLabel(layout: LayoutKind): string {
+  if (layout === "sidebar") return "Sidebar";
+  if (layout === "asymmetric") return "Two column";
+  return "Single column";
+}
+
+/** Reads `?template=` from a query string. Unknown ids are ignored so a
+ * mistyped or stale link can't silently fall back to the default theme. */
+export function requestedTemplateId(search: string): string | null {
+  const query = search.startsWith("?") ? search.slice(1) : search;
+  const id = new URLSearchParams(query).get("template");
+  return id && isTemplateId(id) ? id : null;
+}

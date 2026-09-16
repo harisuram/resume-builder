@@ -110,9 +110,9 @@ export function PhotoCropModal({
       aria-modal="true"
       aria-label="Crop photo"
     >
-      <div className="flex w-full max-w-sm flex-col gap-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-xl">
+      <div className="flex w-full max-w-sm flex-col gap-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-card">
         <div>
-          <h2 className="font-display text-[17px] font-semibold text-[var(--color-ink)]">Crop photo</h2>
+          <h2 className="font-display text-[17px] font-semibold tracking-tight text-[var(--color-ink)]">Crop photo</h2>
           <p className="mt-1 text-[12.5px] text-[var(--color-ink-soft)]">Drag to reposition, use the slider to zoom.</p>
         </div>
 

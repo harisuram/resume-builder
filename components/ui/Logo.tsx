@@ -2,7 +2,7 @@ import Link from "next/link";
 
 /** A nib mark — ties the brand to writing/typography rather than a generic
  * geometric logo. Inline SVG: zero extra requests, scales crisply. */
-function NibIcon({ className }: { className?: string }) {
+function NibIcon({ className, cutout }: { className?: string; cutout: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
       <path
@@ -10,7 +10,7 @@ function NibIcon({ className }: { className?: string }) {
         fill="currentColor"
       />
       <path d="M12 13 9 21.5c-.2.6.5 1.1 1 .7L12 20l2 2.2c.5.4 1.2-.1 1-.7L12 13Z" fill="currentColor" />
-      <circle cx="12" cy="10.5" r="1.3" fill="var(--color-paper)" />
+      <circle cx="12" cy="10.5" r="1.3" fill={cutout} />
     </svg>
   );
 }
@@ -24,12 +24,22 @@ export function Logo({
   size?: "sm" | "md";
   className?: string;
 }) {
+  const compact = size === "sm";
   const content = (
-    <span className={`inline-flex items-center gap-2 ${className}`}>
-      <NibIcon className="h-5 w-5 shrink-0 text-[var(--color-accent)]" />
+    <span className={`inline-flex min-w-0 items-center gap-2.5 ${className}`}>
+      <span
+        className={`flex shrink-0 items-center justify-center rounded-[10px] bg-[var(--color-accent)] text-[var(--color-accent-ink)] shadow-cta ${
+          compact ? "h-7 w-7" : "h-8 w-8"
+        }`}
+      >
+        <NibIcon
+          className={compact ? "h-3.5 w-3.5" : "h-4 w-4"}
+          cutout="var(--color-accent)"
+        />
+      </span>
       <span
         className={`whitespace-nowrap font-display font-semibold tracking-tight text-[var(--color-ink)] ${
-          size === "sm" ? "text-[14px] sm:text-[16px]" : "text-[15px] sm:text-[17px]"
+          compact ? "text-[14px] sm:text-[16px]" : "text-[15px] sm:text-[17px]"
         }`}
       >
         Free Resume Builder

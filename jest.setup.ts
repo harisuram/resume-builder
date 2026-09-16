@@ -17,4 +17,8 @@ if (typeof window !== "undefined") {
   // Always a fresh jest mock (rather than only filling in a missing stub) so
   // call assertions work regardless of jsdom's own behavior here.
   window.print = jest.fn();
+
+  if (!Element.prototype.scrollIntoView) {
+    Element.prototype.scrollIntoView = function scrollIntoView() {};
+  }
 }
