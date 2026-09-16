@@ -1,7 +1,9 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
-import { FieldGroup, Select, TextInput } from "@/components/ui/Field";
+import { FieldGroup, Select } from "@/components/ui/Field";
+import { SuggestInput } from "@/components/ui/SuggestInput";
+import { LANGUAGE_CATALOG } from "@/lib/catalogs";
 import { useBuilderStore } from "@/lib/store";
 import { LANGUAGE_LEVELS, type Language, type LanguageLevel } from "@/lib/types";
 import { useTouchedFields } from "@/lib/useTouchedFields";
@@ -36,14 +38,16 @@ export function LanguagesForm() {
               <ItemCard key={i} autoFocus={i === focusIndex} onRemove={() => removeListItem("languages", i)}>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <FieldGroup label="Language" htmlFor={`language-${i}-name`} required error={nameError}>
-                    <TextInput
+                    <SuggestInput
                       id={`language-${i}-name`}
                       value={lang.name}
-                      onChange={(e) => updateListItem("languages", i, { name: e.target.value })}
+                      onChange={(value) => updateListItem("languages", i, { name: value })}
                       onBlur={touch(`${i}.name`)}
                       placeholder="Spanish"
                       maxLength={MAX_FIELD_LENGTH}
                       invalid={Boolean(nameError)}
+                      suggestions={LANGUAGE_CATALOG}
+                      suggestionLabel="Suggested languages"
                     />
                   </FieldGroup>
                   <FieldGroup label="Proficiency" htmlFor={`language-level-${i}`}>

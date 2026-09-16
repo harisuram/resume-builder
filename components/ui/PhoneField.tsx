@@ -186,7 +186,7 @@ export function PhoneField({
           aria-controls={open ? listboxId : undefined}
           onClick={() => setOpen((value) => !value)}
           onKeyDown={onTriggerKeyDown}
-          className="flex h-full w-[7.75rem] items-center justify-between gap-1 bg-transparent py-2 pl-3 pr-2 text-left text-[13px] text-[var(--color-ink)] outline-none"
+          className="flex h-full w-[6.25rem] items-center justify-between gap-0.5 bg-transparent py-2 pl-2 pr-1.5 text-left text-[13px] text-[var(--color-ink)] outline-none"
         >
           <span className="min-w-0 truncate">
             {selected.iso2} {selected.dialCode}

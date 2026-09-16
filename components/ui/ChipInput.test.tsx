@@ -3,9 +3,16 @@ import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { ChipInput } from "./ChipInput";
 
-function Controlled({ initial = [] as string[] }) {
+function Controlled({ initial = [] as string[], suggestions }: { initial?: string[]; suggestions?: string[] }) {
   const [values, setValues] = useState<string[]>(initial);
-  return <ChipInput values={values} onChange={setValues} placeholder="Add a skill, press Enter" />;
+  return (
+    <ChipInput
+      values={values}
+      onChange={setValues}
+      placeholder="Add a skill, press Enter"
+      suggestions={suggestions}
+    />
+  );
 }
 
 describe("ChipInput", () => {
@@ -68,5 +75,40 @@ describe("ChipInput", () => {
     await userEvent.type(input, "TypeScript{Enter}");
     expect(screen.getByRole("alert")).toHaveTextContent("already on the list");
     expect(screen.getAllByText("TypeScript")).toHaveLength(1);
+  });
+
+  describe("suggestions", () => {
+    const catalog = ["TypeScript", "Python", "React"];
+
+    it("lists unselected suggestions on focus and hides ones already added", async () => {
+      render(<Controlled initial={["Python"]} suggestions={catalog} />);
+      await userEvent.click(screen.getByPlaceholderText("Add a skill, press Enter"));
+      expect(screen.getByRole("option", { name: "TypeScript" })).toBeInTheDocument();
+      expect(screen.getByRole("option", { name: "React" })).toBeInTheDocument();
+      expect(screen.queryByRole("option", { name: "Python" })).not.toBeInTheDocument();
+    });
+
+    it("filters the list as the user types", async () => {
+      render(<Controlled suggestions={catalog} />);
+      const input = screen.getByPlaceholderText("Add a skill, press Enter");
+      await userEvent.type(input, "scr");
+      expect(screen.getByRole("option", { name: "TypeScript" })).toBeInTheDocument();
+      expect(screen.queryByRole("option", { name: "React" })).not.toBeInTheDocument();
+    });
+
+    it("adds a suggestion on click", async () => {
+      render(<Controlled suggestions={catalog} />);
+      await userEvent.click(screen.getByPlaceholderText("Add a skill, press Enter"));
+      await userEvent.click(screen.getByRole("option", { name: "React" }));
+      expect(screen.getByText("React")).toBeInTheDocument();
+      expect(screen.queryByRole("option", { name: "React" })).not.toBeInTheDocument();
+    });
+
+    it("still accepts a custom value on Enter", async () => {
+      render(<Controlled suggestions={catalog} />);
+      const input = screen.getByPlaceholderText("Add a skill, press Enter");
+      await userEvent.type(input, "GraphQL{Enter}");
+      expect(screen.getByText("GraphQL")).toBeInTheDocument();
+    });
   });
 });

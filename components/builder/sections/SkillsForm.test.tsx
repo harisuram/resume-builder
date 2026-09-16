@@ -27,4 +27,13 @@ describe("SkillsForm", () => {
     rerender(<SkillsForm />);
     expect(screen.getByPlaceholderText("Add a skill, press Enter")).toBeInTheDocument();
   });
+
+  it("offers a catalog of skills and hides ones already selected", async () => {
+    render(<SkillsForm />);
+    await userEvent.click(screen.getByPlaceholderText("Add a skill, press Enter"));
+    expect(screen.getByRole("option", { name: "TypeScript" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("option", { name: "TypeScript" }));
+    expect(useBuilderStore.getState().sections.skills).toEqual(["TypeScript"]);
+    expect(screen.queryByRole("option", { name: "TypeScript" })).not.toBeInTheDocument();
+  });
 });

@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ChipInput } from "@/components/ui/ChipInput";
 import { FieldGroup, TextInput } from "@/components/ui/Field";
+import { SuggestInput } from "@/components/ui/SuggestInput";
+import { COURSE_CATALOG, DEGREE_CATALOG, FIELD_CATALOG } from "@/lib/catalogs";
 import { useBuilderStore } from "@/lib/store";
 import type { Education } from "@/lib/types";
 import { useTouchedFields } from "@/lib/useTouchedFields";
@@ -54,25 +56,29 @@ export function EducationForm() {
                 />
               </FieldGroup>
               <FieldGroup label="Degree" htmlFor={`education-${i}-degree`} required error={degreeError}>
-                <TextInput
+                <SuggestInput
                   id={`education-${i}-degree`}
                   value={edu.degree}
-                  onChange={(e) => updateListItem("education", i, { degree: e.target.value })}
+                  onChange={(value) => updateListItem("education", i, { degree: value })}
                   onBlur={touch(`${i}.degree`)}
-                  placeholder="B.S. Computer Science"
+                  placeholder="B.S. / B.Arch / Pharm.D."
                   maxLength={MAX_FIELD_LENGTH}
                   invalid={Boolean(degreeError)}
+                  suggestions={DEGREE_CATALOG}
+                  suggestionLabel="Suggested degrees"
                 />
               </FieldGroup>
               <FieldGroup label="Field of study (optional)" htmlFor={`education-${i}-field`} error={fieldError}>
-                <TextInput
+                <SuggestInput
                   id={`education-${i}-field`}
                   value={edu.fieldOfStudy ?? ""}
-                  onChange={(e) => updateListItem("education", i, { fieldOfStudy: e.target.value })}
+                  onChange={(value) => updateListItem("education", i, { fieldOfStudy: value })}
                   onBlur={touch(`${i}.fieldOfStudy`)}
-                  placeholder="Computer Science"
+                  placeholder="Pharmacy, Architecture, Construction…"
                   maxLength={MAX_FIELD_LENGTH}
                   invalid={Boolean(fieldError)}
+                  suggestions={FIELD_CATALOG}
+                  suggestionLabel="Suggested fields"
                 />
               </FieldGroup>
               <div className="grid grid-cols-2 gap-3">
@@ -173,6 +179,7 @@ function DetailFields({
           placeholder="Add a course, press Enter"
           maxLength={MAX_CHIP_LENGTH}
           itemLabel="course"
+          suggestions={COURSE_CATALOG}
         />
       </FieldGroup>
     </div>

@@ -1,11 +1,13 @@
 import type { NextConfig } from "next";
 
-// Static export: this app has no backend/database (everything lives in
-// client state + localStorage), so it ships as plain static files. That
-// maps directly onto Cloudflare Pages' free tier — unlimited static
-// requests/bandwidth, no Workers/Functions invocations to meter.
+// Static export for `next build` / Cloudflare Pages. `next dev` must NOT
+// use `output: "export"` — that mode rejects POST route handlers, and the
+// ATS rewrite at /api/optimize is a POST. Production still ships static
+// files; Groq is served by functions/api/optimize.ts on Pages.
+const isDevCommand = process.argv.includes("dev");
+
 const nextConfig: NextConfig = {
-  output: "export",
+  ...(!isDevCommand ? { output: "export" as const } : {}),
   images: {
     unoptimized: true,
   },

@@ -7,7 +7,7 @@ export function SkillsForm() {
     <ChipListForm
       sectionKey="skills"
       title="Skills"
-      help="Technical languages, tools, and frameworks worth listing."
+      help="Tools, methods, and systems — software, data, IT, trades, clinical, and more."
       placeholder="Add a skill, press Enter"
       itemLabel="skill"
     />

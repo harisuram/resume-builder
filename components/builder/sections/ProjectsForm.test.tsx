@@ -51,6 +51,16 @@ describe("ProjectsForm", () => {
     expect(useBuilderStore.getState().sections.projects![0].technologies).toEqual(["React"]);
   });
 
+  it("offers the skill catalog for technologies and hides ones already selected", async () => {
+    act(() => useBuilderStore.getState().addListItem("projects", { name: "P", description: "D" }));
+    render(<ProjectsForm />);
+    await userEvent.click(screen.getByPlaceholderText("Add a technology, press Enter"));
+    expect(screen.getByRole("option", { name: "TypeScript" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("option", { name: "TypeScript" }));
+    expect(useBuilderStore.getState().sections.projects![0].technologies).toEqual(["TypeScript"]);
+    expect(screen.queryByRole("option", { name: "TypeScript" })).not.toBeInTheDocument();
+  });
+
   it("removes a project", async () => {
     act(() => useBuilderStore.getState().addListItem("projects", { name: "P", description: "D" }));
     render(<ProjectsForm />);

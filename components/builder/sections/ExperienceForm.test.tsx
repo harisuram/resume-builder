@@ -2,6 +2,8 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AiLimitError, optimizeExperienceBullets } from "@/lib/ai";
 import { useBuilderStore } from "@/lib/store";
+import { useToastStore } from "@/lib/toast";
+import { ToastHost } from "@/components/ui/Toast";
 import { ExperienceForm } from "./ExperienceForm";
 
 // jest.mock's target must resolve through Jest's own resolver, which has no
@@ -9,6 +11,8 @@ import { ExperienceForm } from "./ExperienceForm";
 // still registers against the same resolved module as the "@/lib/ai" import.
 jest.mock("../../../lib/ai", () => ({
   AiLimitError: class AiLimitError extends Error {},
+  AI_LIMITED_UNTIL_KEY: "ai-optimize-limited-until",
+  AI_BACKOFF_MS: 4 * 60 * 60 * 1000,
   optimizeExperienceBullets: jest.fn(),
 }));
 const mockOptimize = optimizeExperienceBullets as jest.Mock;
@@ -19,6 +23,7 @@ beforeEach(() => {
   });
   mockOptimize.mockReset();
   localStorage.clear();
+  useToastStore.getState().clear();
 });
 
 describe.each([
@@ -37,12 +42,20 @@ describe.each([
     await userEvent.click(screen.getByText(new RegExp(`\\+ Add (experience|role)`)));
 
     await userEvent.type(screen.getByPlaceholderText("Acme Corp"), "Acme Corp");
-    await userEvent.type(screen.getByPlaceholderText("Software Engineer Intern"), "Engineer");
+    await userEvent.type(screen.getByPlaceholderText(/Software Engineer, Pharmacist, Architect/), "Engineer");
 
     const list = useBuilderStore.getState().sections[sectionKey]!;
     expect(list[0].company).toBe("Acme Corp");
     expect(list[0].role).toBe("Engineer");
     expect(list[0].bullets).toEqual([""]);
+  });
+
+  it("fills the role from the suggestion list", async () => {
+    render(<ExperienceForm sectionKey={sectionKey} title={title} help="help" />);
+    await userEvent.click(screen.getByText(new RegExp(`\\+ Add (experience|role)`)));
+    await userEvent.click(screen.getByPlaceholderText(/Software Engineer, Pharmacist, Architect/));
+    await userEvent.click(screen.getByRole("option", { name: "Software Engineer" }));
+    expect(useBuilderStore.getState().sections[sectionKey]![0].role).toBe("Software Engineer");
   });
 
   it("shows required-field errors after blur", async () => {
@@ -106,15 +119,23 @@ describe.each([
   });
 
   it("hides the AI button once the free quota is hit", async () => {
-    mockOptimize.mockRejectedValue(new AiLimitError("limited"));
+    mockOptimize.mockRejectedValue(
+      new AiLimitError("The free AI rewrite limit is used up. Try another writing tool, or polish this section yourself."),
+    );
     act(() => {
       useBuilderStore.getState().addListItem(sectionKey, { company: "Acme", role: "Eng", startDate: "2020-01", bullets: ["Did a thing"] });
     });
-    render(<ExperienceForm sectionKey={sectionKey} title={title} help="help" />);
+    render(
+      <>
+        <ExperienceForm sectionKey={sectionKey} title={title} help="help" />
+        <ToastHost />
+      </>,
+    );
 
     await userEvent.click(screen.getByRole("button", { name: /Make ATS-friendly/ }));
 
     await waitFor(() => expect(screen.queryByRole("button", { name: /Make ATS-friendly/ })).not.toBeInTheDocument());
+    expect(screen.getByRole("alert")).toHaveTextContent(/free AI rewrite limit is used up/i);
     expect(Number(localStorage.getItem("ai-optimize-limited-until"))).toBeGreaterThan(Date.now());
   });
 });

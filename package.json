@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/build.mjs",
     "start": "npx serve@latest out",
     "lint": "eslint",
-    "deploy": "next build && npx wrangler pages deploy out",
+    "deploy": "npm run build && npx wrangler pages deploy out",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"

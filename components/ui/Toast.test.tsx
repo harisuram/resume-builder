@@ -17,10 +17,13 @@ describe("ToastHost", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("shows a failed-action toast as an alert", () => {
+  it("shows a failed-action toast as an alert at the top of the screen", () => {
     render(<ToastHost />);
     act(() => showToast("Couldn't open the print dialog. Try again."));
-    expect(screen.getByRole("alert")).toHaveTextContent("Couldn't open the print dialog. Try again.");
+    const region = screen.getByRole("region", { name: "Notifications" });
+    expect(region).toHaveTextContent("Couldn't open the print dialog. Try again.");
+    expect(region.className).toContain("top-[");
+    expect(region.className).not.toContain("bottom-");
   });
 
   it("dismisses when the close button is clicked", async () => {

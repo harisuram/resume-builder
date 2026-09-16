@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { FieldGroup, TextInput } from "@/components/ui/Field";
-import { AiLimitError, optimizeExperienceBullets } from "@/lib/ai";
+import { SuggestInput } from "@/components/ui/SuggestInput";
+import { AI_BACKOFF_MS, AI_LIMITED_UNTIL_KEY, AiLimitError, optimizeExperienceBullets } from "@/lib/ai";
+import { ROLE_CATALOG } from "@/lib/catalogs";
 import { useBuilderStore } from "@/lib/store";
 import { showToast } from "@/lib/toast";
 import type { Experience } from "@/lib/types";
@@ -14,12 +16,6 @@ import { SectionFormHeader } from "./SectionFormHeader";
 import { SkippedNotice } from "./SkippedNotice";
 
 const EMPTY: Experience = { company: "", role: "", startDate: "", bullets: [""] };
-
-/** Once the shared free quota is hit, stop offering the button for a while
- * instead of letting every click fail — persisted so it stays hidden across
- * this section and a reload, not just this component instance. */
-const AI_LIMITED_UNTIL_KEY = "ai-optimize-limited-until";
-const BACKOFF_MS = 4 * 60 * 60 * 1000;
 
 export function ExperienceForm({
   sectionKey,
@@ -61,7 +57,7 @@ export function ExperienceForm({
       setBullets(index, optimized);
     } catch (err) {
       if (err instanceof AiLimitError) {
-        localStorage.setItem(AI_LIMITED_UNTIL_KEY, String(Date.now() + BACKOFF_MS));
+        localStorage.setItem(AI_LIMITED_UNTIL_KEY, String(Date.now() + AI_BACKOFF_MS));
         setAiAvailable(false);
       }
       showToast(err instanceof Error ? err.message : "AI optimization failed. Try again later.");
@@ -98,14 +94,16 @@ export function ExperienceForm({
                 />
               </FieldGroup>
               <FieldGroup label="Role / title" htmlFor={`${sectionKey}-${i}-role`} required error={roleError}>
-                <TextInput
+                <SuggestInput
                   id={`${sectionKey}-${i}-role`}
                   value={exp.role}
-                  onChange={(e) => updateListItem(sectionKey, i, { role: e.target.value })}
+                  onChange={(value) => updateListItem(sectionKey, i, { role: value })}
                   onBlur={touch(`${i}.role`)}
-                  placeholder="Software Engineer Intern"
+                  placeholder="Software Engineer, Pharmacist, Architect…"
                   maxLength={MAX_FIELD_LENGTH}
                   invalid={Boolean(roleError)}
+                  suggestions={ROLE_CATALOG}
+                  suggestionLabel="Suggested roles"
                 />
               </FieldGroup>
               <div className="grid grid-cols-2 gap-3">

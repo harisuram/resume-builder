@@ -22,12 +22,16 @@ export const ALTERNATE_NAMES = [
 
 export const HOME_TITLE = "Free Resume Maker — Make a Resume Online, No Account";
 export const HOME_DESCRIPTION =
-  "Make a resume or curriculum vitae with a free resume creator. Skip unused sections, pick templates, download a PDF. Private, no account.";
+  "Make a resume or curriculum vitae with a free resume creator for any field — software, data, IT, pharmacy, architecture, construction, and more. Skip unused sections, pick templates, download a PDF. Private, no account.";
 
 export const FEATURES = [
   {
     title: "You choose the sections",
     body: "Experience, internships, projects, education, skills, certifications, patents, languages, hobbies, soft skills, plus a custom additional section — they're all in the flow. Turn off anything that doesn't belong. A skipped section never leaves an empty heading on the page.",
+  },
+  {
+    title: "Suggestions for any field",
+    body: "Roles, skills, degrees, certifications, and more are not software-only. The lists include pharmacy, architecture, construction, IT, networking, data, and databases — or type anything that isn’t there.",
   },
   {
     title: "Twenty-one templates, one live preview",
@@ -49,6 +53,7 @@ export const FEATURES = [
 
 export const FEATURE_LIST = [
   "Choose only the resume sections you need",
+  "Suggestions for roles and skills across software, data, IT, pharmacy, architecture, and construction",
   "Twenty-one resume templates with a live preview",
   "Download a PDF of the same preview",
   "No account — data stays in your browser until you save or opt in",
@@ -68,7 +73,12 @@ export const HOME_FAQS: FaqItem[] = [
   {
     question: "How do I make a resume here?",
     answer:
-      "Open the builder, add your name and contact details, fill only the sections that belong on this resume, skip the rest, pick a template, and download a PDF. A short walkthrough lives on the how-to page if you want the steps spelled out.",
+      "Open the builder, add your name and contact details (including a country code on the phone), fill only the sections that belong on this resume, skip the rest, pick a template, and download a PDF. A short walkthrough lives on the how-to page if you want the steps spelled out.",
+  },
+  {
+    question: "Can I make a resume for fields besides software?",
+    answer:
+      "Yes. Role, skill, degree, and certification suggestions include pharmacy, architecture, construction, IT, networking, data, and databases — or type anything that isn’t in the list. The same editor works for any field.",
   },
   {
     question: "Is it safe? Do you store my resume?",
@@ -105,7 +115,7 @@ export interface HowToStep {
 export const HOW_TO_STEPS: HowToStep[] = [
   {
     name: "Add your name and contact details",
-    text: "Start with the basics: name, role, email, phone, and links you want on the page. This is the only step that is really required.",
+    text: "Start with name, email, location, and an optional phone number with a country code. Links are optional. Required fields have to be valid before you can continue.",
   },
   {
     name: "Skip the photo if it doesn’t belong",
@@ -117,7 +127,7 @@ export const HOW_TO_STEPS: HowToStep[] = [
   },
   {
     name: "Fill only the sections that apply",
-    text: "Work through experience, internships, projects, education, skills, and the rest. Skip anything that isn’t on this resume. Empty sections are omitted, not left blank.",
+    text: "Work through experience, internships, projects, education, skills, and the rest. Pick from suggestions — software, data, IT, pharmacy, architecture, construction — or type your own. Skip anything that isn’t on this resume.",
   },
   {
     name: "Optionally make experience bullets ATS-friendly",
@@ -139,6 +149,11 @@ export const FOOTER_LINKS: { href: IndexablePath; label: string }[] = [
   { href: "/about", label: "About" },
 ];
 
+export const FOOTER_TAGLINE =
+  "A free resume builder for any field — software, data, IT, pharmacy, architecture, construction, and more. Skip unused sections, pick a template, download a PDF.";
+
+export const FOOTER_NOTE = "Free · No account · Drafts stay in your browser until you save.";
+
 export const PAGE_META: Record<
   Exclude<IndexablePath, "/">,
   { title: string; description: string }
@@ -146,7 +161,7 @@ export const PAGE_META: Record<
   "/how-to-make-a-resume": {
     title: "How to Make a Resume Free (No Account)",
     description:
-      "How to make a resume in about ten minutes: add your details, skip unused sections, pick a template, and download a PDF. Free, no account.",
+      "How to make a resume in about ten minutes: add your details, pick from suggestions for any field, skip unused sections, pick a template, and download a PDF. Free, no account.",
   },
   "/private": {
     title: "Safe, Private Resume Builder",
@@ -171,7 +186,7 @@ export const PAGE_META: Record<
   "/about": {
     title: "About",
     description:
-      "A free resume maker and curriculum vitae creator: skip unused sections, pick a template, download a PDF. No account required.",
+      "A free resume maker for software, data, IT, pharmacy, architecture, construction, and more. Skip unused sections, pick a template, download a PDF. No account.",
   },
 };
 

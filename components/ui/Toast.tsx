@@ -38,7 +38,7 @@ function ErrorIcon() {
   );
 }
 
-/** Fixed corner stack for failed actions (export, save, photo). Lives
+/** Fixed top-right stack for failed actions (export, save, photo, AI). Lives
  * outside any overflow pane so a toast can't be clipped by the form. */
 export function ToastHost() {
   const toasts = useToastStore((s) => s.toasts);
@@ -47,7 +47,7 @@ export function ToastHost() {
 
   return (
     <div
-      className="no-print pointer-events-none fixed right-4 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-[60] flex w-[min(22rem,calc(100vw-2rem))] flex-col gap-2 md:bottom-4"
+      className="no-print pointer-events-none fixed right-4 top-[calc(4.25rem+env(safe-area-inset-top))] z-[60] flex w-[min(22rem,calc(100vw-2rem))] flex-col gap-2"
       role="region"
       aria-label="Notifications"
     >

@@ -25,6 +25,7 @@ export const ADSENSE_CLIENT_ID = liveId(process.env.NEXT_PUBLIC_ADSENSE_CLIENT_I
 export const ADSENSE_SLOTS = {
   landing: liveId(process.env.NEXT_PUBLIC_ADSENSE_SLOT_LANDING),
   builderPreview: liveId(process.env.NEXT_PUBLIC_ADSENSE_SLOT_BUILDER),
+  builderPreviewTop: liveId(process.env.NEXT_PUBLIC_ADSENSE_SLOT_BUILDER_TOP),
   builderNav: liveId(process.env.NEXT_PUBLIC_ADSENSE_SLOT_NAV),
   builderExport: liveId(process.env.NEXT_PUBLIC_ADSENSE_SLOT_EXPORT),
   builderSectionFooter: liveId(process.env.NEXT_PUBLIC_ADSENSE_SLOT_SECTION_FOOTER),

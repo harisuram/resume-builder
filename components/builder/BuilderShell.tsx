@@ -313,7 +313,14 @@ export function BuilderShell() {
                 capped to this column so a long resume scrolls here instead
                 of stretching the whole builder. */}
             <aside className="hidden min-h-0 w-full border-[var(--color-border)] bg-[var(--color-border)]/10 px-5 py-6 sm:px-8 md:flex md:w-[420px] md:shrink-0 md:flex-col md:overflow-hidden md:border-l">
-              <PreviewPane />
+              <AdSlot
+                slot={ADSENSE_SLOTS.builderPreviewTop}
+                name="Builder preview top"
+                className="mb-4 shrink-0 flex-col items-center gap-1"
+              />
+              <div className="min-h-0 flex-1">
+                <PreviewPane />
+              </div>
             </aside>
           </div>
         )}

@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import { ChipInput } from "@/components/ui/ChipInput";
 import { FieldGroup, TextArea, TextInput } from "@/components/ui/Field";
+import { SKILL_CATALOG } from "@/lib/catalogs";
 import { useBuilderStore } from "@/lib/store";
 import type { Project } from "@/lib/types";
 import { useTouchedFields } from "@/lib/useTouchedFields";
@@ -82,6 +83,7 @@ export function ProjectsForm() {
                 placeholder="Add a technology, press Enter"
                 maxLength={MAX_CHIP_LENGTH}
                 itemLabel="technology"
+                suggestions={SKILL_CATALOG}
               />
             </FieldGroup>
           </ItemCard>

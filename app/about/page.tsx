@@ -11,16 +11,17 @@ export default function AboutPage() {
       <Article>
         <PageTitle>{`About ${SITE_NAME}`}</PageTitle>
         <Lead>
-          A free resume maker and resume creator: every section is available, none are required. Skip what doesn’t
-          belong, pick a template, download a PDF. No account. The same editor works as a CV builder if you need a
-          curriculum vitae.
+          A free resume maker and resume creator for any field — software, data, IT, pharmacy, architecture,
+          construction, and the rest. Every section is available, none are required. Skip what doesn’t belong, pick a
+          template, download a PDF. No account. The same editor works as a CV builder if you need a curriculum vitae.
         </Lead>
 
         <SectionHeading>What it is</SectionHeading>
         <Body>
-          A browser tool with a live preview. Twenty-one templates share one preview, and that preview is what you
-          print. You can skip internships, patents, a photo, or anything else — skipped sections don’t leave empty
-          headings.
+          A browser tool with a live preview. Roles, skills, degrees, and certifications offer suggestions that are not
+          software-only; you can still type anything. Twenty-one templates share one preview, and that preview is what
+          you print. Phone numbers include a country code. Required fields are checked before you move on. Skip
+          internships, patents, a photo, or anything else — skipped sections don’t leave empty headings.
         </Body>
 
         <SectionHeading>What it isn’t</SectionHeading>

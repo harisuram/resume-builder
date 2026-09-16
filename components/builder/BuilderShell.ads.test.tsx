@@ -13,6 +13,15 @@ beforeEach(() => {
 });
 
 describe("BuilderShell section-footer ads", () => {
+  it("shows a preview-column ad above the live résumé, except on export", async () => {
+    render(<BuilderShell />);
+    await screen.findByRole("heading", { name: "Basic info" });
+    expect(screen.getByText("Builder preview top")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByText("Template & export"));
+    expect(screen.queryByText("Builder preview top")).not.toBeInTheDocument();
+  });
+
   it("shows the footer ad on the new optional sections, and not on Basic info", async () => {
     render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });

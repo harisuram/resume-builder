@@ -1,12 +1,7 @@
-# Local secrets for the Cloudflare Pages Function in functions/api/optimize.ts.
-# Copy to .dev.vars and fill in your key — this is Cloudflare's own env
-# mechanism for Pages Functions, separate from .env.local (which only
-# covers Next.js's NEXT_PUBLIC_* build-time vars and isn't read here).
+# Copy to .dev.vars — Cloudflare Pages Functions read this file, not .env.local.
+# `next dev` uses GROQ_API_KEY from .env.local instead.
 #
 # Get a free key at https://console.groq.com/keys
-#
-# `next dev` does NOT run this function — it's static-export only. To test
-# it locally: `npm run build && npx wrangler pages dev out`
 #
 # In production, set GROQ_API_KEY as a secret in the Cloudflare Pages
 # project's dashboard (Settings > Environment variables), not in this file.

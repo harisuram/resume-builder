@@ -2,6 +2,8 @@
 
 import { Button } from "@/components/ui/Button";
 import { FieldGroup, TextInput } from "@/components/ui/Field";
+import { SuggestInput } from "@/components/ui/SuggestInput";
+import { CERTIFICATION_CATALOG, CERTIFICATION_ISSUER_CATALOG } from "@/lib/catalogs";
 import { useBuilderStore } from "@/lib/store";
 import type { Certification } from "@/lib/types";
 import { useTouchedFields } from "@/lib/useTouchedFields";
@@ -39,25 +41,29 @@ export function CertificationsForm() {
           <ItemCard key={i} autoFocus={i === focusIndex} onRemove={() => removeListItem("certifications", i)}>
             <div className="grid gap-3 sm:grid-cols-3">
               <FieldGroup label="Name" htmlFor={`cert-${i}-name`} required error={nameError}>
-                <TextInput
+                <SuggestInput
                   id={`cert-${i}-name`}
                   value={cert.name}
-                  onChange={(e) => updateListItem("certifications", i, { name: e.target.value })}
+                  onChange={(value) => updateListItem("certifications", i, { name: value })}
                   onBlur={touch(`${i}.name`)}
-                  placeholder="AWS Certified Developer"
+                  placeholder="AWS Certified Developer, CCNA, PMP…"
                   maxLength={MAX_FIELD_LENGTH}
                   invalid={Boolean(nameError)}
+                  suggestions={CERTIFICATION_CATALOG}
+                  suggestionLabel="Suggested certifications"
                 />
               </FieldGroup>
               <FieldGroup label="Issuer" htmlFor={`cert-${i}-issuer`} required error={issuerError}>
-                <TextInput
+                <SuggestInput
                   id={`cert-${i}-issuer`}
                   value={cert.issuer}
-                  onChange={(e) => updateListItem("certifications", i, { issuer: e.target.value })}
+                  onChange={(value) => updateListItem("certifications", i, { issuer: value })}
                   onBlur={touch(`${i}.issuer`)}
-                  placeholder="Amazon Web Services"
+                  placeholder="Amazon Web Services, Cisco, OSHA…"
                   maxLength={MAX_FIELD_LENGTH}
                   invalid={Boolean(issuerError)}
+                  suggestions={CERTIFICATION_ISSUER_CATALOG}
+                  suggestionLabel="Suggested issuers"
                 />
               </FieldGroup>
               <FieldGroup label="Date" htmlFor={`cert-${i}-date`}>

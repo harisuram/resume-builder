@@ -11,8 +11,9 @@ export default function HowToMakeAResumePage() {
       <Article>
         <PageTitle>How to make a resume in about ten minutes</PageTitle>
         <Lead>
-          You don’t need an account. This walkthrough matches the real editor: basic info, optional photo, only the
-          sections that belong, a template, then a PDF. Same steps if you’re making a CV or a free curriculum vitae.
+          You don’t need an account. This walkthrough matches the real editor: name and contact (with a country-code
+          phone), suggestions for any field, only the sections that belong, a template, then a PDF. Same steps if you’re
+          making a CV or a free curriculum vitae.
         </Lead>
 
         <ol className="mt-10 space-y-8">

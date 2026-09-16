@@ -34,7 +34,7 @@ describe("BuilderShell", () => {
     render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
     await userEvent.click(screen.getByText("Skills"));
-    expect(screen.getByText("Technical languages, tools, and frameworks worth listing.")).toBeInTheDocument();
+    expect(screen.getByText("Tools, methods, and systems — software, data, IT, trades, clinical, and more.")).toBeInTheDocument();
     expect(screen.queryByLabelText("Full name")).not.toBeInTheDocument();
   });
 

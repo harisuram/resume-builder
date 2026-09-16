@@ -34,6 +34,9 @@ yarn-error.log*
 .env*
 !.env.example
 
+# Stashed by scripts/build.mjs so the POST /api/optimize route isn't exported
+.next-export-stash/
+
 # Cloudflare Pages Functions local secrets (see .dev.vars.example)
 .dev.vars
 

@@ -47,7 +47,7 @@ describe("BasicInfoForm", () => {
     const trigger = screen.getByLabelText("Phone country code");
     const phone = screen.getByLabelText("Phone");
     expect(trigger.tagName).toBe("BUTTON");
-    expect(trigger.className).toContain("w-[7.75rem]");
+    expect(trigger.className).toContain("w-[6.25rem]");
     expect(phone.className).toContain("min-w-0");
     expect(phone.className).toContain("flex-1");
   });

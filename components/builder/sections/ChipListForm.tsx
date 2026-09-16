@@ -1,6 +1,7 @@
 "use client";
 
 import { ChipInput } from "@/components/ui/ChipInput";
+import { HOBBY_CATALOG, SKILL_CATALOG, SOFT_SKILL_CATALOG } from "@/lib/catalogs";
 import { useBuilderStore } from "@/lib/store";
 import { MAX_CHIP_LENGTH } from "@/lib/validation";
 import { SectionFormHeader } from "./SectionFormHeader";
@@ -44,6 +45,9 @@ export function ChipListForm({
           placeholder={placeholder}
           maxLength={MAX_CHIP_LENGTH}
           itemLabel={itemLabel}
+          suggestions={
+            sectionKey === "skills" ? SKILL_CATALOG : sectionKey === "hobbies" ? HOBBY_CATALOG : SOFT_SKILL_CATALOG
+          }
         />
       )}
     </div>

@@ -1,7 +1,8 @@
 import { ImageResponse } from "next/og";
 import { OgMark } from "@/components/site/OgMark";
 
-export const size = { width: 32, height: 32 };
+/** PNG fallback of the nav nib for browsers that don't use the SVG favicon. */
+export const size = { width: 64, height: 64 };
 export const contentType = "image/png";
 export const dynamic = "force-static";
 
@@ -18,7 +19,7 @@ export default function Icon() {
           background: "#faf7f0",
         }}
       >
-        <OgMark size={32} />
+        <OgMark size={56} />
       </div>
     ),
     { ...size },

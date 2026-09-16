@@ -13,10 +13,10 @@ describe("CertificationsForm", () => {
   it("adds a certification and fills name, issuer, and date", async () => {
     render(<CertificationsForm />);
     await userEvent.click(screen.getByText("+ Add certification"));
-    expect(screen.getByPlaceholderText("AWS Certified Developer")).toHaveFocus();
+    expect(screen.getByPlaceholderText(/AWS Certified Developer, CCNA, PMP/)).toHaveFocus();
 
-    await userEvent.type(screen.getByPlaceholderText("AWS Certified Developer"), "AWS SAA");
-    await userEvent.type(screen.getByPlaceholderText("Amazon Web Services"), "AWS");
+    await userEvent.type(screen.getByPlaceholderText(/AWS Certified Developer, CCNA, PMP/), "AWS SAA");
+    await userEvent.type(screen.getByPlaceholderText(/Amazon Web Services, Cisco, OSHA/), "AWS");
 
     const cert = useBuilderStore.getState().sections.certifications![0];
     expect(cert.name).toBe("AWS SAA");

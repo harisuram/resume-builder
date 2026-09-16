@@ -10,31 +10,21 @@ declare global {
 }
 
 type AdFormat = "auto" | "fluid";
+type FillStatus = "pending" | "filled" | "unfilled";
 
 /**
- * Renders nothing — not even an empty placeholder — unless there's a real
- * chance an ad can show:
- *  - no AdSense client id configured (e.g. local dev, preview builds): skip entirely
- *    in production; in `next dev`, render a dashed outline instead (below),
- *    so the layout's ad positions are visible before real credentials exist.
- *  - the slot id isn't set: same as above.
- *  - Google itself reports no fill for this request (`data-ad-status="unfilled"`,
- *    set async once AdSense processes the slot): hide the "Advertisement" label
- *    so no leftover blank chrome is left behind, but keep the `ins.adsbygoogle`
- *    in the DOM. Google's crawler looks for that tag; unmounting it after a
- *    no-fill (the usual state before a site is approved) makes the slot
- *    invisible to review.
+ * Visible only once Google has actually filled the unit. Until then — and
+ * whenever the request comes back unfilled — the wrapper takes no layout
+ * space. The `ins.adsbygoogle` stays in the DOM the whole time so AdSense's
+ * crawler (and the fill request itself) can still see the tag.
  *
- * The `<ins>` attributes match AdSense's generated display-ad snippet so the
- * crawler can recognize a real unit. Never rendered in the printed/exported
- * resume — every call site keeps ads out of that path, and `no-print` is a
- * defensive second layer here.
+ * Unconfigured builds render nothing at all (no dashed placeholder).
+ * Never rendered in the printed/exported resume — every call site keeps ads
+ * out of that path, and `no-print` is a defensive second layer here.
  */
 export function AdSlot({
   slot,
   format = "auto",
-  // Shown only on the dev placeholder (below), to tell slots apart before
-  // real slot ids exist to tell them apart by.
   name,
   // A full replacement for the wrapper's layout classes, not an addition —
   // "no-print" is applied separately and always, so a caller overriding this
@@ -48,9 +38,10 @@ export function AdSlot({
   className?: string;
 }) {
   const insRef = useRef<HTMLModElement>(null);
-  const [unfilled, setUnfilled] = useState(false);
+  const [status, setStatus] = useState<FillStatus>("pending");
   const client = adsenseClientAttr(ADSENSE_CLIENT_ID);
   const enabled = Boolean(client && slot);
+  const visible = status === "filled";
 
   useEffect(() => {
     if (!enabled) return;
@@ -62,40 +53,29 @@ export function AdSlot({
       // the official snippet's pattern (`adsbygoogle = window.adsbygoogle || []`).
       (window.adsbygoogle = window.adsbygoogle || []).push({});
     } catch {
-      // AdSense script blocked (ad blocker, offline, not yet approved) — the
-      // slot just never fills, which the observer below already handles.
+      // AdSense script blocked (ad blocker, offline, not yet approved).
+      // Status stays pending, so the slot stays collapsed.
     }
 
-    const observer = new MutationObserver(() => {
-      if (node.getAttribute("data-ad-status") === "unfilled") setUnfilled(true);
-    });
+    const syncStatus = () => {
+      const next = node.getAttribute("data-ad-status");
+      if (next === "filled" || next === "unfilled") setStatus(next);
+    };
+    syncStatus();
+    const observer = new MutationObserver(syncStatus);
     observer.observe(node, { attributes: true, attributeFilter: ["data-ad-status"] });
     return () => observer.disconnect();
   }, [enabled, slot]);
 
-  if (!enabled) {
-    // Real production behavior is untouched — `NODE_ENV` is "production"
-    // for every `next build`, static export included, regardless of
-    // whether AdSense credentials happen to be set. This branch only ever
-    // runs under `next dev`.
-    if (process.env.NODE_ENV !== "development") return null;
-    return (
-      <div className={`no-print ${className}`}>
-        <div className="flex w-full flex-col items-center justify-center gap-0.5 rounded-md border border-dashed border-[var(--color-border)] px-4 py-6">
-          <span className="text-[10px] uppercase tracking-wide text-[var(--color-ink-faint)]">
-            Ad slot{name ? ` — ${name}` : ""}
-          </span>
-          <span className="text-[10.5px] text-[var(--color-ink-faint)]">
-            Not shown to real users until NEXT_PUBLIC_ADSENSE_* is set
-          </span>
-        </div>
-      </div>
-    );
-  }
+  if (!enabled) return null;
 
   return (
-    <div className={`no-print ${className}`}>
-      {!unfilled && (
+    <div
+      className={`no-print ${visible ? className : "h-0 overflow-hidden"}`}
+      aria-hidden={visible ? undefined : true}
+      aria-label={visible ? name : undefined}
+    >
+      {visible && (
         <span className="text-[10px] uppercase tracking-wide text-[var(--color-ink-faint)]">Advertisement</span>
       )}
       <ins

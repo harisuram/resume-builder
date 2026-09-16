@@ -35,7 +35,7 @@ const SECTION_META: Record<SectionKey, SectionMeta> = {
   skills: {
     key: "skills",
     label: "Skills",
-    helpText: "Technical languages, tools, and frameworks worth listing.",
+    helpText: "Tools, methods, and systems — software, data, IT, trades, clinical, and more.",
   },
   certifications: {
     key: "certifications",

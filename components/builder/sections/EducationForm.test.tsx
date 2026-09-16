@@ -37,7 +37,7 @@ describe("EducationForm", () => {
     await userEvent.click(screen.getByText("+ Add education"));
 
     await userEvent.type(screen.getByPlaceholderText("University of Texas at Austin"), "MIT");
-    await userEvent.type(screen.getByPlaceholderText("B.S. Computer Science"), "M.S. CS");
+    await userEvent.type(screen.getByPlaceholderText("B.S. / B.Arch / Pharm.D."), "M.S. CS");
 
     const education = useBuilderStore.getState().sections.education!;
     expect(education[0].institution).toBe("MIT");
@@ -87,5 +87,16 @@ describe("EducationForm", () => {
 
     await userEvent.click(screen.getByText("+ Add GPA / coursework"));
     expect(screen.getByPlaceholderText("3.8 / 4.0")).toBeInTheDocument();
+  });
+
+  it("offers field-of-study suggestions across industries", async () => {
+    act(() => {
+      useBuilderStore.getState().addListItem("education", { institution: "MIT", degree: "B.S.", startDate: "2020-01" });
+    });
+    render(<EducationForm />);
+    await userEvent.click(screen.getByPlaceholderText(/Pharmacy, Architecture, Construction/));
+    expect(screen.getByRole("option", { name: "Architecture" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Pharmacy" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Construction Management" })).toBeInTheDocument();
   });
 });

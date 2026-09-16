@@ -1,4 +1,4 @@
-import { AiLimitError, optimizeExperienceBullets } from "./ai";
+import { AiLimitError, optimizeExperienceBullets, optimizeSummary } from "./ai";
 
 function mockFetch(response: Partial<Response> & { json: () => Promise<unknown> }) {
   global.fetch = jest.fn().mockResolvedValue(response) as unknown as typeof fetch;
@@ -14,6 +14,10 @@ describe("optimizeExperienceBullets", () => {
 
   it("throws AiLimitError on 429 without needing a response body", async () => {
     mockFetch({ ok: false, status: 429, json: async () => ({}) });
+    await expect(optimizeExperienceBullets(input)).rejects.toMatchObject({
+      name: "Error",
+      message: expect.stringMatching(/free AI rewrite limit is used up/i),
+    });
     await expect(optimizeExperienceBullets(input)).rejects.toBeInstanceOf(AiLimitError);
   });
 
@@ -25,5 +29,24 @@ describe("optimizeExperienceBullets", () => {
   it("throws a generic error when the response body is malformed", async () => {
     mockFetch({ ok: true, status: 200, json: async () => ({ bullets: "not an array" }) });
     await expect(optimizeExperienceBullets(input)).rejects.toThrow("AI optimization failed. Try again later.");
+  });
+});
+
+describe("optimizeSummary", () => {
+  it("returns the rewritten summary on success", async () => {
+    mockFetch({ ok: true, status: 200, json: async () => ({ summary: "Staff backend engineer." }) });
+    await expect(optimizeSummary("I work on backends.")).resolves.toBe("Staff backend engineer.");
+    expect(global.fetch).toHaveBeenCalledWith(
+      "/api/optimize",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ kind: "summary", summary: "I work on backends." }),
+      }),
+    );
+  });
+
+  it("throws AiLimitError on 429", async () => {
+    mockFetch({ ok: false, status: 429, json: async () => ({}) });
+    await expect(optimizeSummary("A summary.")).rejects.toBeInstanceOf(AiLimitError);
   });
 });

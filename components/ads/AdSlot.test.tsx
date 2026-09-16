@@ -39,13 +39,25 @@ describe("AdSlot", () => {
     expect(ins).toHaveAttribute("data-ad-format", "auto");
     expect(ins).toHaveAttribute("data-full-width-responsive", "true");
     expect(ins).toHaveStyle({ display: "block" });
-    expect(container.querySelector(".no-print")).toBeInTheDocument();
+    expect(container.firstElementChild).toHaveClass("h-0", "overflow-hidden");
   });
 
-  it("shows an 'Advertisement' label alongside the unit", () => {
+  it("stays collapsed and unlabeled until Google reports a fill", () => {
     setClientId("ca-pub-123");
-    const { getByText } = render(<AdSlot slot="9876" />);
-    expect(getByText("Advertisement")).toBeInTheDocument();
+    const { container, queryByText } = render(<AdSlot slot="9876" />);
+    expect(queryByText("Advertisement")).not.toBeInTheDocument();
+    expect(container.firstElementChild).toHaveClass("h-0", "overflow-hidden");
+  });
+
+  it("shows the slot only after Google reports a fill", async () => {
+    setClientId("ca-pub-123");
+    const { container, getByText } = render(<AdSlot slot="9876" className="mt-6 flex flex-col" />);
+    const ins = container.querySelector("ins.adsbygoogle")!;
+    ins.setAttribute("data-ad-status", "filled");
+
+    await waitFor(() => expect(getByText("Advertisement")).toBeInTheDocument());
+    expect(container.firstElementChild).toHaveClass("mt-6", "flex");
+    expect(container.firstElementChild).not.toHaveClass("h-0");
   });
 
   it("pushes exactly one ad request on mount", () => {
@@ -66,22 +78,14 @@ describe("AdSlot", () => {
     expect(() => render(<AdSlot slot="9876" />)).not.toThrow();
   });
 
-  it("hides the Advertisement label when Google reports no fill, but keeps the ins for crawlers", async () => {
+  it("stays collapsed when Google reports no fill, but keeps the ins for crawlers", async () => {
     setClientId("ca-pub-123");
     const { container, queryByText } = render(<AdSlot slot="9876" />);
     const ins = container.querySelector("ins.adsbygoogle")!;
     ins.setAttribute("data-ad-status", "unfilled");
 
-    await waitFor(() => expect(queryByText("Advertisement")).not.toBeInTheDocument());
+    await waitFor(() => expect(container.firstElementChild).toHaveClass("h-0", "overflow-hidden"));
+    expect(queryByText("Advertisement")).not.toBeInTheDocument();
     expect(container.querySelector("ins.adsbygoogle")).toBeInTheDocument();
-  });
-
-  it("does not collapse when Google reports a fill", async () => {
-    setClientId("ca-pub-123");
-    const { container } = render(<AdSlot slot="9876" />);
-    const ins = container.querySelector("ins.adsbygoogle")!;
-    ins.setAttribute("data-ad-status", "filled");
-
-    await waitFor(() => expect(container.querySelector("ins.adsbygoogle")).toBeInTheDocument());
   });
 });

@@ -25,7 +25,7 @@ export default function Home() {
           Make a resume from only the sections you need.
         </h1>
         <p className="mt-5 max-w-xl text-center text-[15px] leading-relaxed text-[var(--color-ink-soft)]">
-          A free resume builder, resume maker, and resume creator — make a resume or a curriculum vitae, skip anything
+          A free resume builder for software, data, IT, pharmacy, architecture, construction, and more. Skip anything
           that doesn’t belong, pick a template, and download a PDF. No sign-up.
         </p>
         <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">

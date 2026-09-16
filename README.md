@@ -14,6 +14,19 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## ATS rewrite (Groq)
+
+The Experience “Make ATS-friendly” button calls `/api/optimize`. The Groq API
+key stays on the server (`GROQ_API_KEY`, never `NEXT_PUBLIC_`).
+
+1. Copy `.env.example` to `.env.local`.
+2. Paste a key from [console.groq.com/keys](https://console.groq.com/keys).
+3. Restart `npm run dev`.
+
+Production: set `GROQ_API_KEY` as a **secret** in the Cloudflare Pages
+dashboard. The static export does not include the Next.js route; Pages serves
+`functions/api/optimize.ts` instead.
+
 ## Testing
 
 ```bash
@@ -30,11 +43,10 @@ enabled/disabled/no-fill states.
 
 ## Architecture notes
 
-- **Static export.** `next.config.ts` sets `output: "export"`. There's no
-  server-side rendering or API routes to justify Cloudflare Workers/Functions
-  — the whole app ships as static HTML/CSS/JS, which puts it on Cloudflare
-  Pages' free, unmetered static-asset tier instead of counting against any
-  request/CPU budget.
+- **Static export.** `next build` sets `output: "export"` (via `scripts/build.mjs`).
+  The app ships as static HTML/CSS/JS on Cloudflare Pages. The one exception is
+  `/api/optimize` (Groq ATS rewrite): a Pages Function in production, and a
+  Next.js POST route under `next dev` only.
 - **State** lives in a single Zustand store (`lib/store.ts`) shared by every
   form and the live preview, so edits reflect instantly with no prop drilling.
 - **Templates** (`components/templates/`) are config-driven: three layout
@@ -52,16 +64,17 @@ enabled/disabled/no-fill states.
 ## Ads (Google AdSense)
 
 Off by default — copy `.env.example` to `.env.local` and fill in
-`NEXT_PUBLIC_ADSENSE_CLIENT_ID` (plus the five slot ids) to turn ads on. Until
+`NEXT_PUBLIC_ADSENSE_CLIENT_ID` (plus the slot ids) to turn ads on. Until
 then, the loader script isn't injected, `/ads.txt` ships empty, and every
-`AdSlot` renders nothing at all (a dashed outline shows the slot positions
-instead, but only under `next dev` — never in a real build).
+`AdSlot` stays out of the layout until Google actually fills it.
 
-Five slots:
+Six slots:
 - **Landing page** — between the feature grid and the footer, well below the
   primary "Build my resume" CTA.
 - **Builder nav** — bottom of the left section sidebar, below "Template &
   export", desktop only.
+- **Builder preview top** — top of the right preview column, above the live
+  résumé, desktop only, hidden on the export step.
 - **Builder preview** — under the live preview, desktop only, hidden on the
   export step (the export step has its own slot instead — see below).
 - **Export page** — between the save/download card and the preview, on the
@@ -71,10 +84,10 @@ Five slots:
   Additional (one shared slot id — only ever one of these is on screen at
   a time).
 
-Each `AdSlot` also collapses itself entirely — wrapper, "Advertisement"
-label, and all — the moment Google reports no fill for that request
-(`data-ad-status="unfilled"`), so a blocked or empty ad slot never leaves
-reserved blank space behind. `/ads.txt` is generated from the same client id
+Each `AdSlot` stays collapsed — no label, no reserved space — until Google
+reports a fill (`data-ad-status="filled"`). An unfilled or blocked request
+never leaves a blank box behind; the `ins` tag remains in the DOM so
+AdSense's crawler can still see the unit. `/ads.txt` is generated from the same client id
 so Google can verify the site as an authorized seller. Note that a brand-new
 AdSense account still needs Google's manual site review before any ad
 actually serves — this wiring is necessary but not sufficient for that.
