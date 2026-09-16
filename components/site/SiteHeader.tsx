@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/ui/Logo";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { ctaPrimary } from "@/components/ui/cta";
 
 const HEADER_LINKS = [
@@ -13,7 +14,7 @@ export function SiteHeader({ home = false }: { home?: boolean }) {
     <header className="sticky top-0 z-30 w-full border-b border-[var(--color-border)]/80 bg-[var(--color-paper)]/80 backdrop-blur-xl">
       <div className="flex min-w-0 items-center justify-between gap-3 px-4 py-3 sm:px-10 sm:py-3.5">
         <Logo href={home ? "" : "/"} />
-        <div className="flex shrink-0 items-center gap-5">
+        <div className="flex shrink-0 items-center gap-3 sm:gap-5">
           <nav className="hidden items-center gap-5 text-[13.5px] font-medium md:flex" aria-label="Site">
             {HEADER_LINKS.map((link) => (
               <Link
@@ -25,6 +26,7 @@ export function SiteHeader({ home = false }: { home?: boolean }) {
               </Link>
             ))}
           </nav>
+          <ThemeToggle />
           <Link href="/builder" className={ctaPrimary.sm} aria-label="Start building">
             <span className="sm:hidden" aria-hidden="true">
               Start

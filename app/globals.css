@@ -67,6 +67,29 @@ html {
   color-scheme: light dark;
 }
 
+/* Icon shown is the action (moon = go dark, sun = go light). Follows the
+   stored data-theme when set, otherwise the system preference. */
+.theme-icon-sun {
+  display: none;
+}
+.theme-icon-moon {
+  display: block;
+}
+html[data-theme="dark"] .theme-icon-sun {
+  display: block;
+}
+html[data-theme="dark"] .theme-icon-moon {
+  display: none;
+}
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) .theme-icon-sun {
+    display: block;
+  }
+  html:not([data-theme="light"]) .theme-icon-moon {
+    display: none;
+  }
+}
+
 body {
   background: var(--color-paper);
   color: var(--color-ink);

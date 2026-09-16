@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Logo } from "@/components/ui/Logo";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { clearResumeData } from "@/lib/storage";
 import { useBuilderStore } from "@/lib/store";
 import { showToast } from "@/lib/toast";
@@ -36,15 +37,18 @@ export function Navbar() {
   return (
     <header className="no-print flex shrink-0 items-center justify-between gap-3 border-b border-[var(--color-border)] bg-[var(--color-surface)]/90 px-4 py-3 shadow-card backdrop-blur-xl sm:px-6">
       <Logo />
-      <Button variant="secondary" size="sm" onClick={() => setConfirming(true)} aria-label="Start new resume">
-        <NewResumeIcon />
-        <span className="hidden sm:inline" aria-hidden="true">
-          Start new resume
-        </span>
-        <span className="sm:hidden" aria-hidden="true">
-          New
-        </span>
-      </Button>
+      <div className="flex shrink-0 items-center gap-2">
+        <ThemeToggle />
+        <Button variant="secondary" size="sm" onClick={() => setConfirming(true)} aria-label="Start new resume">
+          <NewResumeIcon />
+          <span className="hidden sm:inline" aria-hidden="true">
+            Start new resume
+          </span>
+          <span className="sm:hidden" aria-hidden="true">
+            New
+          </span>
+        </Button>
+      </div>
       <ConfirmDialog
         open={confirming}
         title="Start a new resume?"

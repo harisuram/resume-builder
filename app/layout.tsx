@@ -4,6 +4,7 @@ import Script from "next/script";
 import { ADSENSE_CLIENT_ID, adsenseClientAttr, isAdsenseConfigured } from "@/lib/ads";
 import { BRAND } from "@/lib/brand";
 import { HOME_DESCRIPTION, HOME_TITLE, SITE_KEYWORDS, SITE_NAME } from "@/lib/seo";
+import { THEME_BOOTSTRAP_SCRIPT } from "@/lib/theme";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
@@ -70,6 +71,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           only covers this node's own attributes — it does not hide mismatches
           in children. */}
       <body className="flex min-h-full flex-col antialiased" suppressHydrationWarning>
+        <Script id="theme-bootstrap" strategy="beforeInteractive">
+          {THEME_BOOTSTRAP_SCRIPT}
+        </Script>
         {isAdsenseConfigured() && (
           <Script
             id="adsense"
