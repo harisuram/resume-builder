@@ -1,12 +1,11 @@
 /**
- * All AdSense identifiers are environment-driven — never hardcode a real
- * publisher/slot id in source. Nothing here renders anything: it just
- * answers "is this configured," which is what lets every ad slot decide to
- * render nothing at all rather than an empty placeholder when it isn't.
+ * The publisher id is this site's AdSense account (the `ca-pub-…` in the
+ * snippet Google gives you). Slot ids stay environment-driven so in-page
+ * units stay collapsed until real slot numbers are set.
  *
- * Placeholder values from `.env.example` (`ca-pub-000…`, slot `0000000000`)
- * are treated as unset so copying the example file can't publish fake ads
- * or an ads.txt line Google would reject.
+ * Override `NEXT_PUBLIC_ADSENSE_CLIENT_ID` if you need a different account.
+ * Empty values and the all-zero placeholders (`ca-pub-000…`, slot `0000000000`)
+ * are treated as unset so a preview build can disable ads entirely.
  */
 
 /** True for empty values and the all-zero placeholders in `.env.example`. */
@@ -20,7 +19,12 @@ function liveId(value: string | undefined): string {
   return isPlaceholderAdId(raw) ? "" : raw;
 }
 
-export const ADSENSE_CLIENT_ID = liveId(process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID);
+/** From the AdSense snippet: `adsbygoogle.js?client=ca-pub-…`. */
+export const DEFAULT_ADSENSE_CLIENT_ID = "ca-pub-9224755974440077";
+
+export const ADSENSE_CLIENT_ID = liveId(
+  process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID ?? DEFAULT_ADSENSE_CLIENT_ID,
+);
 
 export const ADSENSE_SLOTS = {
   landing: liveId(process.env.NEXT_PUBLIC_ADSENSE_SLOT_LANDING),

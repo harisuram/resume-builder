@@ -1,6 +1,7 @@
 import {
   ADSENSE_CLIENT_ID,
   ADSENSE_SLOTS,
+  DEFAULT_ADSENSE_CLIENT_ID,
   adsTxtBody,
   adsenseClientAttr,
   adsensePublisherId,
@@ -9,9 +10,11 @@ import {
 } from "./ads";
 
 describe("ads config", () => {
-  it("defaults to unconfigured when no env vars are set", () => {
-    expect(ADSENSE_CLIENT_ID).toBe("");
-    expect(isAdsenseConfigured()).toBe(false);
+  it("defaults to the site publisher so the loader script and ads.txt ship", () => {
+    expect(DEFAULT_ADSENSE_CLIENT_ID).toBe("ca-pub-9224755974440077");
+    expect(ADSENSE_CLIENT_ID).toBe("ca-pub-9224755974440077");
+    expect(isAdsenseConfigured()).toBe(true);
+    expect(adsTxtBody()).toBe("google.com, pub-9224755974440077, DIRECT, f08c47fec0942fa0\n");
   });
 
   it("exposes every slot AdsBot needs to find", () => {

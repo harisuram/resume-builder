@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { AdSlot } from "@/components/ads/AdSlot";
 import { requestedTemplateId } from "@/components/templates/shared/theme";
 import { ADSENSE_SLOTS } from "@/lib/ads";
@@ -87,6 +87,29 @@ function isStepValid(
   return status === "complete" || status === "skipped";
 }
 
+/** Enter animation for Next (from the right) and Back (from the left).
+ * Kept off the sticky footer — a transform on that ancestor would un-fix
+ * it on phones. */
+function StepEnter({
+  direction,
+  enabled,
+  children,
+}: {
+  direction: 1 | -1;
+  enabled: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className={`min-w-0 ${
+        enabled ? (direction === 1 ? "animate-step-in-from-right" : "animate-step-in-from-left") : ""
+      }`}
+    >
+      {children}
+    </div>
+  );
+}
+
 function ActivePanel({ activeKey }: { activeKey: NavKey }) {
   switch (activeKey) {
     case "basicInfo":
@@ -151,6 +174,8 @@ export function BuilderShell() {
   const clearBasicInfo = useBuilderStore((s) => s.clearBasicInfo);
   const sectionOrder = useBuilderStore((s) => s.sectionOrder);
   const [activeKey, setActiveKey] = useState<NavKey>("basicInfo");
+  const [stepDir, setStepDir] = useState<1 | -1>(1);
+  const [animateStep, setAnimateStep] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -201,12 +226,17 @@ export function BuilderShell() {
     if (pane) pane.scrollTop = 0;
   }, [activeKey]);
 
-  function selectSection(key: NavKey) {
-    setActiveKey(key);
-  }
-
   const wizardOrder = getWizardOrder(sectionOrder);
   const stepIndex = wizardOrder.indexOf(activeKey);
+
+  function selectSection(key: NavKey, direction?: 1 | -1) {
+    if (key === activeKey) return;
+    const from = wizardOrder.indexOf(activeKey);
+    const to = wizardOrder.indexOf(key);
+    setStepDir(direction ?? (to < from ? -1 : 1));
+    setAnimateStep(true);
+    setActiveKey(key);
+  }
   const canGoBack = stepIndex > 0;
   const hasNextStep = stepIndex >= 0 && stepIndex < wizardOrder.length - 1;
   const stepValid = isStepValid(activeKey, basicInfo, sectionStatus, photo);
@@ -234,7 +264,7 @@ export function BuilderShell() {
 
   function goBack() {
     const prev = adjacentUnskippedStep(wizardOrder, stepIndex, -1, sectionStatus);
-    if (prev) selectSection(prev);
+    if (prev) selectSection(prev, -1);
   }
   /** Unconditional advance — used once a step has already been resolved
    * (Next, after its own validity check) or explicitly bypassed (Skip).
@@ -242,7 +272,7 @@ export function BuilderShell() {
    * switch that's already off. */
   function advance() {
     const next = adjacentUnskippedStep(wizardOrder, stepIndex, 1, sectionStatus);
-    if (next) selectSection(next);
+    if (next) selectSection(next, 1);
   }
   function goNext() {
     if (!stepValid) return;
@@ -277,14 +307,14 @@ export function BuilderShell() {
   }
 
   function goSkip() {
-    // toggleSkipSection updates the store synchronously, but `sectionStatus`
-    // here is a snapshot from this render — re-deriving validity from it
-    // right after would still see the pre-skip status. Skip is the explicit
-    // override anyway, so just advance unconditionally.
-    if (isSkippableStep(activeKey) && sectionStatus[activeKey] !== "skipped") {
-      toggleSkipSection(activeKey);
-    }
+    // Advance first so Skip uses the same step fade as Next. Marking the
+    // current step skipped before the key changes would paint SkippedNotice
+    // in place and eat the transition. `sectionStatus` here is still the
+    // pre-skip snapshot, which is what adjacentUnskippedStep expects.
+    const current = activeKey;
+    const shouldMarkSkipped = isSkippableStep(current) && sectionStatus[current] !== "skipped";
     advance();
+    if (shouldMarkSkipped) toggleSkipSection(current);
   }
   function goClear() {
     if (activeKey === "basicInfo") {
@@ -318,9 +348,11 @@ export function BuilderShell() {
           </aside>
 
           {activeKey === "export" ? (
-            <main ref={formPaneRef} className="print-unclip min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-6 sm:px-8">
+            <main ref={formPaneRef} className="print-unclip min-h-0 flex-1 overflow-y-auto overflow-x-clip overscroll-contain px-5 py-6 sm:px-8">
               <div className="mx-auto max-w-3xl">
-                <ExportSection />
+                <StepEnter key={activeKey} direction={stepDir} enabled={animateStep}>
+                  <ExportSection />
+                </StepEnter>
                 <AdSlot
                   slot={ADSENSE_SLOTS.builderPreview}
                   name="Builder preview"
@@ -332,9 +364,11 @@ export function BuilderShell() {
             <div className="flex min-h-0 flex-1 overflow-hidden">
               {/* Extra bottom padding on mobile: the sticky step footer sits
                   over the viewport, so the last field has to scroll above it. */}
-              <main ref={formPaneRef} className="block min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-6 pb-[calc(11rem+env(safe-area-inset-bottom))] sm:px-8 md:pb-6">
+              <main ref={formPaneRef} className="block min-h-0 flex-1 overflow-y-auto overflow-x-clip overscroll-contain px-5 py-6 pb-[calc(11rem+env(safe-area-inset-bottom))] sm:px-8 md:pb-6">
                 <div className="mx-auto max-w-2xl">
-                  <ActivePanel activeKey={activeKey} />
+                  <StepEnter key={activeKey} direction={stepDir} enabled={animateStep}>
+                    <ActivePanel activeKey={activeKey} />
+                  </StepEnter>
                   <SectionFooterNav
                     canGoBack={canGoBack}
                     canGoNext={hasNextStep}

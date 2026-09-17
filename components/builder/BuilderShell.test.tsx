@@ -136,6 +136,36 @@ describe("BuilderShell", () => {
     expect(screen.getByRole("heading", { name: "Basic info" })).toBeInTheDocument();
   });
 
+  it("fades the step in from the right on Next and from the left on Back", async () => {
+    render(<BuilderShell />);
+    expect(await screen.findByRole("heading", { name: "Basic info" })).toBeInTheDocument();
+    expect(document.querySelector(".animate-step-in-from-right")).toBeNull();
+    expect(document.querySelector(".animate-step-in-from-left")).toBeNull();
+
+    act(() => useBuilderStore.getState().updateBasicInfo({ name: "Jamie", email: "jamie@example.com", location: "Austin, TX" }));
+    await userEvent.click(screen.getByRole("button", { name: "Next" }));
+    await userEvent.click(screen.getByRole("button", { name: "No, don’t save" }));
+
+    expect(screen.getByRole("heading", { name: "Summary", level: 2 }).closest(".animate-step-in-from-right")).not.toBeNull();
+
+    await userEvent.click(screen.getByRole("button", { name: "Back" }));
+    expect(screen.getByRole("heading", { name: "Basic info" }).closest(".animate-step-in-from-left")).not.toBeNull();
+    expect(document.querySelector(".animate-step-in-from-right")).toBeNull();
+  });
+
+  it("fades the step in from the right on Skip", async () => {
+    render(<BuilderShell />);
+    expect(await screen.findByRole("heading", { name: "Basic info" })).toBeInTheDocument();
+    act(() => useBuilderStore.getState().updateBasicInfo({ name: "Jamie", email: "jamie@example.com", location: "Austin, TX" }));
+    await userEvent.click(screen.getByRole("button", { name: "Next" }));
+    await userEvent.click(screen.getByRole("button", { name: "No, don’t save" }));
+    expect(screen.getByRole("heading", { name: "Summary", level: 2 })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Skip" }));
+    expect(screen.getByRole("heading", { name: "Photo" }).closest(".animate-step-in-from-right")).not.toBeNull();
+    expect(useBuilderStore.getState().sectionStatus.summary).toBe("skipped");
+  });
+
   it("scrolls the form pane to the top when Next opens the next section", async () => {
     const { container } = render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });

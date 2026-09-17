@@ -64,10 +64,15 @@ enabled/disabled/no-fill states.
 
 ## Ads (Google AdSense)
 
-Off by default — copy `.env.example` to `.env.local` and fill in
-`NEXT_PUBLIC_ADSENSE_CLIENT_ID` (plus the slot ids) to turn ads on. Until
-then, the loader script isn't injected, `/ads.txt` ships empty, and every
-`AdSlot` stays out of the layout until Google actually fills it.
+The AdSense loader (`adsbygoogle.js?client=ca-pub-9224755974440077`), the
+`google-adsense-account` meta tag, and `/ads.txt` ship with this site's
+publisher id. Set `NEXT_PUBLIC_ADSENSE_CLIENT_ID` to empty or `ca-pub-000…`
+to turn that off for a preview build.
+
+In-page `AdSlot` units still need slot ids (`NEXT_PUBLIC_ADSENSE_SLOT_*`).
+Until those are set, every slot stays out of the layout; Auto ads can still
+run from the loader script. A filled unit is the only thing that takes
+space — unfilled or blocked requests never leave a blank box.
 
 Six slots:
 - **Landing page** — between the feature grid and the footer, well below the
@@ -109,7 +114,8 @@ split is what makes the free plan fit: HTML/CSS/JS is served from the CDN
 2. Framework preset: **None**. Build command: `npm run build`. Deploy command: leave default (`npx wrangler deploy`).
 3. Set **build** environment variables:
    - `NEXT_PUBLIC_SITE_URL` — your real domain (`https://example.com`)
-   - AdSense `NEXT_PUBLIC_ADSENSE_*` vars if you want ads on
+   - AdSense `NEXT_PUBLIC_ADSENSE_SLOT_*` to show in-page units (the publisher snippet is already the site default)
+   - Set `NEXT_PUBLIC_ADSENSE_CLIENT_ID` only if you need to override or disable ads
 4. After the first deploy, set the Groq secret (Settings → Variables and Secrets):
    - `GROQ_API_KEY` — encrypt / secret (never a plain text var)
    - `GROQ_MODEL` is already defaulted in `wrangler.jsonc`
