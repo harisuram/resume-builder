@@ -5,6 +5,15 @@ import { loadResumeData } from "./storage";
  * draft doesn't replay it on every visit. Independent of `resumeData`. */
 export const TOUR_DISMISSED_KEY = "builderTourDismissed";
 
+/** Matches the builder's `md:` layout. Tour targets (skip switch, sort
+ * arrows, page separator) are `hidden` below this width. */
+export const BUILDER_TOUR_MEDIA = "(min-width: 768px)";
+
+export function isBuilderTourViewport(): boolean {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return true;
+  return window.matchMedia(BUILDER_TOUR_MEDIA).matches;
+}
+
 export function isBuilderTourDismissed(): boolean {
   return localStorage.getItem(TOUR_DISMISSED_KEY) === "1";
 }

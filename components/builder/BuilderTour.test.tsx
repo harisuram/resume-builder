@@ -1,7 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { saveResumeData } from "@/lib/storage";
-import { TOUR_DISMISSED_KEY } from "@/lib/builderTour";
+import { BUILDER_TOUR_MEDIA, TOUR_DISMISSED_KEY } from "@/lib/builderTour";
 import { useBuilderStore } from "@/lib/store";
 import { makeFullResumeData } from "@/test-utils/fixtures";
 import { BuilderShell } from "./BuilderShell";
@@ -10,6 +10,12 @@ import { BuilderTour } from "./BuilderTour";
 beforeEach(() => {
   localStorage.clear();
   useBuilderStore.getState().resetStore();
+  window.matchMedia = jest.fn().mockImplementation((query: string) => ({
+    matches: query === BUILDER_TOUR_MEDIA,
+    media: query,
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+  }));
 });
 
 describe("BuilderTour", () => {
@@ -50,6 +56,38 @@ describe("BuilderShell first-run tour", () => {
   it("shows the tour when local storage has no section values", async () => {
     render(<BuilderShell />);
     expect(await screen.findByRole("dialog", { name: /skip what this resume/i })).toBeInTheDocument();
+  });
+
+  it("does not show the tour on a mobile viewport", async () => {
+    window.matchMedia = jest.fn().mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+    }));
+    render(<BuilderShell />);
+    await screen.findByRole("heading", { name: "Basic info" });
+    expect(screen.queryByRole("dialog", { name: /skip what this resume/i })).not.toBeInTheDocument();
+  });
+
+  it("closes the tour when the viewport shrinks below md", async () => {
+    const listeners: Array<(event: MediaQueryListEvent) => void> = [];
+    const media = {
+      matches: true,
+      media: BUILDER_TOUR_MEDIA,
+      addEventListener: (_event: string, cb: (event: MediaQueryListEvent) => void) => {
+        listeners.push(cb);
+      },
+      removeEventListener: jest.fn(),
+    };
+    window.matchMedia = jest.fn().mockReturnValue(media);
+    render(<BuilderShell />);
+    expect(await screen.findByRole("dialog", { name: /skip what this resume/i })).toBeInTheDocument();
+    media.matches = false;
+    act(() => {
+      listeners.forEach((cb) => cb({ matches: false } as MediaQueryListEvent));
+    });
+    expect(screen.queryByRole("dialog", { name: /skip what this resume/i })).not.toBeInTheDocument();
   });
 
   it("does not show the tour when a saved section already has a value", async () => {

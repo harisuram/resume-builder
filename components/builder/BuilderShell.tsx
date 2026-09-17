@@ -5,7 +5,12 @@ import { AdSlot } from "@/components/ads/AdSlot";
 import { requestedTemplateId } from "@/components/templates/shared/theme";
 import { ADSENSE_SLOTS } from "@/lib/ads";
 import { hasSavedResumeData, loadResumeData } from "@/lib/storage";
-import { dismissBuilderTour, shouldOfferBuilderTour } from "@/lib/builderTour";
+import {
+  BUILDER_TOUR_MEDIA,
+  dismissBuilderTour,
+  isBuilderTourViewport,
+  shouldOfferBuilderTour,
+} from "@/lib/builderTour";
 import { isBasicInfoComplete, hasBasicInfoContent, hasSectionContent, useBuilderStore } from "@/lib/store";
 import { showToast } from "@/lib/toast";
 import { getSectionMeta } from "@/lib/persona";
@@ -186,8 +191,22 @@ export function BuilderShell() {
     if (fromGallery) useBuilderStore.getState().setTemplateId(fromGallery);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setHydrated(true);
-    if (shouldOfferBuilderTour()) setTourOpen(true);
+    if (shouldOfferBuilderTour() && isBuilderTourViewport()) setTourOpen(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return;
+    const media = window.matchMedia(BUILDER_TOUR_MEDIA);
+    const sync = () => {
+      if (media.matches) {
+        if (shouldOfferBuilderTour()) setTourOpen(true);
+      } else {
+        setTourOpen(false);
+      }
+    };
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
   }, []);
 
   useEffect(() => {

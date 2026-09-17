@@ -1,5 +1,11 @@
 import { saveResumeData } from "./storage";
-import { dismissBuilderTour, shouldOfferBuilderTour, TOUR_DISMISSED_KEY } from "./builderTour";
+import {
+  BUILDER_TOUR_MEDIA,
+  dismissBuilderTour,
+  isBuilderTourViewport,
+  shouldOfferBuilderTour,
+  TOUR_DISMISSED_KEY,
+} from "./builderTour";
 import { hasAnyResumeValue } from "./store";
 import { makeFullResumeData } from "@/test-utils/fixtures";
 
@@ -27,6 +33,34 @@ describe("hasAnyResumeValue", () => {
     expect(hasAnyResumeValue({ sections: { skills: ["TypeScript"] } })).toBe(true);
     expect(hasAnyResumeValue({ sections: { summary: "Backend engineer." } })).toBe(true);
     expect(hasAnyResumeValue({ sections: { additional: { heading: "Awards", items: [] } } })).toBe(true);
+  });
+});
+
+describe("isBuilderTourViewport", () => {
+  it("is true when matchMedia is missing (jsdom / SSR)", () => {
+    const original = window.matchMedia;
+    // @ts-expect-error jsdom may omit matchMedia
+    delete window.matchMedia;
+    expect(isBuilderTourViewport()).toBe(true);
+    window.matchMedia = original;
+  });
+
+  it("follows the md breakpoint the builder layout uses", () => {
+    window.matchMedia = jest.fn().mockImplementation((query: string) => ({
+      matches: query === BUILDER_TOUR_MEDIA,
+      media: query,
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+    }));
+    expect(isBuilderTourViewport()).toBe(true);
+
+    window.matchMedia = jest.fn().mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+    }));
+    expect(isBuilderTourViewport()).toBe(false);
   });
 });
 
