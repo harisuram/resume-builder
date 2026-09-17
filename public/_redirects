@@ -1,0 +1,3 @@
+# Google’s ads.txt crawler must get a plain-text file at /ads.txt.
+# auto-trailing-slash would otherwise 404 /ads.txt/ through the Worker.
+/ads.txt/ /ads.txt 301

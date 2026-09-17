@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import {
   ADSENSE_CLIENT_ID,
   ADSENSE_SLOTS,
@@ -67,5 +69,10 @@ describe("adsTxtBody", () => {
     expect(adsTxtBody("ca-pub-1234567890123456")).toBe(
       "google.com, pub-1234567890123456, DIRECT, f08c47fec0942fa0\n",
     );
+  });
+
+  it("keeps public/ads.txt identical to the generated publisher line", () => {
+    const file = readFileSync(join(__dirname, "../public/ads.txt"), "utf8");
+    expect(file).toBe(adsTxtBody());
   });
 });

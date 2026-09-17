@@ -6,6 +6,7 @@
 
 /ads.txt
   Content-Type: text/plain; charset=utf-8
+  Cache-Control: public, max-age=600
 
 # Next static export writes these without a .png extension. Wrangler MIME-sniffs
 # by extension, so without this, nosniff would block the share image and icons.

@@ -10,24 +10,24 @@ import { GET } from "./route";
 
 jest.mock("../../lib/ads", () => ({
   __esModule: true,
-  isAdsenseConfigured: jest.fn(),
+  DEFAULT_ADSENSE_CLIENT_ID: "ca-pub-9224755974440077",
   adsTxtBody: jest.fn(),
 }));
 
+const LINE = "google.com, pub-9224755974440077, DIRECT, f08c47fec0942fa0\n";
+
 describe("GET /ads.txt", () => {
-  it("returns an empty body when AdSense isn't configured", async () => {
-    (adsLib.isAdsenseConfigured as jest.Mock).mockReturnValue(false);
+  it("returns the site publisher line when the live client id is unset", async () => {
+    (adsLib.adsTxtBody as jest.Mock).mockImplementation((id?: string) => (id ? LINE : ""));
     const res = await GET();
-    expect(await res.text()).toBe("");
+    expect(await res.text()).toBe(LINE);
+    expect(res.headers.get("Content-Type")).toBe("text/plain; charset=utf-8");
   });
 
   it("returns the standard ads.txt line with the publisher id when configured", async () => {
-    (adsLib.isAdsenseConfigured as jest.Mock).mockReturnValue(true);
-    (adsLib.adsTxtBody as jest.Mock).mockReturnValue(
-      "google.com, pub-1234567890123456, DIRECT, f08c47fec0942fa0\n",
-    );
+    (adsLib.adsTxtBody as jest.Mock).mockReturnValue(LINE);
     const res = await GET();
-    expect(await res.text()).toBe("google.com, pub-1234567890123456, DIRECT, f08c47fec0942fa0\n");
+    expect(await res.text()).toBe(LINE);
     expect(res.headers.get("Content-Type")).toBe("text/plain; charset=utf-8");
   });
 });
