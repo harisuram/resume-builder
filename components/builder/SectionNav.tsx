@@ -45,6 +45,8 @@ export function SectionNav({ active, onSelect }: { active: NavKey; onSelect: (ke
   const basicInfoDone = isBasicInfoComplete(basicInfo);
   const summaryLabel = SUMMARY_COPY.label;
   const summaryStatus = sectionStatus.summary ?? "not_started";
+  const photoStatus: SectionStatus =
+    sectionStatus.photo === "skipped" ? "skipped" : photo ? "complete" : "not_started";
 
   return (
     <>
@@ -59,23 +61,6 @@ export function SectionNav({ active, onSelect }: { active: NavKey; onSelect: (ke
           trailing={
             <span className="hidden text-[10.5px] font-medium tracking-wide text-[var(--color-ink-faint)] md:inline">
               {basicInfoDone ? "Complete" : "Required"}
-            </span>
-          }
-        />
-
-        <RowDivider />
-
-        <NavRow
-          label="Photo"
-          active={active === "photo"}
-          // No photo — including straight after Skip, which clears it — means
-          // nothing shows on the resume, so mobile marks the row inactive
-          // rather than repeating a status the strip has no room for.
-          skipped={!photo}
-          onClick={() => onSelect("photo")}
-          trailing={
-            <span className="hidden text-[10.5px] font-medium tracking-wide text-[var(--color-ink-faint)] md:inline">
-              {photo ? "Added" : "Optional"}
             </span>
           }
         />
@@ -99,6 +84,31 @@ export function SectionNav({ active, onSelect }: { active: NavKey; onSelect: (ke
                   checked={summaryStatus !== "skipped"}
                   onChange={() => toggleSkipSection("summary")}
                   label={summaryStatus === "skipped" ? `Include ${summaryLabel}` : `Skip ${summaryLabel}`}
+                />
+              </div>
+            </div>
+          }
+        />
+
+        <RowDivider />
+
+        <NavRow
+          label="Photo"
+          active={active === "photo"}
+          skipped={photoStatus === "skipped"}
+          onClick={() => onSelect("photo")}
+          trailing={
+            <div className="hidden shrink-0 items-center gap-2 md:flex">
+              <span
+                className="h-1.5 w-1.5 shrink-0 rounded-full transition-colors duration-150"
+                style={{ background: DOT_COLOR[photoStatus] }}
+                aria-hidden="true"
+              />
+              <div onClick={(e) => e.stopPropagation()}>
+                <Switch
+                  checked={photoStatus !== "skipped"}
+                  onChange={() => toggleSkipSection("photo")}
+                  label={photoStatus === "skipped" ? "Include Photo" : "Skip Photo"}
                 />
               </div>
             </div>

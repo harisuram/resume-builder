@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AdSlot } from "@/components/ads/AdSlot";
 import { requestedTemplateId } from "@/components/templates/shared/theme";
 import { ADSENSE_SLOTS } from "@/lib/ads";
-import { hasSavedResumeData, loadResumeData } from "@/lib/storage";
+import { hasSavedResumeData, loadResumeData, saveResumeData } from "@/lib/storage";
 import {
   BUILDER_TOUR_MEDIA,
   dismissBuilderTour,
@@ -15,6 +15,7 @@ import { isBasicInfoComplete, hasBasicInfoContent, hasSectionContent, useBuilder
 import { showToast } from "@/lib/toast";
 import { getSectionMeta } from "@/lib/persona";
 import type { BasicInfo, SectionKey, SectionStatus } from "@/lib/types";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ToastHost } from "@/components/ui/Toast";
 import { BasicInfoForm } from "./sections/BasicInfoForm";
 import { CertificationsForm } from "./sections/CertificationsForm";
@@ -61,16 +62,26 @@ function BuilderAdCrawlerTree() {
 
 /** Whether the current step has to be resolved (filled in, or explicitly
  * skipped) before "Next" will advance past it. Basic info has no skip
- * option, so it's gated on its required fields directly; the photo is
- * always optional; every other step must be either complete or skipped —
- * otherwise "Skip" would do nothing "Next" doesn't already do. */
+ * option, so it's gated on its required fields directly; every other step
+ * except export must be either complete or skipped — otherwise "Skip"
+ * would do nothing "Next" doesn't already do. */
 function isContentSection(key: NavKey): key is SectionKey {
   return key !== "basicInfo" && key !== "photo" && key !== "export";
 }
 
-function isStepValid(key: NavKey, basicInfo: BasicInfo, sectionStatus: Record<string, SectionStatus>): boolean {
+function isSkippableStep(key: NavKey): key is SectionKey | "photo" {
+  return key !== "basicInfo" && key !== "export";
+}
+
+function isStepValid(
+  key: NavKey,
+  basicInfo: BasicInfo,
+  sectionStatus: Record<string, SectionStatus>,
+  photo: string | null,
+): boolean {
   if (key === "basicInfo") return isBasicInfoComplete(basicInfo);
-  if (key === "photo" || key === "export") return true;
+  if (key === "export") return true;
+  if (key === "photo") return sectionStatus.photo === "skipped" || Boolean(photo);
   const status = sectionStatus[key] ?? "not_started";
   return status === "complete" || status === "skipped";
 }
@@ -161,18 +172,23 @@ function ActivePanel({ activeKey }: { activeKey: NavKey }) {
 export function BuilderShell() {
   const loadFromData = useBuilderStore((s) => s.loadFromData);
   const setHasSavedCopy = useBuilderStore((s) => s.setHasSavedCopy);
+  const hasSavedCopy = useBuilderStore((s) => s.hasSavedCopy);
+  const saveConsent = useBuilderStore((s) => s.saveConsent);
+  const setSaveConsent = useBuilderStore((s) => s.setSaveConsent);
+  const getResumeData = useBuilderStore((s) => s.getResumeData);
   const basicInfo = useBuilderStore((s) => s.basicInfo);
   const photo = useBuilderStore((s) => s.photo);
   const sections = useBuilderStore((s) => s.sections);
   const sectionStatus = useBuilderStore((s) => s.sectionStatus);
   const toggleSkipSection = useBuilderStore((s) => s.toggleSkipSection);
-  const setPhoto = useBuilderStore((s) => s.setPhoto);
+  const clearPhoto = useBuilderStore((s) => s.clearPhoto);
   const clearSection = useBuilderStore((s) => s.clearSection);
   const clearBasicInfo = useBuilderStore((s) => s.clearBasicInfo);
   const sectionOrder = useBuilderStore((s) => s.sectionOrder);
   const [activeKey, setActiveKey] = useState<NavKey>("basicInfo");
   const [hydrated, setHydrated] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
+  const [saveConsentOpen, setSaveConsentOpen] = useState(false);
   const formPaneRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -226,8 +242,8 @@ export function BuilderShell() {
   const stepIndex = wizardOrder.indexOf(activeKey);
   const canGoBack = stepIndex > 0;
   const hasNextStep = stepIndex >= 0 && stepIndex < wizardOrder.length - 1;
-  const stepValid = isStepValid(activeKey, basicInfo, sectionStatus);
-  const canSkip = activeKey === "photo" || isContentSection(activeKey);
+  const stepValid = isStepValid(activeKey, basicInfo, sectionStatus, photo);
+  const canSkip = isSkippableStep(activeKey);
   const canClear =
     activeKey === "basicInfo"
       ? hasBasicInfoContent(basicInfo)
@@ -240,11 +256,13 @@ export function BuilderShell() {
         ? basicInfo.name.trim() && basicInfo.email.trim() && basicInfo.location.trim()
           ? "Fix the highlighted fields before continuing."
           : "Fill in your name, email, and location to continue."
-        : isContentSection(activeKey)
-          ? hasSectionContent(activeKey, sections)
-            ? "Fix the highlighted fields before continuing."
-            : "Fill in this section, or skip it, to continue."
-          : undefined
+        : activeKey === "photo"
+          ? "Upload a photo, or skip it, to continue."
+          : isContentSection(activeKey)
+            ? hasSectionContent(activeKey, sections)
+              ? "Fix the highlighted fields before continuing."
+              : "Fill in this section, or skip it, to continue."
+            : undefined
       : undefined;
 
   function goBack() {
@@ -256,16 +274,43 @@ export function BuilderShell() {
     if (hasNextStep) selectSection(wizardOrder[stepIndex + 1]);
   }
   function goNext() {
-    if (stepValid) advance();
+    if (!stepValid) return;
+    // First time past basic info, ask whether to keep a copy on this device
+    // — skipped when a saved copy already exists or they already answered.
+    if (activeKey === "basicInfo" && !hasSavedCopy && saveConsent === null) {
+      setSaveConsentOpen(true);
+      return;
+    }
+    advance();
   }
+
+  function closeSaveConsentAndAdvance() {
+    setSaveConsentOpen(false);
+    advance();
+  }
+
+  function acceptSaveConsent() {
+    try {
+      saveResumeData(getResumeData());
+      setHasSavedCopy(true);
+      setSaveConsent("yes");
+    } catch {
+      showToast("Couldn't save this resume on this device. Storage may be full.");
+    }
+    closeSaveConsentAndAdvance();
+  }
+
+  function declineSaveConsent() {
+    setSaveConsent("no");
+    closeSaveConsentAndAdvance();
+  }
+
   function goSkip() {
     // toggleSkipSection updates the store synchronously, but `sectionStatus`
     // here is a snapshot from this render — re-deriving validity from it
     // right after would still see the pre-skip status. Skip is the explicit
     // override anyway, so just advance unconditionally.
-    if (activeKey === "photo") {
-      setPhoto(null);
-    } else if (isContentSection(activeKey) && sectionStatus[activeKey] !== "skipped") {
+    if (isSkippableStep(activeKey) && sectionStatus[activeKey] !== "skipped") {
       toggleSkipSection(activeKey);
     }
     advance();
@@ -274,7 +319,7 @@ export function BuilderShell() {
     if (activeKey === "basicInfo") {
       clearBasicInfo();
     } else if (activeKey === "photo") {
-      setPhoto(null);
+      clearPhoto();
     } else if (isContentSection(activeKey)) {
       clearSection(activeKey);
     }
@@ -364,6 +409,16 @@ export function BuilderShell() {
       </div>
 
       {activeKey !== "export" && <MobilePreviewButton onClick={() => selectSection("export")} />}
+      <ConfirmDialog
+        open={saveConsentOpen}
+        title="Save this resume on this device so you can pick it up again later?"
+        description="Stored only in this browser. Nothing is uploaded anywhere."
+        confirmLabel="Yes, save it"
+        cancelLabel="No, don’t save"
+        confirmVariant="primary"
+        onConfirm={acceptSaveConsent}
+        onCancel={declineSaveConsent}
+      />
       <ToastHost />
       <BuilderTour
         open={tourOpen}

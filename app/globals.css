@@ -96,6 +96,32 @@ body {
   font-family: var(--font-sans);
 }
 
+/* Native month pickers include a calendar icon. On desktop, floor the
+ * width so "September 2020" isn't clipped. On mobile, let the field fill
+ * the card instead of forcing a min-width that overflows. */
+input[type="month"] {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+input[type="month"]::-webkit-datetime-edit {
+  min-width: 0;
+  padding-inline: 0;
+}
+input[type="month"]::-webkit-calendar-picker-indicator {
+  margin-inline-start: 0.25rem;
+  flex-shrink: 0;
+}
+@media (min-width: 768px) {
+  input[type="month"] {
+    min-width: 14rem;
+  }
+  input[type="month"]::-webkit-datetime-edit {
+    min-width: 9rem;
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;

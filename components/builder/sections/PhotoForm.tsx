@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/Button";
 import { useBuilderStore } from "@/lib/store";
 import { showToast } from "@/lib/toast";
 import { PhotoCropModal } from "./PhotoCropModal";
+import { SkippedNotice } from "./SkippedNotice";
 
 const MAX_FILE_BYTES = 8 * 1024 * 1024;
 
 export function PhotoForm() {
   const photo = useBuilderStore((s) => s.photo);
   const setPhoto = useBuilderStore((s) => s.setPhoto);
+  const skipped = useBuilderStore((s) => s.sectionStatus.photo) === "skipped";
   const inputRef = useRef<HTMLInputElement>(null);
   const [pendingSource, setPendingSource] = useState<string | null>(null);
   const [error, setError] = useState<string | undefined>();
@@ -45,41 +47,45 @@ export function PhotoForm() {
         </p>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[var(--color-border)] bg-[var(--color-border)]/20">
-          {photo ? (
-            // eslint-disable-next-line @next/next/no-img-element -- cropped data URL held in client state, not an optimizable next/image asset
-            <img src={photo} alt="" className="h-full w-full object-cover" />
-          ) : (
-            <span className="px-1 text-center text-[10.5px] text-[var(--color-ink-faint)]">No photo</span>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-wrap gap-2">
-            {!photo && (
-              <Button variant="secondary" size="sm" onClick={() => inputRef.current?.click()}>
-                Upload photo
-              </Button>
-            )}
-            {photo && (
-              <Button variant="secondary" size="sm" onClick={() => setPendingSource(photo)}>
-                Edit crop
-              </Button>
-            )}
-            {photo && (
-              <Button variant="ghost" size="sm" onClick={() => setPhoto(null)}>
-                Remove
-              </Button>
+      {skipped ? (
+        <SkippedNotice label="Photo" />
+      ) : (
+        <div className="flex items-center gap-4">
+          <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[var(--color-border)] bg-[var(--color-border)]/20">
+            {photo ? (
+              // eslint-disable-next-line @next/next/no-img-element -- cropped data URL held in client state, not an optimizable next/image asset
+              <img src={photo} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <span className="px-1 text-center text-[10.5px] text-[var(--color-ink-faint)]">No photo</span>
             )}
           </div>
-          {error ? (
-            <p role="alert" className="text-[11.5px] text-red-600">
-              {error}
-            </p>
-          ) : null}
+
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-wrap gap-2">
+              {!photo && (
+                <Button variant="secondary" size="sm" onClick={() => inputRef.current?.click()}>
+                  Upload photo
+                </Button>
+              )}
+              {photo && (
+                <Button variant="secondary" size="sm" onClick={() => setPendingSource(photo)}>
+                  Edit
+                </Button>
+              )}
+              {photo && (
+                <Button variant="ghost" size="sm" onClick={() => setPhoto(null)}>
+                  Remove
+                </Button>
+              )}
+            </div>
+            {error ? (
+              <p role="alert" className="text-[11.5px] text-red-600">
+                {error}
+              </p>
+            ) : null}
+          </div>
         </div>
-      </div>
+      )}
 
       <input
         ref={inputRef}

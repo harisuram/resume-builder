@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useBuilderStore } from "@/lib/store";
 import { EducationForm } from "./EducationForm";
@@ -43,6 +43,15 @@ describe("EducationForm", () => {
     expect(education[0].institution).toBe("MIT");
     expect(education[0].degree).toBe("M.S. CS");
     expect(useBuilderStore.getState().sectionStatus.education).toBe("complete");
+  });
+
+  it("keeps end date disabled until a start date is set", async () => {
+    render(<EducationForm />);
+    await userEvent.click(screen.getByText("+ Add education"));
+    expect(screen.getByLabelText("End date")).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText("Start date"), { target: { value: "2020-01" } });
+    expect(screen.getByLabelText("End date")).toBeEnabled();
   });
 
   it("shows required-field errors after blur", async () => {

@@ -18,6 +18,7 @@ describe("initial state", () => {
     expect(state.sections).toEqual({});
     expect(state.sectionStatus).toEqual({});
     expect(state.hasSavedCopy).toBe(false);
+    expect(state.saveConsent).toBeNull();
   });
 });
 
@@ -200,6 +201,16 @@ describe("toggleSkipSection", () => {
     toggleSkipSection("certifications");
     expect(useBuilderStore.getState().sectionStatus.certifications).toBe("complete");
   });
+
+  it("skips Photo without deleting it, and restores complete when unskipped", () => {
+    const { setPhoto, toggleSkipSection } = useBuilderStore.getState();
+    setPhoto("data:image/jpeg;base64,abc123");
+    toggleSkipSection("photo");
+    expect(useBuilderStore.getState().sectionStatus.photo).toBe("skipped");
+    expect(useBuilderStore.getState().photo).toBe("data:image/jpeg;base64,abc123");
+    toggleSkipSection("photo");
+    expect(useBuilderStore.getState().sectionStatus.photo).toBe("complete");
+  });
 });
 
 describe("clearSection / clearBasicInfo", () => {
@@ -220,6 +231,15 @@ describe("clearSection / clearBasicInfo", () => {
     expect(next.sections.skills).toEqual(["TypeScript"]);
     expect(next.pageBreakSections).toEqual([]);
     expect(next.pageBreakItems).toEqual([]);
+  });
+
+  it("clearPhoto drops the image and skip flag", () => {
+    const store = useBuilderStore.getState();
+    store.setPhoto("data:image/jpeg;base64,abc123");
+    store.toggleSkipSection("photo");
+    store.clearPhoto();
+    expect(useBuilderStore.getState().photo).toBeNull();
+    expect(useBuilderStore.getState().sectionStatus.photo).toBe("not_started");
   });
 
   it("clears an additional block including a heading with no items yet", () => {
@@ -252,9 +272,19 @@ describe("setPhoto", () => {
   it("stores and clears the photo data URL", () => {
     useBuilderStore.getState().setPhoto("data:image/jpeg;base64,abc123");
     expect(useBuilderStore.getState().photo).toBe("data:image/jpeg;base64,abc123");
+    expect(useBuilderStore.getState().sectionStatus.photo).toBe("complete");
 
     useBuilderStore.getState().setPhoto(null);
     expect(useBuilderStore.getState().photo).toBeNull();
+    expect(useBuilderStore.getState().sectionStatus.photo).toBe("not_started");
+  });
+
+  it("leaves a skipped photo skipped even if one is set underneath it", () => {
+    const store = useBuilderStore.getState();
+    store.toggleSkipSection("photo");
+    store.setPhoto("data:image/jpeg;base64,abc123");
+    expect(useBuilderStore.getState().sectionStatus.photo).toBe("skipped");
+    expect(useBuilderStore.getState().photo).toBe("data:image/jpeg;base64,abc123");
   });
 });
 
@@ -440,6 +470,7 @@ describe("loadFromData / resetStore", () => {
     useBuilderStore.getState().setSkills(["TypeScript"]);
     useBuilderStore.getState().setPhoto("data:image/jpeg;base64,abc123");
     useBuilderStore.getState().setHasSavedCopy(true);
+    useBuilderStore.getState().setSaveConsent("yes");
     useBuilderStore.getState().toggleSectionPageBreak("experience");
     useBuilderStore.getState().moveSection("skills", "up");
     useBuilderStore.getState().resetStore();
@@ -447,6 +478,7 @@ describe("loadFromData / resetStore", () => {
     expect(state.sections).toEqual({});
     expect(state.photo).toBeNull();
     expect(state.hasSavedCopy).toBe(false);
+    expect(state.saveConsent).toBeNull();
     expect(state.pageBreakSections).toEqual([]);
     expect(state.sectionOrder).toBeNull();
   });
@@ -475,6 +507,14 @@ describe("getResumeData", () => {
 
     useBuilderStore.getState().setPhoto("data:image/jpeg;base64,abc123");
     expect(useBuilderStore.getState().getResumeData().photo).toBe("data:image/jpeg;base64,abc123");
+  });
+
+  it("keeps a skipped photo in the snapshot so it can be shown again", () => {
+    useBuilderStore.getState().setPhoto("data:image/jpeg;base64,abc123");
+    useBuilderStore.getState().toggleSkipSection("photo");
+    const data = useBuilderStore.getState().getResumeData();
+    expect(data.photo).toBe("data:image/jpeg;base64,abc123");
+    expect(data.sectionStatus.photo).toBe("skipped");
   });
 
   it("includes sectionOrder once something has been moved, and omits it otherwise", () => {

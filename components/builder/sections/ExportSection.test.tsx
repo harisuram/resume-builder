@@ -10,7 +10,6 @@ beforeEach(() => {
   (window.print as jest.Mock).mockClear();
   act(() => {
     useBuilderStore.getState().resetStore();
-    useBuilderStore.getState().updateBasicInfo({ name: "Jamie Rivera" });
     useToastStore.getState().clear();
   });
 });
@@ -24,133 +23,91 @@ function renderExport() {
   );
 }
 
-function addContentSection() {
-  act(() => {
-    useBuilderStore.getState().setSkills(["TypeScript"]);
-  });
-}
-
 describe("ExportSection", () => {
-  it("hides the save question and download until at least one content section is filled", () => {
+  it("hides download until at least one field is filled", () => {
     renderExport();
+    expect(screen.queryByRole("button", { name: "Download PDF" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("File name")).not.toBeInTheDocument();
     expect(
       screen.queryByText("Save this resume on this device so you can pick it up again later?"),
     ).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Yes, save it" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Download PDF" })).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("File name")).not.toBeInTheDocument();
-    expect(screen.queryByText("Choose an option above first.")).not.toBeInTheDocument();
   });
 
-  it("asks to save once a content section is added", () => {
+  it("enables download once a basic-info field is filled", () => {
+    act(() => {
+      useBuilderStore.getState().updateBasicInfo({ name: "Jamie Rivera" });
+    });
     renderExport();
-    addContentSection();
-    expect(
-      screen.getByText("Save this resume on this device so you can pick it up again later?"),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Download PDF" })).toBeDisabled();
-    expect(screen.getByText("Choose an option above first.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Download PDF" })).toBeEnabled();
+    expect(screen.getByLabelText("File name")).toBeInTheDocument();
   });
 
-  it("hides the save question and download again if the last content section is cleared", () => {
-    addContentSection();
+  it("enables download once any content-section field is filled", () => {
+    act(() => {
+      useBuilderStore.getState().setSkills(["TypeScript"]);
+    });
     renderExport();
-    expect(
-      screen.getByText("Save this resume on this device so you can pick it up again later?"),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Download PDF" })).toBeEnabled();
+  });
+
+  it("hides download again if every field is cleared", () => {
+    act(() => {
+      useBuilderStore.getState().updateBasicInfo({ name: "Jamie Rivera" });
+      useBuilderStore.getState().setSkills(["TypeScript"]);
+    });
+    renderExport();
+    expect(screen.getByRole("button", { name: "Download PDF" })).toBeInTheDocument();
 
     act(() => {
+      useBuilderStore.getState().clearBasicInfo();
       useBuilderStore.getState().setSkills([]);
     });
 
-    expect(
-      screen.queryByText("Save this resume on this device so you can pick it up again later?"),
-    ).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Download PDF" })).not.toBeInTheDocument();
   });
 
-  it("does not ask when the only filled section is skipped", () => {
+  it("does not ask to save on the export step", () => {
     act(() => {
+      useBuilderStore.getState().updateBasicInfo({ name: "Jamie Rivera" });
       useBuilderStore.getState().setSkills(["TypeScript"]);
-      useBuilderStore.getState().toggleSkipSection("skills");
     });
     renderExport();
     expect(
       screen.queryByText("Save this resume on this device so you can pick it up again later?"),
     ).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Download PDF" })).not.toBeInTheDocument();
-  });
-
-  it("disables Download until a save choice is made", () => {
-    addContentSection();
-    renderExport();
-    expect(screen.getByRole("button", { name: "Download PDF" })).toBeDisabled();
-    expect(screen.getByText("Choose an option above first.")).toBeInTheDocument();
-  });
-
-  it("pre-selects 'No' state (no existing saved copy) so nothing saves by default", () => {
-    renderExport();
-    // Neither option is pressed as "primary" until a saved copy exists or one is chosen.
-    expect(localStorage.getItem("resumeData")).toBeNull();
-  });
-
-  it("saves to localStorage and prints when consenting", async () => {
-    addContentSection();
-    renderExport();
-    await userEvent.click(screen.getByRole("button", { name: "Yes, save it" }));
-    expect(screen.getByRole("button", { name: "Download PDF" })).toBeEnabled();
-
-    await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
-
-    const saved = localStorage.getItem("resumeData");
-    expect(saved).not.toBeNull();
-    expect(JSON.parse(saved!).basicInfo.name).toBe("Jamie Rivera");
-    expect(useBuilderStore.getState().hasSavedCopy).toBe(true);
-    expect(window.print).toHaveBeenCalledTimes(1);
-  });
-
-  it("does not save when declining", async () => {
-    addContentSection();
-    renderExport();
-    await userEvent.click(screen.getByRole("button", { name: "No, don’t save" }));
-    await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
-
-    expect(localStorage.getItem("resumeData")).toBeNull();
-    expect(useBuilderStore.getState().hasSavedCopy).toBe(false);
-    expect(window.print).toHaveBeenCalledTimes(1);
-  });
-
-  it("skips the save question entirely when a saved copy already exists on mount", () => {
-    localStorage.setItem(
-      "resumeData",
-      JSON.stringify({
-        basicInfo: { name: "Existing", email: "", phone: "", location: "", links: {} },
-        sections: { skills: ["TypeScript"] },
-        sectionStatus: {},
-        templateId: "jakes-resume",
-      }),
-    );
-    addContentSection();
-    renderExport();
-
     expect(screen.queryByRole("button", { name: "Yes, save it" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "No, don’t save" })).not.toBeInTheDocument();
-    expect(screen.queryByText("Choose an option above first.")).not.toBeInTheDocument();
-    // The existing copy counts as consent, so downloading is available directly.
-    expect(screen.getByRole("button", { name: "Download PDF" })).toBeEnabled();
   });
 
-  it("keeps the existing saved copy up to date when downloading without re-asking", async () => {
+  it("prints without writing localStorage when there is no saved copy", async () => {
+    act(() => {
+      useBuilderStore.getState().updateBasicInfo({ name: "Jamie Rivera" });
+    });
+    renderExport();
+    await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
+
+    expect(localStorage.getItem("resumeData")).toBeNull();
+    expect(window.print).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the existing saved copy up to date when downloading", async () => {
     localStorage.setItem("resumeData", JSON.stringify({ basicInfo: { name: "Stale" } }));
-    addContentSection();
+    act(() => {
+      useBuilderStore.getState().updateBasicInfo({ name: "Jamie Rivera" });
+      useBuilderStore.getState().setSkills(["TypeScript"]);
+      useBuilderStore.getState().setHasSavedCopy(true);
+    });
     renderExport();
     await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
 
     expect(JSON.parse(localStorage.getItem("resumeData")!).basicInfo.name).toBe("Jamie Rivera");
-    expect(useBuilderStore.getState().hasSavedCopy).toBe(true);
+    expect(window.print).toHaveBeenCalledTimes(1);
   });
 
   it("renders the live preview alongside the export controls", () => {
+    act(() => {
+      useBuilderStore.getState().updateBasicInfo({ name: "Jamie Rivera" });
+    });
     renderExport();
     expect(screen.getByText("Jamie Rivera")).toBeInTheDocument();
   });
@@ -165,9 +122,10 @@ describe("ExportSection", () => {
     (window.print as jest.Mock).mockImplementationOnce(() => {
       throw new Error("blocked");
     });
-    addContentSection();
+    act(() => {
+      useBuilderStore.getState().updateBasicInfo({ name: "Jamie Rivera" });
+    });
     renderExport();
-    await userEvent.click(screen.getByRole("button", { name: "Yes, save it" }));
     await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
     expect(screen.getByRole("alert")).toHaveTextContent(/print dialog/);
   });
@@ -176,23 +134,29 @@ describe("ExportSection", () => {
     const spy = jest.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
       throw new DOMException("quota", "QuotaExceededError");
     });
-    addContentSection();
+    act(() => {
+      useBuilderStore.getState().updateBasicInfo({ name: "Jamie Rivera" });
+      useBuilderStore.getState().setHasSavedCopy(true);
+    });
     renderExport();
-    await userEvent.click(screen.getByRole("button", { name: "Yes, save it" }));
     await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
     expect(screen.getByRole("alert")).toHaveTextContent(/Storage may be full/);
     spy.mockRestore();
   });
 
   describe("editable file name", () => {
+    beforeEach(() => {
+      act(() => {
+        useBuilderStore.getState().updateBasicInfo({ name: "Jamie Rivera" });
+      });
+    });
+
     it("defaults to a slug of the resume's name", () => {
-      addContentSection();
       renderExport();
       expect(screen.getByLabelText("File name")).toHaveValue("jamie_rivera");
     });
 
     it("lets the user type freely (no slugifying mid-keystroke) and slugifies on blur", async () => {
-      addContentSection();
       renderExport();
       const input = screen.getByLabelText("File name");
       await userEvent.clear(input);
@@ -206,7 +170,6 @@ describe("ExportSection", () => {
     it("sets document.title to the edited name during print, then restores it", async () => {
       const originalTitle = document.title;
       document.title = "Build your resume";
-      addContentSection();
       renderExport();
 
       const input = screen.getByLabelText("File name");
@@ -217,7 +180,6 @@ describe("ExportSection", () => {
         expect(document.title).toBe("my_resume");
       });
 
-      await userEvent.click(screen.getByRole("button", { name: "Yes, save it" }));
       await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
 
       expect(window.print).toHaveBeenCalledTimes(1);
@@ -226,7 +188,6 @@ describe("ExportSection", () => {
     });
 
     it("keeps the edited name even if the resume's own name field changes afterward", async () => {
-      addContentSection();
       renderExport();
       const input = screen.getByLabelText("File name");
       await userEvent.clear(input);
@@ -241,7 +202,6 @@ describe("ExportSection", () => {
     });
 
     it("falls back to 'resume' if cleared entirely", async () => {
-      addContentSection();
       renderExport();
       const input = screen.getByLabelText("File name");
       await userEvent.clear(input);

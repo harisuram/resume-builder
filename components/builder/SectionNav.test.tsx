@@ -18,13 +18,21 @@ function expectBadgesHiddenUntilMd(badges: string[]) {
 }
 
 describe("SectionNav", () => {
-  it("lists Basic info, every content section, and Template & export", () => {
+  it("lists Basic info, Summary, Photo, the content sections, then Template & export", () => {
     render(<SectionNav active="basicInfo" onSelect={() => {}} />);
 
-    const buttons = screen.getAllByRole("button").map((b) => b.textContent);
+    const buttons = screen.getAllByRole("button").map((b) => b.textContent ?? "");
     expect(buttons[0]).toContain("Basic info");
-    expect(buttons.some((t) => t?.includes("Education"))).toBe(true);
-    expect(buttons.some((t) => t?.includes("Internships"))).toBe(true);
+    const summary = buttons.findIndex((t) => t.includes("Summary"));
+    const photo = buttons.findIndex((t) => t.includes("Photo"));
+    const keyAchievements = buttons.findIndex((t) => t.includes("Key achievements"));
+    const additional = buttons.findIndex((t) => t.includes("Additional"));
+    const exportIdx = buttons.findIndex((t) => t.includes("Template & export"));
+    expect(summary).toBeGreaterThan(0);
+    expect(photo).toBeGreaterThan(summary);
+    expect(keyAchievements).toBeGreaterThan(photo);
+    expect(additional).toBeGreaterThan(keyAchievements);
+    expect(exportIdx).toBeGreaterThan(additional);
     expect(buttons[buttons.length - 1]).toContain("Template & export");
   });
 
@@ -60,6 +68,14 @@ describe("SectionNav", () => {
     expect(onSelect).not.toHaveBeenCalled();
   });
 
+  it("toggles Photo skip without navigating", async () => {
+    const onSelect = jest.fn();
+    render(<SectionNav active="basicInfo" onSelect={onSelect} />);
+    await userEvent.click(screen.getByRole("switch", { name: "Skip Photo" }));
+    expect(useBuilderStore.getState().sectionStatus.photo).toBe("skipped");
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
   describe("mobile strip", () => {
     it("keeps the status dot and skip switch off the row until md", () => {
       render(<SectionNav active="basicInfo" onSelect={() => {}} />);
@@ -71,16 +87,15 @@ describe("SectionNav", () => {
 
     it("shows no status badge at all — every one of them waits for md", () => {
       const { rerender } = render(<SectionNav active="basicInfo" onSelect={() => {}} />);
-      expectBadgesHiddenUntilMd(["Required", "Optional"]);
+      expectBadgesHiddenUntilMd(["Required"]);
 
       act(() => {
         useBuilderStore
           .getState()
           .updateBasicInfo({ name: "Jamie", email: "jamie@example.com", location: "Austin" });
-        useBuilderStore.getState().setPhoto("data:image/png;base64,abc");
       });
       rerender(<SectionNav active="basicInfo" onSelect={() => {}} />);
-      expectBadgesHiddenUntilMd(["Complete", "Added"]);
+      expectBadgesHiddenUntilMd(["Complete"]);
     });
 
     it("threads a connector line through every gap, keeping only the group rules at md", () => {
@@ -96,12 +111,17 @@ describe("SectionNav", () => {
       expect(lines.filter((el) => el.className.includes("md:hidden"))).toHaveLength(lines.length - 2);
     });
 
-    it("dims the Photo label while there's no photo, and undims it once one is set", () => {
-      const { rerender } = render(<SectionNav active="basicInfo" onSelect={() => {}} />);
-      expect(screen.getByText("Photo").className).toContain("text-[var(--color-ink-faint)]");
+    it("dims the Photo label when skipped, and undims it when included again", async () => {
+      render(<SectionNav active="basicInfo" onSelect={() => {}} />);
+      expect(screen.getByText("Photo").className).not.toContain("ink-faint");
 
-      act(() => useBuilderStore.getState().setPhoto("data:image/png;base64,abc"));
-      rerender(<SectionNav active="basicInfo" onSelect={() => {}} />);
+      await userEvent.click(screen.getByRole("switch", { name: "Skip Photo" }));
+      expect(useBuilderStore.getState().sectionStatus.photo).toBe("skipped");
+      expect(screen.getByText("Photo").className).toContain("text-[var(--color-ink-faint)]");
+      expect(screen.getByText("Photo").className).toContain("md:text-inherit");
+
+      await userEvent.click(screen.getByRole("switch", { name: "Include Photo" }));
+      expect(useBuilderStore.getState().sectionStatus.photo).not.toBe("skipped");
       expect(screen.getByText("Photo").className).not.toContain("ink-faint");
     });
 

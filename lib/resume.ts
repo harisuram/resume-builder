@@ -23,8 +23,8 @@ export function getRenderableSections(data: ResumeData): SectionKey[] {
 
 /** True once the user has filled in at least one content section (not
  * skipped, with something to render). Basic info and photo don't count —
- * those aren't skippable sections. Drives whether the export step offers
- * to save a copy on this device. */
+ * photo is skippable on its own, but it isn't a content block. Drives
+ * whether the export step offers to save a copy on this device. */
 export function hasAddedSection(data: ResumeData): boolean {
   return getRenderableSections(data).length > 0;
 }

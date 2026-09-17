@@ -38,7 +38,7 @@ export function ItemCard({
   return (
     <div
       ref={rootRef}
-      className="relative rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-card transition-colors duration-150 ease-out hover:border-[var(--color-accent)]/30"
+      className="relative rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 pt-9 shadow-card transition-colors duration-150 ease-out hover:border-[var(--color-accent)]/30 md:pt-4"
     >
       <button
         type="button"
@@ -48,7 +48,7 @@ export function ItemCard({
       >
         Remove
       </button>
-      <div className="grid gap-3 pr-16">{children}</div>
+      <div className="grid gap-3 md:pr-16">{children}</div>
     </div>
   );
 }

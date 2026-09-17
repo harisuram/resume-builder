@@ -1,17 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { AdSlot } from "@/components/ads/AdSlot";
 import { Button } from "@/components/ui/Button";
 import { FieldGroup, TextInput } from "@/components/ui/Field";
 import { PreviewPane } from "@/components/builder/PreviewPane";
 import { ADSENSE_SLOTS } from "@/lib/ads";
-import { hasAddedSection } from "@/lib/resume";
-import { clearResumeData, hasSavedResumeData, saveResumeData } from "@/lib/storage";
-import { useBuilderStore } from "@/lib/store";
+import { saveResumeData } from "@/lib/storage";
+import { hasAnyResumeValue, useBuilderStore } from "@/lib/store";
 import { showToast } from "@/lib/toast";
-
-type Consent = "yes" | "no" | null;
 
 function slugifyName(name: string): string {
   const slug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
@@ -40,54 +37,27 @@ function PdfIcon() {
 
 export function ExportSection() {
   const getResumeData = useBuilderStore((s) => s.getResumeData);
-  const setHasSavedCopy = useBuilderStore((s) => s.setHasSavedCopy);
-  const addedSection = useBuilderStore((s) => hasAddedSection(s.getResumeData()));
-  const [consent, setConsent] = useState<Consent>(null);
-  // null until the mount effect below has read localStorage, so the save
-  // question stays out of the first paint instead of flashing in and then
-  // disappearing for someone who already has a saved copy.
-  const [hadSavedCopy, setHadSavedCopy] = useState<boolean | null>(null);
-  // Offer to persist — and to download — only once there's actually a
-  // section worth picking up later. An empty builder (or basic info / photo
-  // alone) hides both the question and the download button.
-  const showSavePrompt = hadSavedCopy === false && addedSection;
-  const downloadBlocked = addedSection && hadSavedCopy !== true && !consent;
+  const hasSavedCopy = useBuilderStore((s) => s.hasSavedCopy);
+  const canDownload = useBuilderStore((s) =>
+    hasAnyResumeValue({ basicInfo: s.basicInfo, photo: s.photo, sections: s.sections }),
+  );
   // Seeded once from the resume's name; editable from there and then reused
   // as-is for every download in this session — it doesn't keep resetting
   // itself to match the name field if that changes later.
   const [fileBaseName, setFileBaseName] = useState(() => slugifyName(getResumeData().basicInfo.name));
   const originalTitle = useRef<string | null>(null);
 
-  useEffect(() => {
-    // localStorage doesn't exist on the server, so this can only run here.
-    // An existing saved copy already answers the question, so it's taken as
-    // the answer and the question isn't asked again — "Start new resume" in
-    // the navbar is the way back out of it.
-    const saved = hasSavedResumeData();
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setHadSavedCopy(saved);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setConsent(saved ? "yes" : null);
-  }, []);
-
-  function commitConsent() {
-    if (!addedSection) return false;
-    if (!consent) return false;
+  function persistSavedCopy() {
+    if (!hasSavedCopy) return;
     try {
-      if (consent === "yes") {
-        saveResumeData(getResumeData());
-      } else {
-        clearResumeData();
-      }
-      setHasSavedCopy(consent === "yes");
+      saveResumeData(getResumeData());
     } catch {
       showToast("Couldn't save this resume on this device. Storage may be full.");
     }
-    return true;
   }
 
   function handleDownloadPdf() {
-    if (!commitConsent()) return;
+    persistSavedCopy();
     // Chrome (and most Chromium browsers) suggest document.title as the
     // filename in the print-to-PDF save dialog — this is the only lever a
     // page has over that filename, since the dialog itself is native chrome.
@@ -111,55 +81,27 @@ export function ExportSection() {
         </p>
       </div>
 
-      {addedSection && (
+      {canDownload && (
         <div className="no-print rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-card">
-          {showSavePrompt && (
-            <>
-              <p className="text-[13.5px] font-medium text-[var(--color-ink)]">
-                Save this resume on this device so you can pick it up again later?
-              </p>
-              <p className="mt-1 text-[12px] text-[var(--color-ink-soft)]">
-                Stored only in this browser. Nothing is uploaded anywhere.
-              </p>
-              <div className="mt-3 flex gap-2">
-                <Button
-                  variant={consent === "yes" ? "primary" : "secondary"}
-                  size="sm"
-                  onClick={() => setConsent("yes")}
-                >
-                  Yes, save it
-                </Button>
-                <Button variant={consent === "no" ? "primary" : "secondary"} size="sm" onClick={() => setConsent("no")}>
-                  No, don&rsquo;t save
-                </Button>
-              </div>
-            </>
-          )}
-
-          <div className={showSavePrompt ? "mt-4 border-t border-[var(--color-border)] pt-4" : ""}>
-            <FieldGroup label="File name">
-              <div className="flex items-center gap-1.5">
-                <TextInput
-                  value={fileBaseName}
-                  onChange={(e) => setFileBaseName(e.target.value)}
-                  onBlur={() => setFileBaseName((current) => slugifyName(current))}
-                  placeholder="resume"
-                  className="max-w-[220px]"
-                  aria-label="File name"
-                />
-                <span className="text-[12px] text-[var(--color-ink-faint)]">.pdf</span>
-              </div>
-            </FieldGroup>
-
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <Button variant="primary" onClick={handleDownloadPdf} disabled={downloadBlocked}>
-                <PdfIcon />
-                Download PDF
-              </Button>
-              {downloadBlocked && (
-                <span className="text-[11.5px] text-[var(--color-ink-faint)]">Choose an option above first.</span>
-              )}
+          <FieldGroup label="File name">
+            <div className="flex items-center gap-1.5">
+              <TextInput
+                value={fileBaseName}
+                onChange={(e) => setFileBaseName(e.target.value)}
+                onBlur={() => setFileBaseName((current) => slugifyName(current))}
+                placeholder="resume"
+                className="max-w-[220px]"
+                aria-label="File name"
+              />
+              <span className="text-[12px] text-[var(--color-ink-faint)]">.pdf</span>
             </div>
+          </FieldGroup>
+
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <Button variant="primary" onClick={handleDownloadPdf}>
+              <PdfIcon />
+              Download PDF
+            </Button>
           </div>
         </div>
       )}

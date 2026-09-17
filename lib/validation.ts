@@ -205,7 +205,7 @@ export function getExperienceErrors(item: Experience): ExperienceErrors {
   return {
     company: required(item.company, "Enter the company or organization.").message,
     role: required(item.role, "Enter your role or title.").message,
-    endDate: validateEndDate(item.startDate, item.endDate ?? "").message,
+    endDate: item.current ? undefined : validateEndDate(item.startDate, item.endDate ?? "").message,
     bullets: item.bullets.map((bullet) => validateBullet(bullet).message),
   };
 }

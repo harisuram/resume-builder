@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AiLimitError, optimizeExperienceBullets } from "@/lib/ai";
 import { useBuilderStore } from "@/lib/store";
@@ -48,6 +48,18 @@ describe.each([
     expect(list[0].company).toBe("Acme Corp");
     expect(list[0].role).toBe("Engineer");
     expect(list[0].bullets).toEqual([""]);
+  });
+
+  it("keeps end date and Present disabled until a start date is set", async () => {
+    render(<ExperienceForm sectionKey={sectionKey} title={title} help="help" />);
+    await userEvent.click(screen.getByText(new RegExp(`\\+ Add (experience|role)`)));
+
+    expect(screen.getByLabelText("End date")).toBeDisabled();
+    expect(screen.getByRole("checkbox", { name: "Present" })).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText("Start date"), { target: { value: "2020-01" } });
+    expect(screen.getByLabelText("End date")).toBeEnabled();
+    expect(screen.getByRole("checkbox", { name: "Present" })).toBeEnabled();
   });
 
   it("fills the role from the suggestion list", async () => {
@@ -101,6 +113,57 @@ describe.each([
     render(<ExperienceForm sectionKey={sectionKey} title={title} help="help" />);
     await userEvent.click(screen.getByRole("button", { name: "Remove" }));
     expect(useBuilderStore.getState().sections[sectionKey]).toEqual([]);
+  });
+
+  it("writes Present into the end date and stores a current role when the checkbox is checked", async () => {
+    act(() => {
+      useBuilderStore.getState().addListItem(sectionKey, {
+        company: "Acme",
+        role: "Eng",
+        startDate: "2020-01",
+        current: false,
+        bullets: [""],
+      });
+    });
+    render(<ExperienceForm sectionKey={sectionKey} title={title} help="help" />);
+
+    await userEvent.click(screen.getByRole("checkbox", { name: "Present" }));
+
+    const item = useBuilderStore.getState().sections[sectionKey]![0];
+    expect(item.current).toBe(true);
+    expect(item.endDate).toBeUndefined();
+    expect(screen.getByLabelText("End date")).toHaveValue("Present");
+  });
+
+  it("places the Present checkbox on the right of the end-date label", () => {
+    act(() => {
+      useBuilderStore.getState().addListItem(sectionKey, {
+        company: "Acme",
+        role: "Eng",
+        startDate: "2020-01",
+        current: false,
+        bullets: [""],
+      });
+    });
+    render(<ExperienceForm sectionKey={sectionKey} title={title} help="help" />);
+    const checkbox = screen.getByRole("checkbox", { name: "Present" });
+    expect(checkbox.closest("label")?.parentElement).toHaveClass("ml-auto");
+  });
+
+  it("hides the Present checkbox once an end date is selected", () => {
+    act(() => {
+      useBuilderStore.getState().addListItem(sectionKey, {
+        company: "Acme",
+        role: "Eng",
+        startDate: "2020-01",
+        endDate: "2021-06",
+        current: false,
+        bullets: [""],
+      });
+    });
+    render(<ExperienceForm sectionKey={sectionKey} title={title} help="help" />);
+    expect(screen.getByLabelText("End date")).toHaveValue("2021-06");
+    expect(screen.queryByRole("checkbox", { name: "Present" })).not.toBeInTheDocument();
   });
 
   it("replaces bullets with the AI-optimized version on success", async () => {

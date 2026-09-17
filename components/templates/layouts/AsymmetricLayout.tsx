@@ -1,7 +1,7 @@
 import { SUMMARY_COPY } from "@/lib/persona";
 import { getRenderableSections, hasSummary, sectionBreakProps } from "@/lib/resume";
 import type { ResumeData } from "@/lib/types";
-import { Avatar, ContactLine, hasAvatar, SummaryText } from "../shared/atoms";
+import { Avatar, ContactLine, hasAvatar, SummaryText, visiblePhoto } from "../shared/atoms";
 import { NARROW_SECTION_KEYS, ResumeSection } from "../shared/ResumeSection";
 import { SectionHeading } from "../shared/SectionHeading";
 import type { TemplateTheme } from "../shared/theme";
@@ -26,7 +26,7 @@ export function AsymmetricLayout({ data, theme }: { data: ResumeData; theme: Tem
           </div>
         </div>
         {hasAvatar(data, theme) && (
-          <Avatar name={data.basicInfo.name || "?"} accent={theme.accent} photo={data.photo} size={76} />
+          <Avatar name={data.basicInfo.name || "?"} accent={theme.accent} photo={visiblePhoto(data)} size={76} />
         )}
       </div>
 

@@ -1,4 +1,4 @@
-import { formatDateRange, formatMonth } from "./date";
+import { formatDateRange, formatMonth, isCurrentExperience, PRESENT_LABEL } from "./date";
 
 describe("formatMonth", () => {
   it("formats a YYYY-MM string as 'Mon YYYY'", () => {
@@ -32,11 +32,35 @@ describe("formatDateRange", () => {
     expect(formatDateRange("2019-03", undefined)).toBe("Mar 2019 – Present");
   });
 
+  it("uses 'Present' when present is forced, even if an end date exists", () => {
+    expect(formatDateRange("2019-03", "2022-08", true)).toBe(`Mar 2019 – ${PRESENT_LABEL}`);
+  });
+
+  it("omits Present when the role is not current and there is no end date", () => {
+    expect(formatDateRange("2019-03", undefined, false)).toBe("Mar 2019");
+  });
+
   it("returns just the end label when the start is missing but end is not 'Present'", () => {
     expect(formatDateRange(undefined, "2022-08")).toBe("Aug 2022");
   });
 
   it("returns an empty string when both are missing", () => {
     expect(formatDateRange(undefined, undefined)).toBe("");
+  });
+});
+
+describe("isCurrentExperience", () => {
+  it("is true when the Present checkbox is on", () => {
+    expect(isCurrentExperience({ current: true, endDate: "2022-08" })).toBe(true);
+  });
+
+  it("is false when the checkbox is off", () => {
+    expect(isCurrentExperience({ current: false })).toBe(false);
+    expect(isCurrentExperience({ current: false, endDate: "2022-08" })).toBe(false);
+  });
+
+  it("treats a missing end date as present for legacy entries", () => {
+    expect(isCurrentExperience({})).toBe(true);
+    expect(isCurrentExperience({ endDate: "2022-08" })).toBe(false);
   });
 });

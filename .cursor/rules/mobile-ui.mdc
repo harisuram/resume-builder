@@ -1,0 +1,38 @@
+---
+description: UI and layout changes must also work on mobile, not only desktop.
+alwaysApply: true
+---
+
+# Mobile is part of the change
+
+When you add or change UI, layout, styling, or interaction, **include the mobile layout in the same change**. Do not ship a desktop-only version and wait to be asked to fix phones.
+
+This app’s builder is a narrow column on small screens (stacked nav, `pb-24` for the preview button, `md:` at 768px). Assume a ~320–390px viewport.
+
+## Do
+
+- Stack or reflow at `md` (or `sm`) instead of squeezing two/three desktop columns onto a phone.
+- Keep the same behavior: if a control exists on desktop (checkbox, date, skip, tour), decide its mobile placement in the same PR — beside, below, or intentionally hidden (e.g. tour targets that are `hidden md:flex`).
+- Avoid `min-width` / fixed widths that overflow; use `w-full min-w-0` below `md`, and floor widths only from `md` up.
+- Watch card chrome (`pr-16` for Remove, padding) so fields are not clipped under buttons.
+- Prefer one component with responsive classes over a desktop-only implementation.
+
+## Don’t
+
+```tsx
+// BAD: Present sits in the end-date column and min-width clips on phones
+<div className="grid grid-cols-2">
+  <input type="month" className="min-w-[14rem]" />
+  <input type="month" className="min-w-[14rem]" />
+</div>
+```
+
+```tsx
+// GOOD: full-width stack on mobile, equal columns + extra slot from md
+<div className="grid grid-cols-1 sm:col-span-2 md:grid-cols-[minmax(14rem,1fr)_minmax(14rem,1fr)_auto]">
+  <input type="month" className="w-full min-w-0 md:min-w-[14rem]" />
+  <input type="month" className="w-full min-w-0 md:min-w-[14rem]" />
+</div>
+```
+
+If a change cannot reasonably work on mobile, say so and hide or replace it at that breakpoint in the same edit.

@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import { SUMMARY_COPY } from "@/lib/persona";
 import { getRenderableSections, hasSummary, sectionBreakProps } from "@/lib/resume";
 import type { ResumeData } from "@/lib/types";
-import { Avatar, ContactLine, hasAvatar, SummaryText } from "../shared/atoms";
+import { Avatar, ContactLine, hasAvatar, SummaryText, visiblePhoto } from "../shared/atoms";
 import { NARROW_SECTION_KEYS, ResumeSection } from "../shared/ResumeSection";
 import { SectionHeading } from "../shared/SectionHeading";
 import { tint, type TemplateTheme } from "../shared/theme";
@@ -30,7 +30,7 @@ export function SidebarLayout({ data, theme }: { data: ResumeData; theme: Templa
             <Avatar
               name={data.basicInfo.name || "?"}
               accent={solid ? "#ffffff33" : theme.accent}
-              photo={data.photo}
+              photo={visiblePhoto(data)}
               size={72}
             />
           )}
@@ -99,7 +99,7 @@ export function SidebarLayout({ data, theme }: { data: ResumeData; theme: Templa
             </div>
           </div>
           {hasAvatar(data, theme) && (
-            <Avatar name={data.basicInfo.name || "?"} accent="#ffffff33" photo={data.photo} size={76} />
+            <Avatar name={data.basicInfo.name || "?"} accent="#ffffff33" photo={visiblePhoto(data)} size={76} />
           )}
         </div>
         {columns}

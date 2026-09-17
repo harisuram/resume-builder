@@ -7,7 +7,7 @@ import type {
 } from "react";
 
 const CONTROL_BASE =
-  "w-full rounded-lg border bg-[var(--color-surface)] px-3 py-2 text-[13.5px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-faint)] transition duration-150 ease-out outline-none focus:ring-2";
+  "w-full rounded-lg border bg-[var(--color-surface)] px-3 py-2 text-[13.5px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-faint)] transition duration-150 ease-out outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60";
 
 const VALID_BORDER =
   "border-[var(--color-border)] focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]/15";
@@ -71,6 +71,7 @@ export function FieldGroup({
   required,
   children,
   htmlFor,
+  labelRight,
 }: {
   label: string;
   hint?: string;
@@ -81,6 +82,9 @@ export function FieldGroup({
   required?: boolean;
   children: ReactNode;
   htmlFor?: string;
+  /** Sits on the right of the label row — used for compact controls like
+   * the Present checkbox on a date field. */
+  labelRight?: ReactNode;
 }) {
   const errorId = htmlFor ? `${htmlFor}-error` : undefined;
   return (
@@ -92,6 +96,7 @@ export function FieldGroup({
             *
           </span>
         ) : null}
+        {labelRight ? <div className="ml-auto">{labelRight}</div> : null}
       </div>
       {children}
       {error ? (

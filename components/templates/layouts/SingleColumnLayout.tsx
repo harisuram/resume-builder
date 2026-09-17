@@ -1,7 +1,7 @@
 import { SUMMARY_COPY } from "@/lib/persona";
 import { getRenderableSections, hasSummary, sectionBreakProps } from "@/lib/resume";
 import type { ResumeData } from "@/lib/types";
-import { Avatar, ContactLine, hasAvatar, SummaryText } from "../shared/atoms";
+import { Avatar, ContactLine, hasAvatar, SummaryText, visiblePhoto } from "../shared/atoms";
 import { ResumeSection } from "../shared/ResumeSection";
 import { SectionHeading } from "../shared/SectionHeading";
 import type { TemplateTheme } from "../shared/theme";
@@ -48,7 +48,7 @@ export function SingleColumnLayout({
         <Avatar
           name={data.basicInfo.name || "?"}
           accent={theme.darkHeader ? "#ffffff33" : theme.accent}
-          photo={data.photo}
+          photo={visiblePhoto(data)}
           size={84}
         />
       )}

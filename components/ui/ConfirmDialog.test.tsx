@@ -36,4 +36,25 @@ describe("ConfirmDialog", () => {
     await userEvent.click(screen.getByRole("button", { name: "Clear it" }));
     expect(onConfirm).toHaveBeenCalledTimes(1);
   });
+
+  it("uses custom cancel copy and a primary confirm when asked", async () => {
+    const onConfirm = jest.fn();
+    const onCancel = jest.fn();
+    render(
+      <ConfirmDialog
+        open
+        title="Save this resume?"
+        description="Stored only in this browser."
+        confirmLabel="Yes, save it"
+        cancelLabel="No, don’t save"
+        confirmVariant="primary"
+        onConfirm={onConfirm}
+        onCancel={onCancel}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "No, don’t save" }));
+    expect(onCancel).toHaveBeenCalledTimes(1);
+    await userEvent.click(screen.getByRole("button", { name: "Yes, save it" }));
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+  });
 });

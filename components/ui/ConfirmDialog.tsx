@@ -7,6 +7,8 @@ export function ConfirmDialog({
   title,
   description,
   confirmLabel = "Confirm",
+  cancelLabel = "Cancel",
+  confirmVariant = "danger",
   onConfirm,
   onCancel,
 }: {
@@ -14,6 +16,8 @@ export function ConfirmDialog({
   title: string;
   description: string;
   confirmLabel?: string;
+  cancelLabel?: string;
+  confirmVariant?: "danger" | "primary";
   onConfirm: () => void;
   onCancel: () => void;
 }) {
@@ -30,9 +34,9 @@ export function ConfirmDialog({
         <p className="mt-2 text-[13px] leading-relaxed text-[var(--color-ink-soft)]">{description}</p>
         <div className="mt-5 flex justify-end gap-2">
           <Button variant="ghost" size="sm" onClick={onCancel}>
-            Cancel
+            {cancelLabel}
           </Button>
-          <Button variant="danger" size="sm" onClick={onConfirm}>
+          <Button variant={confirmVariant} size="sm" onClick={onConfirm}>
             {confirmLabel}
           </Button>
         </div>

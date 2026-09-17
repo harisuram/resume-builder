@@ -10,7 +10,7 @@ import type {
   ResumeData,
   SectionKey,
 } from "@/lib/types";
-import { formatDateRange, formatMonth } from "@/lib/date";
+import { formatDateRange, formatMonth, isCurrentExperience } from "@/lib/date";
 import { DEFAULT_DIAL_CODE } from "@/lib/countryCodes";
 import { forcedItemIndices, itemBreakKey } from "@/lib/resume";
 import { CertificationIcon, GithubIcon, GlobeIcon, LinkedInIcon, MailIcon, PhoneIcon, PinIcon } from "./icons";
@@ -42,9 +42,15 @@ function itemAttrs(breaks: ItemBreaks, index: number, label: string) {
 
 /** A template opts into a decorative initials circle with theme.showAvatar,
  * but an uploaded photo shows on every template regardless — dropping it
- * would read as the upload having failed. */
+ * would read as the upload having failed. Skipping Photo hides it the same
+ * way a skipped section hides its block, without deleting the file. */
+export function visiblePhoto(data: ResumeData): string | undefined {
+  if (data.sectionStatus.photo === "skipped") return undefined;
+  return data.photo;
+}
+
 export function hasAvatar(data: ResumeData, theme: TemplateTheme) {
-  return Boolean(data.photo || theme.showAvatar);
+  return Boolean(visiblePhoto(data) || theme.showAvatar);
 }
 
 export function Avatar({
@@ -320,7 +326,9 @@ export function ExperienceList({
             <p className={`text-[13px] font-semibold ${tone(light, "strong")}`}>
               {exp.role} <span className={`font-normal ${tone(light, "soft")}`}>{exp.company ? ` ${exp.company}` : ""}</span>
             </p>
-            <p className={`text-[11.5px] ${tone(light, "faint")}`}>{formatDateRange(exp.startDate, exp.endDate)}</p>
+            <p className={`text-[11.5px] ${tone(light, "faint")}`}>
+              {formatDateRange(exp.startDate, exp.endDate, isCurrentExperience(exp))}
+            </p>
           </div>
           {exp.bullets.length > 0 && <BulletList items={exp.bullets} theme={theme} light={light} className="mt-1" />}
         </div>

@@ -81,13 +81,21 @@ export function EducationForm() {
                   suggestionLabel="Suggested fields"
                 />
               </FieldGroup>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:col-span-2 md:grid-cols-2">
                 <FieldGroup label="Start date" htmlFor={`education-${i}-start`}>
                   <TextInput
                     id={`education-${i}-start`}
                     type="month"
                     value={edu.startDate}
-                    onChange={(e) => updateListItem("education", i, { startDate: e.target.value })}
+                    className="w-full min-w-0 md:min-w-[14rem]"
+                    onChange={(e) => {
+                      const startDate = e.target.value;
+                      updateListItem(
+                        "education",
+                        i,
+                        startDate ? { startDate } : { startDate: "", endDate: undefined },
+                      );
+                    }}
                     onBlur={touch(`${i}.startDate`)}
                   />
                 </FieldGroup>
@@ -96,6 +104,8 @@ export function EducationForm() {
                     id={`education-${i}-end`}
                     type="month"
                     value={edu.endDate ?? ""}
+                    disabled={!edu.startDate}
+                    className="w-full min-w-0 md:min-w-[14rem]"
                     onChange={(e) => updateListItem("education", i, { endDate: e.target.value || undefined })}
                     onBlur={touch(`${i}.endDate`)}
                     invalid={Boolean(endError)}

@@ -15,9 +15,21 @@ export function formatMonth(value?: string): string {
   return `${MONTHS[index]} ${year}`;
 }
 
-export function formatDateRange(start?: string, end?: string): string {
+/** Shown on the resume when a role is ongoing. Preview and PDF share this. */
+export const PRESENT_LABEL = "Present";
+
+/** Ongoing role: explicit checkbox, or a legacy entry with no end date. */
+export function isCurrentExperience(exp: { endDate?: string; current?: boolean }): boolean {
+  if (exp.current === true) return true;
+  if (exp.current === false) return false;
+  return !exp.endDate;
+}
+
+export function formatDateRange(start?: string, end?: string, present?: boolean): string {
+  const showPresent = present ?? !end;
   const startLabel = formatMonth(start);
-  const endLabel = end ? formatMonth(end) : "Present";
-  if (!startLabel) return endLabel === "Present" ? "" : endLabel;
+  const endLabel = showPresent ? PRESENT_LABEL : formatMonth(end);
+  if (!startLabel) return endLabel === PRESENT_LABEL ? "" : endLabel;
+  if (!endLabel) return startLabel;
   return `${startLabel} – ${endLabel}`;
 }

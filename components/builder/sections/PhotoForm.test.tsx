@@ -53,12 +53,12 @@ describe("PhotoForm", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("shows Edit crop and Remove once a photo is set, and Remove clears it", async () => {
+  it("shows Edit and Remove once a photo is set, and Remove clears it", async () => {
     act(() => useBuilderStore.getState().setPhoto("data:image/jpeg;base64,abc123"));
     renderPhoto();
     expect(screen.queryByRole("button", { name: "Replace photo" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Upload photo" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Edit crop" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Edit" })).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "Remove" }));
     expect(useBuilderStore.getState().photo).toBeNull();
@@ -66,10 +66,30 @@ describe("PhotoForm", () => {
     expect(screen.getByRole("button", { name: "Upload photo" })).toBeInTheDocument();
   });
 
-  it("opens the crop modal pre-loaded with the existing photo via Edit crop", async () => {
+  it("shows a skipped notice when skipped, and the form again once un-skipped", () => {
+    act(() => {
+      useBuilderStore.getState().setPhoto("data:image/jpeg;base64,abc123");
+      useBuilderStore.getState().toggleSkipSection("photo");
+    });
+    const { rerender } = renderPhoto();
+    expect(screen.getByText(/Photo is skipped/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
+
+    act(() => useBuilderStore.getState().toggleSkipSection("photo"));
+    rerender(
+      <>
+        <PhotoForm />
+        <ToastHost />
+      </>,
+    );
+    expect(screen.queryByText(/Photo is skipped/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Edit" })).toBeInTheDocument();
+  });
+
+  it("opens the crop modal pre-loaded with the existing photo via Edit", async () => {
     act(() => useBuilderStore.getState().setPhoto("data:image/jpeg;base64,abc123"));
     renderPhoto();
-    await userEvent.click(screen.getByRole("button", { name: "Edit crop" }));
+    await userEvent.click(screen.getByRole("button", { name: "Edit" }));
     expect(await screen.findByRole("dialog", { name: "Crop photo" })).toBeInTheDocument();
   });
 });

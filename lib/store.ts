@@ -126,11 +126,14 @@ interface BuilderState {
   sections: Partial<ResumeSections>;
   sectionStatus: Record<string, SectionStatus>;
   templateId: TemplateId;
-  /** Whether a copy currently lives in localStorage — drives the export
-   * step's save-consent prompt. Not itself persisted; refreshed from
-   * localStorage on mount and after every save/clear decision. */
+  /** Whether a copy currently lives in localStorage. Not itself persisted;
+   * refreshed from localStorage on mount and after every save/clear decision. */
   hasSavedCopy: boolean;
   setHasSavedCopy: (value: boolean) => void;
+  /** Answer to the post-basic-info save prompt for this session. null until
+   * asked (or skipped because a saved copy already exists). */
+  saveConsent: "yes" | "no" | null;
+  setSaveConsent: (value: "yes" | "no" | null) => void;
 
   updateBasicInfo: (patch: Partial<Omit<BasicInfo, "links">>) => void;
   updateLinks: (patch: Partial<BasicInfo["links"]>) => void;
@@ -150,11 +153,12 @@ interface BuilderState {
   updateAdditionalItem: (index: number, patch: Partial<AdditionalItem>) => void;
   removeAdditionalItem: (index: number) => void;
 
-  toggleSkipSection: (key: SectionKey) => void;
+  toggleSkipSection: (key: SectionKey | "photo") => void;
   /** Wipes one content section's entries, skip flag, and any page-breaks
    * pinned to it. Basic info and the photo have their own setters. */
   clearSection: (key: SectionKey) => void;
   clearBasicInfo: () => void;
+  clearPhoto: () => void;
   setTemplateId: (id: TemplateId) => void;
 
   pageBreakSections: SectionKey[];
@@ -186,12 +190,21 @@ const DEFAULT_TEMPLATE: TemplateId = "jakes-resume";
 export const useBuilderStore = create<BuilderState>((set, get) => ({
   basicInfo: EMPTY_BASIC_INFO,
   photo: null,
-  setPhoto: (photo) => set({ photo }),
+  setPhoto: (photo) =>
+    set((state) => ({
+      photo,
+      sectionStatus: {
+        ...state.sectionStatus,
+        photo: state.sectionStatus.photo === "skipped" ? "skipped" : photo ? "complete" : "not_started",
+      },
+    })),
   sections: {},
   sectionStatus: {},
   templateId: DEFAULT_TEMPLATE,
   hasSavedCopy: false,
   setHasSavedCopy: (value) => set({ hasSavedCopy: value }),
+  saveConsent: null,
+  setSaveConsent: (value) => set({ saveConsent: value }),
 
   updateBasicInfo: (patch) =>
     set((state) => ({ basicInfo: { ...state.basicInfo, ...patch } })),
@@ -336,7 +349,13 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
   toggleSkipSection: (key) =>
     set((state) => {
       const isSkipped = state.sectionStatus[key] === "skipped";
-      const status = isSkipped ? deriveStatus(key, state.sections) : "skipped";
+      const status = isSkipped
+        ? key === "photo"
+          ? state.photo
+            ? "complete"
+            : "not_started"
+          : deriveStatus(key, state.sections)
+        : "skipped";
       return { sectionStatus: { ...state.sectionStatus, [key]: status } };
     }),
 
@@ -353,6 +372,11 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
     }),
 
   clearBasicInfo: () => set({ basicInfo: EMPTY_BASIC_INFO }),
+  clearPhoto: () =>
+    set((state) => ({
+      photo: null,
+      sectionStatus: { ...state.sectionStatus, photo: "not_started" },
+    })),
 
   setTemplateId: (id) => set({ templateId: id }),
 
@@ -407,6 +431,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       sectionStatus: {},
       templateId: DEFAULT_TEMPLATE,
       hasSavedCopy: false,
+      saveConsent: null,
       pageBreakSections: [],
       pageBreakItems: [],
       sectionOrder: null,

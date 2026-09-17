@@ -6,6 +6,7 @@ import { FieldGroup, TextInput } from "@/components/ui/Field";
 import { SuggestInput } from "@/components/ui/SuggestInput";
 import { AI_BACKOFF_MS, AI_LIMITED_UNTIL_KEY, AiLimitError, optimizeExperienceBullets } from "@/lib/ai";
 import { ROLE_CATALOG } from "@/lib/catalogs";
+import { isCurrentExperience, PRESENT_LABEL } from "@/lib/date";
 import { useBuilderStore } from "@/lib/store";
 import { showToast } from "@/lib/toast";
 import type { Experience } from "@/lib/types";
@@ -15,7 +16,7 @@ import { ItemCard, useFocusNewIndex } from "./ItemCard";
 import { SectionFormHeader } from "./SectionFormHeader";
 import { SkippedNotice } from "./SkippedNotice";
 
-const EMPTY: Experience = { company: "", role: "", startDate: "", bullets: [""] };
+const EMPTY: Experience = { company: "", role: "", startDate: "", current: false, bullets: [""] };
 
 export function ExperienceForm({
   sectionKey,
@@ -79,6 +80,9 @@ export function ExperienceForm({
           const companyError = errorFor(`${i}.company`, errors.company);
           const roleError = errorFor(`${i}.role`, errors.role);
           const endError = errorFor(`${i}.endDate`, errors.endDate);
+          const hasStart = Boolean(exp.startDate);
+          const present = hasStart && isCurrentExperience(exp);
+          const showPresentCheckbox = !exp.endDate;
           return (
           <ItemCard key={i} autoFocus={i === focusIndex} onRemove={() => removeListItem(sectionKey, i)}>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -106,25 +110,71 @@ export function ExperienceForm({
                   suggestionLabel="Suggested roles"
                 />
               </FieldGroup>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 items-start gap-x-3 gap-y-2 sm:col-span-2 md:grid-cols-2">
                 <FieldGroup label="Start date" htmlFor={`${sectionKey}-${i}-start`}>
                   <TextInput
                     id={`${sectionKey}-${i}-start`}
                     type="month"
                     value={exp.startDate}
-                    onChange={(e) => updateListItem(sectionKey, i, { startDate: e.target.value })}
+                    className="w-full min-w-0 md:min-w-[14rem]"
+                    onChange={(e) => {
+                      const startDate = e.target.value;
+                      updateListItem(
+                        sectionKey,
+                        i,
+                        startDate ? { startDate } : { startDate: "", endDate: undefined, current: false },
+                      );
+                    }}
                     onBlur={touch(`${i}.startDate`)}
                   />
                 </FieldGroup>
-                <FieldGroup label="End date" htmlFor={`${sectionKey}-${i}-end`} error={endError}>
-                  <TextInput
-                    id={`${sectionKey}-${i}-end`}
-                    type="month"
-                    value={exp.endDate ?? ""}
-                    onChange={(e) => updateListItem(sectionKey, i, { endDate: e.target.value || undefined })}
-                    onBlur={touch(`${i}.endDate`)}
-                    invalid={Boolean(endError)}
-                  />
+                <FieldGroup
+                  label="End date"
+                  htmlFor={`${sectionKey}-${i}-end`}
+                  error={present ? undefined : endError}
+                  labelRight={
+                    showPresentCheckbox ? (
+                      <label
+                        htmlFor={`${sectionKey}-${i}-present`}
+                        className={`flex items-center gap-2 text-[12.5px] font-medium whitespace-nowrap text-[var(--color-ink-soft)] ${
+                          hasStart ? "cursor-pointer" : "cursor-not-allowed opacity-60"
+                        }`}
+                      >
+                        <input
+                          id={`${sectionKey}-${i}-present`}
+                          type="checkbox"
+                          checked={present}
+                          disabled={!hasStart}
+                          onChange={(e) =>
+                            updateListItem(
+                              sectionKey,
+                              i,
+                              e.target.checked ? { current: true, endDate: undefined } : { current: false },
+                            )
+                          }
+                          className="h-3.5 w-3.5 accent-[var(--color-accent)] disabled:cursor-not-allowed"
+                        />
+                        {PRESENT_LABEL}
+                      </label>
+                    ) : null
+                  }
+                >
+                  {present ? (
+                    <TextInput id={`${sectionKey}-${i}-end`} value={PRESENT_LABEL} readOnly className="w-full min-w-0 md:min-w-[14rem]" />
+                  ) : (
+                    <TextInput
+                      id={`${sectionKey}-${i}-end`}
+                      type="month"
+                      value={exp.endDate ?? ""}
+                      disabled={!hasStart}
+                      className="w-full min-w-0 md:min-w-[14rem]"
+                      onChange={(e) =>
+                        updateListItem(sectionKey, i, { endDate: e.target.value || undefined, current: false })
+                      }
+                      onBlur={touch(`${i}.endDate`)}
+                      invalid={Boolean(endError)}
+                    />
+                  )}
                 </FieldGroup>
               </div>
             </div>

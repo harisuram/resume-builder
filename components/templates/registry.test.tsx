@@ -79,6 +79,18 @@ describe("TEMPLATE_COMPONENTS", () => {
     }
   });
 
+  it("hides a skipped photo on every template", () => {
+    const photo = "data:image/jpeg;base64,abc123";
+    for (const theme of TEMPLATE_LIST) {
+      const base = makeFullResumeData({ templateId: theme.id, photo });
+      const data = { ...base, sectionStatus: { ...base.sectionStatus, photo: "skipped" as const } };
+      const Template = TEMPLATE_COMPONENTS[theme.id];
+      const { container, unmount } = render(<Template data={data} />);
+      expect(Array.from(container.querySelectorAll("img")).map((img) => img.getAttribute("src"))).not.toContain(photo);
+      unmount();
+    }
+  });
+
   it("Vitae toggles between its light and dark surface", async () => {
     const Template = TEMPLATE_COMPONENTS["jsonresume-vitae"];
     render(<Template data={makeFullResumeData({ templateId: "jsonresume-vitae" })} />);

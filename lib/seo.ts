@@ -132,12 +132,12 @@ export const HOW_TO_STEPS: HowToStep[] = [
     text: "Start with name, email, location, and an optional phone number with a country code. Links are optional. Required fields have to be valid before you can continue.",
   },
   {
-    name: "Skip the photo if it doesn’t belong",
-    text: "A headshot is optional. Many US resumes omit it. If a template has a photo slot and you skip this step, the layout simply has no picture.",
-  },
-  {
     name: "Write a short summary — or skip it",
     text: "A few sentences on what you do is enough. If you don’t want a summary section, skip it so it never prints an empty heading.",
+  },
+  {
+    name: "Skip the photo if it doesn’t belong",
+    text: "A headshot is optional. Many US resumes omit it. If a template has a photo slot and you skip this step, the layout simply has no picture.",
   },
   {
     name: "Fill only the sections that apply",

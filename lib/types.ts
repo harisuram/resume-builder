@@ -28,6 +28,9 @@ export interface Experience {
   role: string;
   startDate: string;
   endDate?: string;
+  /** When true, the end date is "Present" on the preview and PDF. Legacy
+   * entries with no `current` flag still treat a missing end date as present. */
+  current?: boolean;
   bullets: string[];
 }
 
