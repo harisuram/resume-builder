@@ -118,8 +118,7 @@ export interface ResumeData {
    * removeListItem re-points these when entries above one are deleted. */
   pageBreakItems?: string[];
   /** Custom order for content sections, set once the user moves anything
-   * via the section nav's move-up/move-down controls. Absent = use the
-   * default order (lib/persona.ts). Summary is intentionally not part of
-   * this — see getNavSectionOrder. */
+   * via the section nav. Absent = use the default order (lib/persona.ts).
+   * Summary is intentionally not part of this — see getNavSectionOrder. */
   sectionOrder?: SectionKey[];
 }

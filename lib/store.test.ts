@@ -389,6 +389,12 @@ describe("moveSection", () => {
     expect(useBuilderStore.getState().sectionOrder).toBeNull();
   });
 
+  it("is a no-op for a skipped section", () => {
+    useBuilderStore.getState().toggleSkipSection("experience");
+    useBuilderStore.getState().moveSection("experience", "up");
+    expect(useBuilderStore.getState().sectionOrder).toBeNull();
+  });
+
   it("moves back and forth correctly across repeated calls", () => {
     useBuilderStore.getState().moveSection("experience", "up");
     useBuilderStore.getState().moveSection("internships", "up");
@@ -407,6 +413,25 @@ describe("moveSection", () => {
       "softSkills",
       "additional",
     ]);
+  });
+});
+
+describe("reorderSection", () => {
+  it("places a section at an arbitrary index and materializes the default", () => {
+    useBuilderStore.getState().reorderSection("skills", 0);
+    expect(useBuilderStore.getState().sectionOrder?.[0]).toBe("skills");
+    expect(useBuilderStore.getState().sectionOrder?.[1]).toBe("keyAchievements");
+  });
+
+  it("is a no-op at the current index", () => {
+    useBuilderStore.getState().reorderSection("keyAchievements", 0);
+    expect(useBuilderStore.getState().sectionOrder).toBeNull();
+  });
+
+  it("is a no-op for a skipped section", () => {
+    useBuilderStore.getState().toggleSkipSection("skills");
+    useBuilderStore.getState().reorderSection("skills", 0);
+    expect(useBuilderStore.getState().sectionOrder).toBeNull();
   });
 });
 

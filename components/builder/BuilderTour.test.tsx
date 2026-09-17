@@ -27,7 +27,9 @@ describe("BuilderTour", () => {
     expect(screen.getByText(/every section has a switch/i)).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(screen.getByRole("heading", { name: /this list is the page order/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /drag a section to set the page order/i })).toBeInTheDocument();
+    expect(screen.getByText(/grab the dotted handle/i)).toBeInTheDocument();
+    expect(screen.getByText(/drag the handle to reorder/i)).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByRole("heading", { name: /keep a section from splitting/i })).toBeInTheDocument();

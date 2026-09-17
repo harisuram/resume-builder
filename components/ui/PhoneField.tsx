@@ -58,8 +58,11 @@ export function PhoneField({
     const rect = button.getBoundingClientRect();
     const width = Math.min(Math.max(rect.width, 280), Math.max(160, window.innerWidth - 16));
     const left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8));
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const openUp = spaceBelow < LIST_MAX_HEIGHT_PX + 16;
+    const top = openUp ? Math.max(8, rect.top - LIST_MAX_HEIGHT_PX - 4) : rect.bottom + 4;
     setMenuPos({
-      top: rect.bottom + 4,
+      top,
       left,
       width,
     });
@@ -204,7 +207,7 @@ export function PhoneField({
               role="listbox"
               aria-label="Country codes"
               style={{ top: menuPos.top, left: menuPos.left, width: menuPos.width, maxHeight: LIST_MAX_HEIGHT_PX }}
-              className="fixed z-50 overflow-y-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] py-1 shadow-card"
+              className="fixed z-[80] overflow-y-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] py-1 shadow-card"
             >
               {countries.map((country, index) => {
                 const isSelected = country.iso2 === selected.iso2;

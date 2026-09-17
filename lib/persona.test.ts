@@ -2,6 +2,7 @@ import {
   getNavSectionOrder,
   getSectionMeta,
   getSectionOrder,
+  placeSectionAt,
   resolveSectionOrder,
   SECTION_ORDER,
   SUMMARY_COPY,
@@ -68,6 +69,25 @@ describe("resolveSectionOrder", () => {
   it("returns the custom order verbatim when one is given", () => {
     const custom: SectionKey[] = ["skills", "experience"];
     expect(resolveSectionOrder(custom)).toBe(custom);
+  });
+});
+
+describe("placeSectionAt", () => {
+  it("moves a key to a later or earlier index without mutating the source", () => {
+    const start = [...SECTION_ORDER];
+    expect(placeSectionAt(start, "skills", 0)[0]).toBe("skills");
+    expect(placeSectionAt(start, "keyAchievements", 2)[2]).toBe("keyAchievements");
+    expect(start).toEqual(SECTION_ORDER);
+  });
+
+  it("returns the original array when the placement is a no-op", () => {
+    expect(placeSectionAt(SECTION_ORDER, "experience", 1)).toBe(SECTION_ORDER);
+    expect(placeSectionAt(SECTION_ORDER, "summary" as SectionKey, 0)).toBe(SECTION_ORDER);
+  });
+
+  it("clamps an out-of-range index", () => {
+    expect(placeSectionAt(SECTION_ORDER, "experience", -4)[0]).toBe("experience");
+    expect(placeSectionAt(SECTION_ORDER, "experience", 99).at(-1)).toBe("experience");
   });
 });
 

@@ -22,8 +22,8 @@ const STEPS: TourStep[] = [
   },
   {
     target: "section-sort",
-    title: "This list is the page order",
-    body: "The arrows next to a section move it up or down. The preview follows that order, so the page reads in the same sequence as this list.",
+    title: "Drag a section to set the page order",
+    body: "Grab the dotted handle next to a section and drop it where you want. The preview and Next follow this list. Skipped sections stay locked until you include them again.",
     placement: "right",
   },
   {
@@ -54,26 +54,35 @@ function SwitchDemo() {
   );
 }
 
+function SortGrip() {
+  return (
+    <span className="tour-sort-grip grid grid-cols-2 gap-[3px] text-[var(--color-ink-faint)]" aria-hidden="true">
+      {Array.from({ length: 6 }, (_, dot) => (
+        <span key={dot} className="h-[3px] w-[3px] rounded-full bg-current" />
+      ))}
+    </span>
+  );
+}
+
 function SortDemo() {
   return (
-    <div className="relative overflow-hidden rounded-xl bg-[linear-gradient(135deg,color-mix(in_srgb,var(--color-accent)_18%,transparent),color-mix(in_srgb,var(--color-focus)_12%,transparent))] p-3">
-      <div className="space-y-1.5">
+    <div className="relative overflow-hidden rounded-xl bg-[linear-gradient(135deg,color-mix(in_srgb,var(--color-accent)_18%,transparent),color-mix(in_srgb,var(--color-focus)_12%,transparent))] px-3 pb-3 pt-4">
+      <div className="tour-sort-list space-y-1.5">
         {["Experience", "Projects", "Education"].map((label, i) => (
           <div
             key={label}
             className={`tour-sort-row flex items-center justify-between rounded-lg bg-[var(--color-surface)]/90 px-3 py-1.5 text-[12px] font-medium shadow-card ${
               i === 1 ? "text-[var(--color-accent)]" : "text-[var(--color-ink)]"
             }`}
-            style={{ animationDelay: `${i * 0.12}s` }}
           >
             <span>{label}</span>
-            <span className="flex flex-col text-[9px] leading-none text-[var(--color-ink-faint)]" aria-hidden="true">
-              ▲
-              <span className={i === 1 ? "text-[var(--color-accent)]" : ""}>▼</span>
-            </span>
+            <SortGrip />
           </div>
         ))}
       </div>
+      <p className="mt-2 text-center text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--color-ink-soft)]">
+        Drag the handle to reorder
+      </p>
     </div>
   );
 }

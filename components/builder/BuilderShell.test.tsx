@@ -100,9 +100,27 @@ describe("BuilderShell", () => {
     expect(useBuilderStore.getState().sectionStatus.skills).toBe("skipped");
     expect(screen.getByRole("heading", { name: "Certifications", level: 2 })).toBeInTheDocument();
 
-    // Back on a now-skipped section, Next is unblocked.
+    // Back walks over the skipped Skills step to the previous included one.
     await userEvent.click(screen.getByRole("button", { name: "Back" }));
+    expect(screen.getByRole("heading", { name: "Education", level: 2 })).toBeInTheDocument();
+
+    await userEvent.click(nav().getByText("Skills"));
     expect(screen.getByRole("button", { name: "Next" })).toBeEnabled();
+  });
+
+  it("Next and Skip jump over sections already turned off in the nav", async () => {
+    render(<BuilderShell />);
+    await screen.findByRole("heading", { name: "Basic info" });
+    await userEvent.click(nav().getByText("Photo"));
+    await userEvent.click(nav().getByRole("switch", { name: "Skip Key achievements" }));
+    await userEvent.click(nav().getByRole("switch", { name: "Skip Internships" }));
+
+    await userEvent.click(screen.getByRole("button", { name: "Skip" }));
+    expect(useBuilderStore.getState().sectionStatus.photo).toBe("skipped");
+    expect(screen.getByRole("heading", { name: "Experience", level: 2 })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Back" }));
+    expect(screen.getByRole("heading", { name: "Summary", level: 2 })).toBeInTheDocument();
   });
 
   it("walks basicInfo -> summary via the Next/Back footer buttons", async () => {
@@ -222,9 +240,8 @@ describe("BuilderShell", () => {
     await screen.findByRole("heading", { name: "Basic info" });
 
     const button = screen.getByRole("button", { name: "Preview resume" });
-    expect(button.className).toContain("fixed");
     expect(button.className).toContain("md:hidden");
-    expect(container.querySelector("main")!.contains(button)).toBe(false);
+    expect(container.querySelector("main")!.contains(button)).toBe(true);
 
     const main = container.querySelector("main")!;
     main.scrollTop = 480;
@@ -280,9 +297,9 @@ describe("BuilderShell", () => {
     expect(footer?.className).toContain("md:static");
 
     const preview = screen.getByRole("button", { name: "Preview resume" });
-    expect(preview.className).toContain("bottom-[calc(10.5rem");
-    expect(preview.className).toContain("z-30");
-    expect(container.querySelector("main")!.className).toContain("pb-[calc(13.5rem");
+    expect(footer?.contains(preview)).toBe(true);
+    expect(preview.className).toContain("md:hidden");
+    expect(container.querySelector("main")!.className).toContain("pb-[calc(11rem");
   });
 
   it("resets to an empty builder after 'Start new resume' is confirmed", async () => {

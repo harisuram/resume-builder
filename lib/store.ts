@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { create } from "zustand";
-import { resolveSectionOrder, SECTION_ORDER } from "./persona";
+import { placeSectionAt, resolveSectionOrder, SECTION_ORDER } from "./persona";
 import { itemBreakKey, parseItemBreakKey } from "./resume";
 import { isBasicInfoValid, isSectionValid } from "./validation";
 import type {
@@ -177,8 +177,12 @@ interface BuilderState {
   sectionOrder: SectionKey[] | null;
   /** Swaps a content section with its neighbor. Materializes the default
    * into a real array on first use, so moving one section doesn't require
-   * the caller to already know the full current order. */
+   * the caller to already know the full current order. No-op when the
+   * section is skipped — skipped rows stay put until they're included. */
   moveSection: (key: SectionKey, direction: "up" | "down") => void;
+  /** Places a content section at an index in the current order (clamped).
+   * Same skip and unknown-key no-ops as moveSection. */
+  reorderSection: (key: SectionKey, toIndex: number) => void;
 
   loadFromData: (data: ResumeData) => void;
   resetStore: () => void;
@@ -402,13 +406,19 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
   sectionOrder: null,
   moveSection: (key, direction) =>
     set((state) => {
+      if (state.sectionStatus[key] === "skipped") return state;
       const current = resolveSectionOrder(state.sectionOrder);
       const index = current.indexOf(key);
-      const swapWith = direction === "up" ? index - 1 : index + 1;
-      if (index === -1 || swapWith < 0 || swapWith >= current.length) return state;
-      const next = [...current];
-      [next[index], next[swapWith]] = [next[swapWith], next[index]];
-      return { sectionOrder: next };
+      const toIndex = direction === "up" ? index - 1 : index + 1;
+      const next = placeSectionAt(current, key, toIndex);
+      return next === current ? state : { sectionOrder: next };
+    }),
+  reorderSection: (key, toIndex) =>
+    set((state) => {
+      if (state.sectionStatus[key] === "skipped") return state;
+      const current = resolveSectionOrder(state.sectionOrder);
+      const next = placeSectionAt(current, key, toIndex);
+      return next === current ? state : { sectionOrder: next };
     }),
 
   loadFromData: (data) =>

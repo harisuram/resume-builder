@@ -6,7 +6,7 @@ import { loadResumeData } from "./storage";
 export const TOUR_DISMISSED_KEY = "builderTourDismissed";
 
 /** Matches the builder's `md:` layout. Tour targets (skip switch, sort
- * arrows, page separator) are `hidden` below this width. */
+ * handle, page separator) are `hidden` below this width. */
 export const BUILDER_TOUR_MEDIA = "(min-width: 768px)";
 
 export function isBuilderTourViewport(): boolean {

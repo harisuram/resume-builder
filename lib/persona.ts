@@ -105,9 +105,23 @@ export function getSectionOrder(): SectionMeta[] {
 
 /** Resolves the order content sections actually render and navigate in:
  * the user's custom order once they've moved anything via the section
- * nav's move-up/move-down controls, else the default. */
+ * nav, else the default. */
 export function resolveSectionOrder(custom?: SectionKey[] | null): SectionKey[] {
   return custom && custom.length > 0 ? custom : SECTION_ORDER;
+}
+
+/** Moves `key` to `toIndex` in a content-section order. Unknown keys and
+ * no-op placements return the original array so a still-default order can
+ * stay unmaterialized. */
+export function placeSectionAt(order: SectionKey[], key: SectionKey, toIndex: number): SectionKey[] {
+  const from = order.indexOf(key);
+  if (from === -1) return order;
+  const to = Math.max(0, Math.min(order.length - 1, toIndex));
+  if (from === to) return order;
+  const next = [...order];
+  const [item] = next.splice(from, 1);
+  next.splice(to, 0, item);
+  return next;
 }
 
 /** The summary step plus content sections, in the order the section nav

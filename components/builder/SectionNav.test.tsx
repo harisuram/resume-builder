@@ -36,6 +36,45 @@ describe("SectionNav", () => {
     expect(buttons[buttons.length - 1]).toContain("Template & export");
   });
 
+  it("places a meaningful icon before every section label", () => {
+    render(<SectionNav active="experience" onSelect={() => {}} />);
+    const nav = screen.getByRole("navigation", { name: "Resume sections" });
+    const expected: Array<[string, string]> = [
+      ["Basic info", "basicInfo"],
+      ["Summary", "summary"],
+      ["Photo", "photo"],
+      ["Key achievements", "keyAchievements"],
+      ["Experience", "experience"],
+      ["Internships", "internships"],
+      ["Part-time work", "partTime"],
+      ["Projects", "projects"],
+      ["Education", "education"],
+      ["Skills", "skills"],
+      ["Certifications", "certifications"],
+      ["Patents", "patents"],
+      ["Languages", "languages"],
+      ["Hobbies", "hobbies"],
+      ["Soft skills", "softSkills"],
+      ["Additional", "additional"],
+      ["Template & export", "export"],
+    ];
+
+    for (const [label, key] of expected) {
+      const button = screen.getByText(label).closest("button");
+      expect(button).not.toBeNull();
+      const icon = button!.querySelector(`[data-nav-icon="${key}"]`);
+      expect(icon).not.toBeNull();
+      expect(icon).toHaveAttribute("aria-hidden", "true");
+      expect(icon!.querySelector("svg")).not.toBeNull();
+    }
+
+    expect(nav.querySelectorAll("[data-nav-icon]")).toHaveLength(expected.length);
+    expect(nav.querySelector('[data-nav-icon="experience"]')).toHaveAttribute("data-active", "true");
+    expect(nav.querySelector('[data-nav-icon="experience"] svg')).toHaveAttribute("fill", "currentColor");
+    expect(nav.querySelector('[data-nav-icon="basicInfo"]')).not.toHaveAttribute("data-active");
+    expect(nav.querySelector('[data-nav-icon="basicInfo"] svg')).toHaveAttribute("fill", "none");
+  });
+
   it("labels the summary step Summary", () => {
     render(<SectionNav active="basicInfo" onSelect={() => {}} />);
     expect(screen.getByText("Summary")).toBeInTheDocument();
@@ -148,16 +187,11 @@ describe("SectionNav", () => {
       expect(keyAchievementsIndex).toBeLessThan(experienceIndex);
     });
 
-    it("disables moving the first content section up, and the last one down", () => {
+    it("moves a section with the keyboard handle, updating both the store and the rendered order", async () => {
       render(<SectionNav active="basicInfo" onSelect={() => {}} />);
-      expect(screen.getByRole("button", { name: "Move Key achievements up" })).toBeDisabled();
-      expect(screen.getByRole("button", { name: "Move Additional down" })).toBeDisabled();
-    });
-
-    it("moves a section down, updating both the store and the rendered order", async () => {
-      render(<SectionNav active="basicInfo" onSelect={() => {}} />);
-
-      await userEvent.click(screen.getByRole("button", { name: "Move Key achievements down" }));
+      const handle = screen.getByRole("button", { name: "Reorder Key achievements" });
+      handle.focus();
+      await userEvent.keyboard("{ArrowDown}");
 
       expect(useBuilderStore.getState().sectionOrder?.[0]).toBe("experience");
       expect(useBuilderStore.getState().sectionOrder?.[1]).toBe("keyAchievements");
@@ -168,11 +202,19 @@ describe("SectionNav", () => {
       expect(experienceIndex).toBeLessThan(keyAchievementsIndex);
     });
 
-    it("does not navigate when a move button is clicked", async () => {
+    it("does not navigate when the reorder handle is used", async () => {
       const onSelect = jest.fn();
       render(<SectionNav active="basicInfo" onSelect={onSelect} />);
-      await userEvent.click(screen.getByRole("button", { name: "Move Key achievements down" }));
+      const handle = screen.getByRole("button", { name: "Reorder Key achievements" });
+      handle.focus();
+      await userEvent.keyboard("{ArrowDown}");
       expect(onSelect).not.toHaveBeenCalled();
+    });
+
+    it("disables the reorder handle on a skipped section", async () => {
+      render(<SectionNav active="basicInfo" onSelect={() => {}} />);
+      await userEvent.click(screen.getByRole("switch", { name: "Skip Skills" }));
+      expect(screen.getByRole("button", { name: "Skills is skipped and cannot be reordered" })).toBeDisabled();
     });
   });
 });

@@ -34,7 +34,7 @@ import { AdditionalForm } from "./sections/AdditionalForm";
 import { SummaryForm } from "./sections/SummaryForm";
 import { Navbar } from "./Navbar";
 import { BuilderTour } from "./BuilderTour";
-import { getWizardOrder, type NavKey } from "./nav";
+import { adjacentUnskippedStep, getWizardOrder, type NavKey } from "./nav";
 import { MobilePreviewSheet } from "./MobilePreviewSheet";
 import { PreviewPane } from "./PreviewPane";
 import { SectionFooterNav } from "./SectionFooterNav";
@@ -85,44 +85,6 @@ function isStepValid(
   if (key === "photo") return sectionStatus.photo === "skipped" || Boolean(photo);
   const status = sectionStatus[key] ?? "not_started";
   return status === "complete" || status === "skipped";
-}
-
-function EyeIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.6}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-5 w-5"
-      aria-hidden="true"
-    >
-      <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  );
-}
-
-/** Mobile-only control that opens the preview as a bottom sheet over the
- * current section — so reviewing pages doesn't dump you on export. Pinned
- * to the viewport rather than sitting in the panel's scroll flow, and
- * dropped on export (the preview is already on that step) and while the
- * sheet is open. */
-function MobilePreviewButton({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label="Preview resume"
-      title="Preview resume"
-      aria-haspopup="dialog"
-      className="no-print fixed right-4 bottom-[calc(10.5rem+env(safe-area-inset-bottom))] z-30 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-accent)] text-[var(--color-accent-ink)] shadow-cta transition duration-200 ease-out hover:-translate-y-px hover:brightness-110 active:translate-y-0 active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)] md:hidden"
-    >
-      <EyeIcon />
-    </button>
-  );
 }
 
 function ActivePanel({ activeKey }: { activeKey: NavKey }) {
@@ -271,12 +233,16 @@ export function BuilderShell() {
       : undefined;
 
   function goBack() {
-    if (stepIndex > 0) selectSection(wizardOrder[stepIndex - 1]);
+    const prev = adjacentUnskippedStep(wizardOrder, stepIndex, -1, sectionStatus);
+    if (prev) selectSection(prev);
   }
   /** Unconditional advance — used once a step has already been resolved
-   * (Next, after its own validity check) or explicitly bypassed (Skip). */
+   * (Next, after its own validity check) or explicitly bypassed (Skip).
+   * Already-skipped neighbors are walked over so Next doesn't stop on a
+   * switch that's already off. */
   function advance() {
-    if (hasNextStep) selectSection(wizardOrder[stepIndex + 1]);
+    const next = adjacentUnskippedStep(wizardOrder, stepIndex, 1, sectionStatus);
+    if (next) selectSection(next);
   }
   function goNext() {
     if (!stepValid) return;
@@ -364,10 +330,9 @@ export function BuilderShell() {
             </main>
           ) : (
             <div className="flex min-h-0 flex-1 overflow-hidden">
-              {/* Extra bottom padding on mobile: sticky step footer + preview
-                  button sit over the viewport, so the last field has to be
-                  able to scroll above them. */}
-              <main ref={formPaneRef} className="block min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-6 pb-[calc(13.5rem+env(safe-area-inset-bottom))] sm:px-8 md:pb-6">
+              {/* Extra bottom padding on mobile: the sticky step footer sits
+                  over the viewport, so the last field has to scroll above it. */}
+              <main ref={formPaneRef} className="block min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-6 pb-[calc(11rem+env(safe-area-inset-bottom))] sm:px-8 md:pb-6">
                 <div className="mx-auto max-w-2xl">
                   <ActivePanel activeKey={activeKey} />
                   <SectionFooterNav
@@ -382,6 +347,7 @@ export function BuilderShell() {
                     onNext={goNext}
                     onSkip={goSkip}
                     onClear={goClear}
+                    onPreview={previewOpen ? undefined : () => setPreviewOpen(true)}
                   />
                   <AdSlot
                     slot={ADSENSE_SLOTS.builderSectionFooter}
@@ -418,9 +384,6 @@ export function BuilderShell() {
           )}
         </div>
 
-        {activeKey !== "export" && !previewOpen && (
-          <MobilePreviewButton onClick={() => setPreviewOpen(true)} />
-        )}
         <ConfirmDialog
           open={saveConsentOpen}
           title="Save this resume on this device so you can pick it up again later?"

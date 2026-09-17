@@ -4,6 +4,24 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
+function EyeIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.6}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-5 w-5"
+      aria-hidden="true"
+    >
+      <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
 export function SectionFooterNav({
   canGoBack,
   canGoNext,
@@ -16,6 +34,7 @@ export function SectionFooterNav({
   onNext,
   onSkip,
   onClear,
+  onPreview,
 }: {
   canGoBack: boolean;
   canGoNext: boolean;
@@ -34,6 +53,9 @@ export function SectionFooterNav({
   onNext: () => void;
   onSkip: () => void;
   onClear: () => void;
+  /** Mobile-only: open the live preview over this step. Omitted on desktop
+   * (the side pane is already there) and while the sheet is open. */
+  onPreview?: () => void;
 }) {
   const [confirming, setConfirming] = useState(false);
 
@@ -44,7 +66,7 @@ export function SectionFooterNav({
   return (
     <div className="no-print fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-border)] bg-[var(--color-surface)]/95 px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-xl md:static md:z-auto md:mt-8 md:bg-transparent md:px-0 md:py-0 md:pt-5 md:backdrop-blur-none">
       <div className="mx-auto flex max-w-2xl flex-col gap-3 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-2">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 max-md:w-full">
           {canGoBack && (
             <Button variant="secondary" onClick={onBack} className="max-md:min-h-11">
               Back
@@ -53,6 +75,18 @@ export function SectionFooterNav({
           <Button variant="ghost" onClick={() => setConfirming(true)} disabled={!canClear} className="max-md:min-h-11">
             Clear
           </Button>
+          {onPreview ? (
+            <button
+              type="button"
+              onClick={onPreview}
+              aria-label="Preview resume"
+              title="Preview resume"
+              aria-haspopup="dialog"
+              className="ml-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--color-accent)] text-[var(--color-accent-ink)] shadow-cta transition duration-200 ease-out hover:brightness-110 active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)] md:hidden"
+            >
+              <EyeIcon />
+            </button>
+          ) : null}
         </div>
         {helper ? (
           <p className="min-w-0 text-[11.5px] leading-snug text-[var(--color-ink-faint)] md:hidden">{helper}</p>

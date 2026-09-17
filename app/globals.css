@@ -249,29 +249,59 @@ input[type="month"]::-webkit-calendar-picker-indicator {
   }
 }
 
-@keyframes tour-sort-nudge {
+@keyframes tour-sort-drag {
   0%,
+  10% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
+  }
+  18% {
+    transform: translateY(0) scale(1.04);
+    box-shadow: 0 10px 22px -12px rgb(0 0 0 / 0.45);
+  }
+  40%,
+  56% {
+    transform: translateY(-34px) scale(1.04);
+    box-shadow: 0 10px 22px -12px rgb(0 0 0 / 0.45);
+  }
+  64% {
+    transform: translateY(-34px) scale(1);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
+  }
+  80%,
   100% {
-    transform: translateY(0);
-  }
-  40% {
-    transform: translateY(22px);
-  }
-  60% {
-    transform: translateY(22px);
+    transform: translateY(0) scale(1);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
   }
 }
 
-@keyframes tour-sort-nudge-up {
+@keyframes tour-sort-shift-down {
   0%,
+  18% {
+    transform: translateY(0);
+  }
+  40%,
+  64% {
+    transform: translateY(34px);
+  }
+  80%,
   100% {
     transform: translateY(0);
   }
-  40% {
-    transform: translateY(-22px);
+}
+
+@keyframes tour-sort-grip {
+  0%,
+  10%,
+  80%,
+  100% {
+    color: var(--color-ink-faint);
+    transform: scale(1);
   }
-  60% {
-    transform: translateY(-22px);
+  18%,
+  64% {
+    color: var(--color-accent);
+    transform: scale(1.15);
   }
 }
 
@@ -334,6 +364,261 @@ input[type="month"]::-webkit-calendar-picker-indicator {
   animation: template-picker-glow 2.2s ease-in-out infinite;
 }
 
+@keyframes nav-icon-in {
+  from {
+    opacity: 0;
+    transform: scale(0.55) translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes nav-icon-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1.5px);
+  }
+}
+
+@keyframes nav-icon-wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  30% {
+    transform: rotate(-10deg);
+  }
+  60% {
+    transform: rotate(8deg);
+  }
+}
+
+@keyframes nav-icon-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes nav-icon-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.14);
+  }
+}
+
+@keyframes nav-icon-shutter {
+  0%,
+  35%,
+  100% {
+    transform: scale(1);
+  }
+  48% {
+    transform: scale(0.78);
+  }
+}
+
+@keyframes nav-icon-beat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  18% {
+    transform: scale(1.18);
+  }
+  32% {
+    transform: scale(1);
+  }
+  46% {
+    transform: scale(1.12);
+  }
+}
+
+@keyframes nav-icon-download {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(1.75px);
+  }
+  55% {
+    transform: translateY(1.75px);
+  }
+}
+
+@keyframes nav-icon-tick {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes nav-icon-tassel {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  40% {
+    transform: rotate(16deg);
+  }
+  70% {
+    transform: rotate(-8deg);
+  }
+}
+
+.nav-section-icon {
+  display: inline-flex;
+  width: 0.95rem;
+  height: 0.95rem;
+  flex-shrink: 0;
+  overflow: visible;
+  --nav-icon-delay: 0ms;
+}
+
+.nav-section-icon .nav-icon-motion {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: center;
+}
+
+.nav-section-icon .nav-icon-hand,
+.nav-section-icon .nav-icon-tassel,
+.nav-section-icon .nav-icon-arrow {
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+.nav-section-icon svg {
+  transition: fill 0.18s ease;
+}
+
+.nav-section-icon[data-active="true"] .nav-icon-cut {
+  fill: var(--color-accent-tint);
+  stroke: none;
+}
+
+.nav-section-icon[data-active="true"] .nav-icon-hand,
+.nav-section-icon[data-active="true"] .nav-icon-tassel,
+.nav-section-icon[data-active="true"] .nav-icon-arrow {
+  fill: none;
+  stroke: var(--color-accent-tint);
+}
+
+@media (min-width: 768px) {
+  .nav-section-icon {
+    width: 1.05rem;
+    height: 1.05rem;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .nav-section-icon {
+    animation: nav-icon-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--nav-icon-delay);
+  }
+
+  .group\/navrow:hover .nav-icon-motion,
+  .nav-section-icon[data-active="true"] .nav-icon-motion {
+    animation: nav-icon-bob 1.55s ease-in-out infinite;
+  }
+
+  .group\/navrow:hover .nav-section-icon[data-nav-icon="skills"] .nav-icon-motion,
+  .group\/navrow:hover .nav-section-icon[data-nav-icon="internships"] .nav-icon-motion,
+  .group\/navrow:hover .nav-section-icon[data-nav-icon="additional"] .nav-icon-motion,
+  .nav-section-icon[data-nav-icon="skills"][data-active="true"] .nav-icon-motion,
+  .nav-section-icon[data-nav-icon="internships"][data-active="true"] .nav-icon-motion,
+  .nav-section-icon[data-nav-icon="additional"][data-active="true"] .nav-icon-motion {
+    animation: nav-icon-wiggle 0.9s ease-in-out infinite;
+  }
+
+  .group\/navrow:hover .nav-section-icon[data-nav-icon="languages"] .nav-icon-motion,
+  .nav-section-icon[data-nav-icon="languages"][data-active="true"] .nav-icon-motion {
+    animation: nav-icon-spin 8s linear infinite;
+  }
+
+  .group\/navrow:hover .nav-section-icon[data-nav-icon="photo"] .nav-icon-motion,
+  .nav-section-icon[data-nav-icon="photo"][data-active="true"] .nav-icon-motion {
+    animation: nav-icon-shutter 1.6s ease-in-out infinite;
+  }
+
+  .group\/navrow:hover .nav-section-icon[data-nav-icon="keyAchievements"] .nav-icon-motion,
+  .group\/navrow:hover .nav-section-icon[data-nav-icon="patents"] .nav-icon-motion,
+  .nav-section-icon[data-nav-icon="keyAchievements"][data-active="true"] .nav-icon-motion,
+  .nav-section-icon[data-nav-icon="patents"][data-active="true"] .nav-icon-motion {
+    animation: nav-icon-pulse 1.4s ease-in-out infinite;
+  }
+
+  .group\/navrow:hover .nav-section-icon[data-nav-icon="hobbies"] .nav-icon-motion,
+  .nav-section-icon[data-nav-icon="hobbies"][data-active="true"] .nav-icon-motion {
+    animation: nav-icon-beat 1.15s ease-in-out infinite;
+  }
+
+  .group\/navrow:hover .nav-section-icon[data-nav-icon="export"] .nav-icon-arrow,
+  .nav-section-icon[data-nav-icon="export"][data-active="true"] .nav-icon-arrow {
+    animation: nav-icon-download 1.2s ease-in-out infinite;
+  }
+
+  .group\/navrow:hover .nav-section-icon[data-nav-icon="partTime"] .nav-icon-hand,
+  .nav-section-icon[data-nav-icon="partTime"][data-active="true"] .nav-icon-hand {
+    animation: nav-icon-tick 4s linear infinite;
+    transform-origin: 12px 12px;
+    transform-box: view-box;
+  }
+
+  .group\/navrow:hover .nav-section-icon[data-nav-icon="education"] .nav-icon-tassel,
+  .nav-section-icon[data-nav-icon="education"][data-active="true"] .nav-icon-tassel {
+    animation: nav-icon-tassel 1.6s ease-in-out infinite;
+    transform-origin: 20.2px 9.4px;
+    transform-box: view-box;
+  }
+}
+
+body.nav-section-dragging {
+  cursor: grabbing !important;
+  user-select: none !important;
+}
+
+body.nav-section-dragging * {
+  cursor: grabbing !important;
+}
+
+.nav-row-lift {
+  z-index: 8;
+  background: color-mix(in srgb, var(--color-accent) 16%, var(--color-surface));
+  color: var(--color-accent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-accent) 42%, transparent),
+    0 16px 36px -12px color-mix(in srgb, var(--color-accent) 42%, rgb(0 0 0) 25%);
+}
+
+@keyframes nav-row-drop-pop {
+  0% {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--color-accent) 42%, transparent),
+      0 16px 36px -12px color-mix(in srgb, var(--color-accent) 42%, transparent);
+  }
+  40% {
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--color-accent) 55%, transparent),
+      0 8px 18px -10px color-mix(in srgb, var(--color-accent) 28%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+.nav-row-dropped {
+  animation: nav-row-drop-pop 380ms ease-out;
+}
+
 .tour-card {
   animation: tour-card-in 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -354,14 +639,19 @@ input[type="month"]::-webkit-calendar-picker-indicator {
   animation: tour-caption-swap 2.8s ease-in-out infinite;
 }
 
-.tour-sort-row:nth-child(2) {
-  animation: tour-sort-nudge 2.6s ease-in-out infinite;
-  position: relative;
-  z-index: 1;
+.tour-sort-row:nth-child(1) {
+  animation: tour-sort-shift-down 3s ease-in-out infinite;
 }
 
-.tour-sort-row:nth-child(3) {
-  animation: tour-sort-nudge-up 2.6s ease-in-out infinite;
+.tour-sort-row:nth-child(2) {
+  animation: tour-sort-drag 3s ease-in-out infinite;
+  position: relative;
+  z-index: 1;
+  cursor: grabbing;
+}
+
+.tour-sort-row:nth-child(2) .tour-sort-grip {
+  animation: tour-sort-grip 3s ease-in-out infinite;
 }
 
 .tour-page-pill {
