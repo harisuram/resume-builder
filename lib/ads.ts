@@ -39,6 +39,13 @@ export function isAdsenseConfigured(): boolean {
   return ADSENSE_CLIENT_ID.length > 0;
 }
 
+/** Loader URL from the AdSense snippet Google’s crawler looks for. */
+export function adsenseScriptSrc(clientId = ADSENSE_CLIENT_ID): string {
+  const client = adsenseClientAttr(clientId);
+  if (!client) return "";
+  return `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${client}`;
+}
+
 /** `ca-pub-…` form used by the loader script, the meta tag, and each `ins`. */
 export function adsenseClientAttr(clientId = ADSENSE_CLIENT_ID): string {
   if (!clientId) return "";

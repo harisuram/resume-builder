@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Inter, Source_Serif_4 } from "next/font/google";
 import Script from "next/script";
-import { ADSENSE_CLIENT_ID, adsenseClientAttr, isAdsenseConfigured } from "@/lib/ads";
+import { ADSENSE_CLIENT_ID, adsenseClientAttr, adsenseScriptSrc, isAdsenseConfigured } from "@/lib/ads";
 import { BRAND } from "@/lib/brand";
 import { HOME_DESCRIPTION, HOME_TITLE, SITE_KEYWORDS, SITE_NAME } from "@/lib/seo";
 import { THEME_BOOTSTRAP_SCRIPT } from "@/lib/theme";
@@ -66,6 +66,15 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${inter.variable} ${geist.variable} ${sourceSerif.variable} h-full`} data-scroll-behavior="smooth" suppressHydrationWarning>
+      {/* Native <script>, not next/script: Google’s snippet crawler looks for
+          adsbygoogle.js on a real src= tag in the HTML. next/script rewrites
+          that to a preload + __next_s inject, which Google reports as “no ad
+          code”. Kept in <head> to match the snippet they issued. */}
+      <head>
+        {isAdsenseConfigured() && (
+          <script async src={adsenseScriptSrc()} crossOrigin="anonymous" />
+        )}
+      </head>
       {/* Extensions (ColorZilla's cz-shortcut-listen, Grammarly, etc.) stamp
           attributes onto html/body before React hydrates. suppressHydrationWarning
           only covers this node's own attributes — it does not hide mismatches
@@ -74,15 +83,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Script id="theme-bootstrap" strategy="beforeInteractive">
           {THEME_BOOTSTRAP_SCRIPT}
         </Script>
-        {isAdsenseConfigured() && (
-          <Script
-            id="adsense"
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientAttr(ADSENSE_CLIENT_ID)}`}
-            crossOrigin="anonymous"
-            strategy="beforeInteractive"
-          />
-        )}
         {children}
       </body>
     </html>

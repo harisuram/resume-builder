@@ -5,6 +5,7 @@ import {
   adsTxtBody,
   adsenseClientAttr,
   adsensePublisherId,
+  adsenseScriptSrc,
   isAdsenseConfigured,
   isPlaceholderAdId,
 } from "./ads";
@@ -15,6 +16,9 @@ describe("ads config", () => {
     expect(ADSENSE_CLIENT_ID).toBe("ca-pub-9224755974440077");
     expect(isAdsenseConfigured()).toBe(true);
     expect(adsTxtBody()).toBe("google.com, pub-9224755974440077, DIRECT, f08c47fec0942fa0\n");
+    expect(adsenseScriptSrc()).toBe(
+      "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9224755974440077",
+    );
   });
 
   it("exposes every slot AdsBot needs to find", () => {
