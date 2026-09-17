@@ -50,7 +50,7 @@ export function PhotoForm() {
       {skipped ? (
         <SkippedNotice label="Photo" sectionKey="photo" />
       ) : (
-        <div className="flex min-w-0 items-start gap-4">
+        <div className="flex min-w-0 items-center gap-4">
           <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[var(--color-border)] bg-[var(--color-border)]/20">
             {photo ? (
               // eslint-disable-next-line @next/next/no-img-element -- cropped data URL held in client state, not an optimizable next/image asset

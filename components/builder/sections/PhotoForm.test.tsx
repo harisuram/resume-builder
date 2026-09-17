@@ -33,7 +33,9 @@ describe("PhotoForm", () => {
   it("shows 'No photo' and an upload button when nothing is set", () => {
     renderPhoto();
     expect(screen.getByText("No photo")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Upload photo" })).toBeInTheDocument();
+    const upload = screen.getByRole("button", { name: "Upload photo" });
+    expect(upload).toBeInTheDocument();
+    expect(screen.getByText("No photo").closest("div.flex")?.parentElement?.className).toContain("items-center");
   });
 
   it("opens the crop modal after choosing an image file", async () => {

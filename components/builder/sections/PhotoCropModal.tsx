@@ -50,16 +50,16 @@ export function PhotoCropModal({
   const scale = natural ? coverScale(natural, frame) * zoom : 1;
 
   useLayoutEffect(() => {
-    const el = frameRef.current;
-    if (!el) return;
     function update() {
-      const size = el.clientWidth;
-      if (size > 0) setFrame(size);
+      const node = frameRef.current;
+      if (!node) return;
+      if (node.clientWidth > 0) setFrame(node.clientWidth);
     }
     update();
-    if (typeof ResizeObserver === "undefined") return;
+    const frameEl = frameRef.current;
+    if (!frameEl || typeof ResizeObserver === "undefined") return;
     const observer = new ResizeObserver(update);
-    observer.observe(el);
+    observer.observe(frameEl);
     return () => observer.disconnect();
   }, []);
 
