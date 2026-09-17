@@ -8,6 +8,14 @@ import { resolve } from "node:path";
  * on a Pages project). */
 const apiDir = resolve("app/api");
 const stashDir = resolve(".next-export-stash/api");
+const nextDir = resolve(".next");
+
+/** `next dev` writes `.next/dev/types/validator.ts` that imports every route,
+ * including POST /api/optimize. After we stash that folder for the static
+ * export, a leftover validator fails typecheck and aborts `next build`. */
+function clearStaleNextCache() {
+  if (existsSync(nextDir)) rmSync(nextDir, { recursive: true, force: true });
+}
 
 function stashApiRoute() {
   if (!existsSync(apiDir)) return false;
@@ -24,6 +32,7 @@ function restoreApiRoute(stashed) {
   renameSync(stashDir, apiDir);
 }
 
+clearStaleNextCache();
 const stashed = stashApiRoute();
 try {
   const result = spawnSync("npx", ["next", "build"], { stdio: "inherit" });
