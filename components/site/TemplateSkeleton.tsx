@@ -1,19 +1,26 @@
 import { resumeSectionTitle, SUMMARY_COPY } from "@/lib/persona";
+import { PAGE_HEIGHT_PX } from "@/lib/page";
+import { NARROW_SECTION_KEYS } from "@/lib/resume";
 import type { SectionKey } from "@/lib/types";
 import { SectionHeading } from "@/components/templates/shared/SectionHeading";
 import { tint, type TemplateTheme } from "@/components/templates/shared/theme";
 
 /** Representative sections for a gallery preview — enough to show heading
  * style and column split without dumping every optional block. */
-const MAIN_SECTIONS: SectionKey[] = ["experience", "projects"];
-const RAIL_SECTIONS: SectionKey[] = ["education", "skills"];
-const SINGLE_SECTIONS: SectionKey[] = ["summary", ...MAIN_SECTIONS, ...RAIL_SECTIONS];
+const GALLERY_SECTIONS: SectionKey[] = ["summary", "experience", "projects", "education", "skills"];
+
+function partitionSections(sections: SectionKey[]): { rail: SectionKey[]; main: SectionKey[] } {
+  return {
+    rail: sections.filter((key) => key !== "summary" && NARROW_SECTION_KEYS.has(key)),
+    main: sections.filter((key) => key === "summary" || !NARROW_SECTION_KEYS.has(key)),
+  };
+}
 
 function Bone({ className, light = false }: { className: string; light?: boolean }) {
   return (
     <div
-      className={`rounded-full ${className}`}
-      style={{ background: light ? "rgba(255,255,255,0.32)" : "color-mix(in srgb, var(--r-ink) 13%, transparent)" }}
+      className={`skeleton-bone rounded-full ${className}`}
+      data-skeleton-light={light || undefined}
       aria-hidden="true"
     />
   );
@@ -22,7 +29,8 @@ function Bone({ className, light = false }: { className: string; light?: boolean
 function AvatarSlot({ accent, size, light = false }: { accent: string; size: number; light?: boolean }) {
   return (
     <div
-      className="shrink-0 rounded-full"
+      className="skeleton-bone shrink-0 rounded-full"
+      data-skeleton-light={light || undefined}
       style={{
         width: size,
         height: size,
@@ -51,7 +59,7 @@ function ContactBones({ light = false, stacked = false }: { light?: boolean; sta
   return <div className={stacked ? "flex flex-col gap-1.5" : "flex flex-wrap gap-2"}>{bones}</div>;
 }
 
-function NarrativeBones({ light = false }: { light?: boolean }) {
+function NarrativeBones({ light = false, compact = false }: { light?: boolean; compact?: boolean }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-3">
@@ -59,7 +67,7 @@ function NarrativeBones({ light = false }: { light?: boolean }) {
         <Bone className="h-2 w-14" light={light} />
       </div>
       <Bone className="h-2 w-full" light={light} />
-      <Bone className="h-2 w-[88%]" light={light} />
+      {!compact && <Bone className="h-2 w-[88%]" light={light} />}
     </div>
   );
 }
@@ -73,33 +81,45 @@ function EducationBones({ light = false }: { light?: boolean }) {
   );
 }
 
-function SkillBones({ light = false }: { light?: boolean }) {
+function SkillBones({ light = false, compact = false }: { light?: boolean; compact?: boolean }) {
   return (
     <div className="flex flex-wrap gap-1.5">
       <Bone className="h-5 w-14 rounded-md" light={light} />
       <Bone className="h-5 w-20 rounded-md" light={light} />
       <Bone className="h-5 w-12 rounded-md" light={light} />
-      <Bone className="h-5 w-16 rounded-md" light={light} />
+      {!compact && <Bone className="h-5 w-16 rounded-md" light={light} />}
     </div>
   );
 }
 
-function SectionBody({ section, light = false }: { section: SectionKey; light?: boolean }) {
+function SectionBody({
+  section,
+  light = false,
+  compact = false,
+}: {
+  section: SectionKey;
+  light?: boolean;
+  compact?: boolean;
+}) {
   if (section === "summary") {
     return (
       <div className="space-y-1.5">
         <Bone className="h-2 w-full" light={light} />
         <Bone className="h-2 w-[94%]" light={light} />
-        <Bone className="h-2 w-3/4" light={light} />
+        {!compact && <Bone className="h-2 w-3/4" light={light} />}
       </div>
     );
   }
-  if (section === "skills") return <SkillBones light={light} />;
-  if (section === "education") return <EducationBones light={light} />;
+  if (section === "skills" || section === "hobbies" || section === "softSkills") {
+    return <SkillBones light={light} compact={compact} />;
+  }
+  if (section === "education" || section === "certifications" || section === "languages") {
+    return <EducationBones light={light} />;
+  }
   return (
     <div className="space-y-3">
-      <NarrativeBones light={light} />
-      <NarrativeBones light={light} />
+      <NarrativeBones light={light} compact={compact} />
+      {!compact && <NarrativeBones light={light} />}
     </div>
   );
 }
@@ -108,16 +128,33 @@ function PreviewSection({
   theme,
   section,
   light = false,
+  compact = false,
+  animate = false,
+  index = 0,
+  additionalTitle,
 }: {
   theme: TemplateTheme;
   section: SectionKey;
   light?: boolean;
+  compact?: boolean;
+  animate?: boolean;
+  index?: number;
+  additionalTitle?: string;
 }) {
-  const title = section === "summary" ? SUMMARY_COPY.label : resumeSectionTitle(section);
+  const title =
+    section === "summary"
+      ? SUMMARY_COPY.label
+      : section === "additional" && additionalTitle?.trim()
+        ? additionalTitle.trim()
+        : resumeSectionTitle(section);
   return (
-    <section data-preview-section={section}>
+    <section
+      data-preview-section={section}
+      className={animate ? "skeleton-section" : undefined}
+      style={animate ? { animationDelay: `${Math.min(index, 14) * 45}ms` } : undefined}
+    >
       <SectionHeading theme={theme} section={section} title={title} light={light} />
-      <SectionBody section={section} light={light} />
+      <SectionBody section={section} light={light} compact={compact} />
     </section>
   );
 }
@@ -139,11 +176,31 @@ function NameBone({
   );
 }
 
-function SingleColumnSkeleton({ theme }: { theme: TemplateTheme }) {
+interface SkeletonBodyProps {
+  theme: TemplateTheme;
+  sections: SectionKey[];
+  rail: SectionKey[];
+  main: SectionKey[];
+  compact: boolean;
+  animate: boolean;
+  fullPage: boolean;
+  showAvatar: boolean;
+  additionalTitle?: string;
+}
+
+function SingleColumnSkeleton({
+  theme,
+  sections,
+  compact,
+  animate,
+  fullPage,
+  showAvatar,
+  additionalTitle,
+}: SkeletonBodyProps) {
   const fontClass = theme.fontDisplay === "serif" ? "font-serif" : "font-sans";
-  const gap = theme.density === "compact" ? "gap-4" : "gap-5";
+  const gap = compact ? "gap-3.5" : theme.density === "compact" ? "gap-4" : "gap-5";
   return (
-    <div className={`resume-surface min-h-full ${fontClass}`}>
+    <div className={`resume-surface min-h-full ${fontClass}`} style={fullPage ? { minHeight: PAGE_HEIGHT_PX } : undefined}>
       <div
         className={`flex items-center gap-6 ${theme.darkHeader ? "resume-dark-header px-8 py-7" : "px-8 pt-8"}`}
         style={theme.darkHeader ? { background: theme.accent } : undefined}
@@ -152,64 +209,104 @@ function SingleColumnSkeleton({ theme }: { theme: TemplateTheme }) {
           <NameBone theme={theme} light={theme.darkHeader} sizeClass="text-[26px]" />
           <ContactBones light={theme.darkHeader} />
         </div>
-        {theme.showAvatar && <AvatarSlot accent={theme.darkHeader ? "#ffffff" : theme.accent} size={84} light={theme.darkHeader} />}
+        {showAvatar && <AvatarSlot accent={theme.darkHeader ? "#ffffff" : theme.accent} size={84} light={theme.darkHeader} />}
       </div>
       <div className={`flex flex-col px-8 pb-8 ${theme.darkHeader ? "pt-6" : "pt-5"} ${gap}`}>
-        {SINGLE_SECTIONS.map((key) => (
-          <PreviewSection key={key} theme={theme} section={key} />
+        {sections.map((key, index) => (
+          <PreviewSection
+            key={key}
+            theme={theme}
+            section={key}
+            compact={compact}
+            animate={animate}
+            index={index}
+            additionalTitle={additionalTitle}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function SidebarSkeleton({ theme }: { theme: TemplateTheme }) {
+function SidebarSkeleton({
+  theme,
+  rail,
+  main,
+  compact,
+  animate,
+  fullPage,
+  showAvatar,
+  additionalTitle,
+}: SkeletonBodyProps) {
   const solid = theme.sidebarStyle === "solid";
   const right = theme.sidebarSide === "right";
   const fontClass = theme.fontDisplay === "serif" ? "font-serif" : "font-sans";
   const railBg = solid ? theme.accent : tint(theme.accent, 8);
-  const rail = (
+  const gap = compact ? "gap-4" : "gap-5";
+  const railCol = (
     <div
       data-resume-column="rail"
-      className={`flex w-[34%] shrink-0 flex-col gap-5 self-stretch p-6 ${solid ? "text-white" : ""}`}
+      className={`flex w-[34%] shrink-0 flex-col ${gap} self-stretch p-6 ${solid ? "text-white" : ""}`}
       style={{ background: railBg }}
     >
       {!theme.darkHeader && (
         <div className="flex flex-col items-start gap-3">
-          {theme.showAvatar && <AvatarSlot accent={theme.accent} size={72} light={solid} />}
+          {showAvatar && <AvatarSlot accent={theme.accent} size={72} light={solid} />}
           <NameBone theme={theme} light={solid} sizeClass="text-[19px]" />
           <ContactBones light={solid} stacked />
         </div>
       )}
-      {RAIL_SECTIONS.map((key) => (
-        <PreviewSection key={key} theme={theme} section={key} light={solid} />
+      {rail.map((key, index) => (
+        <PreviewSection
+          key={key}
+          theme={theme}
+          section={key}
+          light={solid}
+          compact={compact}
+          animate={animate}
+          index={index}
+          additionalTitle={additionalTitle}
+        />
       ))}
     </div>
   );
-  const main = (
-    <div data-resume-column="main" className="flex flex-1 flex-col gap-5 p-8">
-      <PreviewSection theme={theme} section="summary" />
-      {MAIN_SECTIONS.map((key) => (
-        <PreviewSection key={key} theme={theme} section={key} />
+  const mainCol = (
+    <div data-resume-column="main" className={`flex flex-1 flex-col ${gap} p-8`}>
+      {main.map((key, index) => (
+        <PreviewSection
+          key={key}
+          theme={theme}
+          section={key}
+          compact={compact}
+          animate={animate}
+          index={rail.length + index}
+          additionalTitle={additionalTitle}
+        />
       ))}
     </div>
   );
   const columns = (
     <div className={`flex min-h-0 w-full flex-1 items-stretch ${right ? "flex-row-reverse" : ""}`}>
-      {rail}
-      {main}
+      {railCol}
+      {mainCol}
     </div>
   );
+  const pageStyle = fullPage
+    ? { minHeight: PAGE_HEIGHT_PX, ["--resume-rail-bg" as string]: railBg }
+    : undefined;
 
   if (theme.darkHeader) {
     return (
-      <div className={`resume-surface flex min-h-full flex-col ${fontClass}`}>
+      <div
+        className={`resume-surface flex flex-col ${fontClass} ${fullPage ? "resume-sidebar-page min-h-full" : "min-h-full"}`}
+        style={pageStyle}
+      >
         <div className="resume-dark-header flex items-center gap-6 px-8 py-6" style={{ background: theme.accent }}>
           <div className="min-w-0 flex-1 space-y-2">
             <NameBone theme={theme} light sizeClass="text-[24px]" />
             <ContactBones light />
           </div>
-          {theme.showAvatar && <AvatarSlot accent="#ffffff" size={76} light />}
+          {showAvatar && <AvatarSlot accent="#ffffff" size={76} light />}
         </div>
         {columns}
       </div>
@@ -217,34 +314,67 @@ function SidebarSkeleton({ theme }: { theme: TemplateTheme }) {
   }
 
   return (
-    <div className={`resume-surface flex min-h-full ${fontClass}`}>{columns}</div>
+    <div
+      className={`resume-surface flex ${fontClass} ${fullPage ? "resume-sidebar-page min-h-full" : "min-h-full"}`}
+      style={pageStyle}
+    >
+      {columns}
+    </div>
   );
 }
 
-function AsymmetricSkeleton({ theme }: { theme: TemplateTheme }) {
+function AsymmetricSkeleton({
+  theme,
+  rail,
+  main,
+  compact,
+  animate,
+  fullPage,
+  showAvatar,
+  additionalTitle,
+}: SkeletonBodyProps) {
   const fontClass = theme.fontDisplay === "serif" ? "font-serif" : "font-sans";
+  const gap = compact ? "gap-3.5" : "gap-4";
   return (
-    <div className={`resume-surface min-h-full px-8 py-7 ${fontClass}`}>
+    <div
+      className={`resume-surface px-8 py-7 ${fontClass} ${fullPage ? "resume-split-page min-h-full" : "min-h-full"}`}
+      style={fullPage ? { minHeight: PAGE_HEIGHT_PX } : undefined}
+    >
       <div className="flex items-center gap-5 border-b-2 pb-3" style={{ borderColor: theme.accent }}>
         <div className="min-w-0 flex-1 space-y-2">
           <NameBone theme={theme} sizeClass="text-[25px]" />
           <ContactBones />
         </div>
-        {theme.showAvatar && <AvatarSlot accent={theme.accent} size={76} />}
+        {showAvatar && <AvatarSlot accent={theme.accent} size={76} />}
       </div>
       <div className="mt-5 flex w-full items-stretch">
         <div data-resume-column="rail" className="w-[32%] border-r border-[var(--r-border)] pr-5">
-          <div className="flex flex-col gap-4">
-            {RAIL_SECTIONS.map((key) => (
-              <PreviewSection key={key} theme={theme} section={key} />
+          <div className={`flex flex-col ${gap}`}>
+            {rail.map((key, index) => (
+              <PreviewSection
+                key={key}
+                theme={theme}
+                section={key}
+                compact={compact}
+                animate={animate}
+                index={index}
+                additionalTitle={additionalTitle}
+              />
             ))}
           </div>
         </div>
         <div data-resume-column="main" className="flex-1 pl-5">
-          <div className="flex flex-col gap-4">
-            <PreviewSection theme={theme} section="summary" />
-            {MAIN_SECTIONS.map((key) => (
-              <PreviewSection key={key} theme={theme} section={key} />
+          <div className={`flex flex-col ${gap}`}>
+            {main.map((key, index) => (
+              <PreviewSection
+                key={key}
+                theme={theme}
+                section={key}
+                compact={compact}
+                animate={animate}
+                index={rail.length + index}
+                additionalTitle={additionalTitle}
+              />
             ))}
           </div>
         </div>
@@ -253,21 +383,58 @@ function AsymmetricSkeleton({ theme }: { theme: TemplateTheme }) {
   );
 }
 
-export function TemplateSkeleton({ theme }: { theme: TemplateTheme }) {
+export function TemplateSkeleton({
+  theme,
+  sections,
+  additionalTitle,
+  showAvatar,
+  framed = true,
+  animate = false,
+  compact = false,
+  fullPage = false,
+}: {
+  theme: TemplateTheme;
+  /** When omitted, the gallery uses a short representative set. */
+  sections?: SectionKey[];
+  additionalTitle?: string;
+  /** Defaults to the theme's avatar slot. */
+  showAvatar?: boolean;
+  framed?: boolean;
+  animate?: boolean;
+  compact?: boolean;
+  /** Stretch to one A4 page so a sidebar rail fills the sheet. */
+  fullPage?: boolean;
+}) {
+  const keys = sections ?? GALLERY_SECTIONS;
+  const { rail, main } = partitionSections(keys);
+  const avatar = showAvatar ?? Boolean(theme.showAvatar);
+  const bodyProps: SkeletonBodyProps = {
+    theme,
+    sections: keys,
+    rail,
+    main,
+    compact,
+    animate,
+    fullPage,
+    showAvatar: avatar,
+    additionalTitle,
+  };
   const body =
     theme.layout === "sidebar" ? (
-      <SidebarSkeleton theme={theme} />
+      <SidebarSkeleton {...bodyProps} />
     ) : theme.layout === "asymmetric" ? (
-      <AsymmetricSkeleton theme={theme} />
+      <AsymmetricSkeleton {...bodyProps} />
     ) : (
-      <SingleColumnSkeleton theme={theme} />
+      <SingleColumnSkeleton {...bodyProps} />
     );
 
   return (
     <div
       data-template-skeleton={theme.id}
       data-layout={theme.layout}
-      className="resume-surface overflow-hidden rounded-lg border border-[var(--r-border)] shadow-card"
+      className={`resume-surface overflow-hidden ${animate ? "skeleton-animate" : ""} ${
+        framed ? "rounded-lg border border-[var(--r-border)] shadow-card" : ""
+      }`}
     >
       {body}
     </div>

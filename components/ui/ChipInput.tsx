@@ -141,7 +141,7 @@ export function ChipInput({
               aria-autocomplete={suggestions ? "list" : undefined}
               role={suggestions ? "combobox" : undefined}
               maxLength={maxLength}
-              className="min-w-[8ch] flex-1 bg-transparent px-1 py-0.5 text-[13.5px] text-[var(--color-ink)] outline-none placeholder:text-[var(--color-ink-faint)]"
+              className="min-w-0 flex-1 bg-transparent px-1 py-0.5 text-[13.5px] text-[var(--color-ink)] outline-none placeholder:text-[var(--color-ink-faint)] sm:min-w-[8ch]"
             />
           </div>
         </div>

@@ -35,7 +35,7 @@ export function Navbar() {
   const [confirming, setConfirming] = useState(false);
 
   return (
-    <header className="no-print flex shrink-0 items-center justify-between gap-3 border-b border-[var(--color-border)] bg-[var(--color-surface)]/90 px-4 py-3 shadow-card backdrop-blur-xl sm:px-6">
+    <header className="no-print flex min-w-0 shrink-0 items-center justify-between gap-3 border-b border-[var(--color-border)] bg-[var(--color-surface)]/90 px-4 py-3 shadow-card backdrop-blur-xl sm:px-6">
       <Logo />
       <div className="flex shrink-0 items-center gap-2">
         <ThemeToggle />

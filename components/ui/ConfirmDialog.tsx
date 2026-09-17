@@ -1,5 +1,6 @@
 "use client";
 
+import { createPortal } from "react-dom";
 import { Button } from "./Button";
 
 export function ConfirmDialog({
@@ -22,9 +23,11 @@ export function ConfirmDialog({
   onCancel: () => void;
 }) {
   if (!open) return null;
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-[2px]"
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4 backdrop-blur-[2px]"
       role="dialog"
       aria-modal="true"
       aria-label={title}
@@ -32,15 +35,16 @@ export function ConfirmDialog({
       <div className="w-full max-w-sm rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-card">
         <h2 className="font-display text-[17px] font-semibold tracking-tight text-[var(--color-ink)]">{title}</h2>
         <p className="mt-2 text-[13px] leading-relaxed text-[var(--color-ink-soft)]">{description}</p>
-        <div className="mt-5 flex justify-end gap-2">
-          <Button variant="ghost" size="sm" onClick={onCancel}>
+        <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+          <Button variant="secondary" size="sm" className="min-h-11 w-full sm:min-h-0 sm:w-auto" onClick={onCancel}>
             {cancelLabel}
           </Button>
-          <Button variant={confirmVariant} size="sm" onClick={onConfirm}>
+          <Button variant={confirmVariant} size="sm" className="min-h-11 w-full sm:min-h-0 sm:w-auto" onClick={onConfirm}>
             {confirmLabel}
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

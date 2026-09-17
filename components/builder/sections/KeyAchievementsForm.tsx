@@ -30,7 +30,7 @@ export function KeyAchievementsForm() {
         help="Standout, quantifiable wins — the highlights you want noticed first, right under your summary."
       />
       {skipped ? (
-        <SkippedNotice label="Key achievements" />
+        <SkippedNotice label="Key achievements" sectionKey="keyAchievements" />
       ) : (
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-2">

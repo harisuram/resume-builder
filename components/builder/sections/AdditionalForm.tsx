@@ -43,7 +43,7 @@ export function AdditionalForm() {
         help="Anything else — publications, volunteer work, awards. Name the heading yourself."
       />
       {skipped ? (
-        <SkippedNotice label={heading.trim() || "Additional"} />
+        <SkippedNotice label={heading.trim() || "Additional"} sectionKey="additional" />
       ) : (
         <>
           <FieldGroup

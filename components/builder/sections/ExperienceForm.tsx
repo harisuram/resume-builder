@@ -71,7 +71,7 @@ export function ExperienceForm({
     <div className="flex flex-col gap-5">
       <SectionFormHeader title={title} help={help} />
       {skipped ? (
-        <SkippedNotice label={title} />
+        <SkippedNotice label={title} sectionKey={sectionKey} />
       ) : (
         <>
       <div className="flex flex-col gap-3">
@@ -220,7 +220,7 @@ export function ExperienceForm({
                   );
                 })}
               </div>
-              <div className="mt-2 flex items-center gap-3">
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
                 <button
                   type="button"
                   onClick={() => setBullets(i, [...exp.bullets, ""])}

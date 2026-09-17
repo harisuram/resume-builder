@@ -1,5 +1,5 @@
 import { renderToString } from "react-dom/server";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { dismissBuilderTour } from "@/lib/builderTour";
 import { useBuilderStore } from "@/lib/store";
@@ -43,7 +43,7 @@ describe("BuilderShell section-footer ads", () => {
     expect(screen.getByText("Builder preview top")).toBeInTheDocument();
     expect(screen.getAllByText("Builder preview").length).toBeGreaterThan(0);
 
-    await userEvent.click(screen.getByText("Template & export"));
+    await userEvent.click(within(screen.getByRole("navigation", { name: "Resume sections" })).getByText("Template & export"));
     expect(screen.queryByText("Builder preview top")).not.toBeInTheDocument();
     expect(screen.getByText("Builder preview")).toBeInTheDocument();
   });
@@ -62,7 +62,7 @@ describe("BuilderShell section-footer ads", () => {
       ["Additional", "Section footer — additional"],
     ];
     for (const [nav, name] of steps) {
-      await userEvent.click(screen.getByText(nav));
+      await userEvent.click(within(screen.getByRole("navigation", { name: "Resume sections" })).getByText(nav));
       expect(screen.getByText(name)).toBeInTheDocument();
     }
   });

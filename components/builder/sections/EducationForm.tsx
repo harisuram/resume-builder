@@ -31,7 +31,7 @@ export function EducationForm() {
     <div className="flex flex-col gap-5">
       <SectionFormHeader title="Education" help="Schools, degrees, and coursework." />
       {skipped ? (
-        <SkippedNotice label="Education" />
+        <SkippedNotice label="Education" sectionKey="education" />
       ) : (
         <>
       <div className="flex flex-col gap-3">
@@ -68,19 +68,21 @@ export function EducationForm() {
                   suggestionLabel="Suggested degrees"
                 />
               </FieldGroup>
-              <FieldGroup label="Field of study (optional)" htmlFor={`education-${i}-field`} error={fieldError}>
-                <SuggestInput
-                  id={`education-${i}-field`}
-                  value={edu.fieldOfStudy ?? ""}
-                  onChange={(value) => updateListItem("education", i, { fieldOfStudy: value })}
-                  onBlur={touch(`${i}.fieldOfStudy`)}
-                  placeholder="Pharmacy, Architecture, Construction…"
-                  maxLength={MAX_FIELD_LENGTH}
-                  invalid={Boolean(fieldError)}
-                  suggestions={FIELD_CATALOG}
-                  suggestionLabel="Suggested fields"
-                />
-              </FieldGroup>
+              <div className="sm:col-span-2">
+                <FieldGroup label="Field of study (optional)" htmlFor={`education-${i}-field`} error={fieldError}>
+                  <SuggestInput
+                    id={`education-${i}-field`}
+                    value={edu.fieldOfStudy ?? ""}
+                    onChange={(value) => updateListItem("education", i, { fieldOfStudy: value })}
+                    onBlur={touch(`${i}.fieldOfStudy`)}
+                    placeholder="Pharmacy, Architecture, Construction…"
+                    maxLength={MAX_FIELD_LENGTH}
+                    invalid={Boolean(fieldError)}
+                    suggestions={FIELD_CATALOG}
+                    suggestionLabel="Suggested fields"
+                  />
+                </FieldGroup>
+              </div>
               <div className="grid grid-cols-1 gap-3 sm:col-span-2 md:grid-cols-2">
                 <FieldGroup label="Start date" htmlFor={`education-${i}-start`}>
                   <TextInput

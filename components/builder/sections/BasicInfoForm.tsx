@@ -91,7 +91,7 @@ export function BasicInfoForm() {
 
       <div>
         <p className="mb-2 text-[12px] font-medium tracking-wide text-[var(--color-ink-soft)]">Links (optional)</p>
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-3">
           <FieldGroup label="LinkedIn" error={linkedinError}>
             <TextInput
               value={basicInfo.links.linkedin ?? ""}

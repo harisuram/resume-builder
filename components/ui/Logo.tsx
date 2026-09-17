@@ -26,7 +26,7 @@ export function Logo({
 }) {
   const compact = size === "sm";
   const content = (
-    <span className={`inline-flex min-w-0 items-center gap-2.5 ${className}`}>
+    <span className={`flex min-w-0 items-center gap-2.5 ${className}`}>
       <span
         className={`flex shrink-0 items-center justify-center rounded-[10px] bg-[var(--color-accent)] text-[var(--color-accent-ink)] shadow-cta ${
           compact ? "h-7 w-7" : "h-8 w-8"
@@ -38,7 +38,7 @@ export function Logo({
         />
       </span>
       <span
-        className={`whitespace-nowrap font-display font-semibold tracking-tight text-[var(--color-ink)] ${
+        className={`min-w-0 truncate font-display font-semibold tracking-tight text-[var(--color-ink)] ${
           compact ? "text-[14px] sm:text-[16px]" : "text-[15px] sm:text-[17px]"
         }`}
       >
@@ -49,7 +49,7 @@ export function Logo({
 
   if (!href) return content;
   return (
-    <Link href={href} className="transition-opacity hover:opacity-80">
+    <Link href={href} className="min-w-0 transition-opacity hover:opacity-80">
       {content}
     </Link>
   );

@@ -19,6 +19,14 @@ describe("EducationForm", () => {
     expect(screen.queryByText("+ Add education")).not.toBeInTheDocument();
   });
 
+  it("lets Include restore a skipped section from the notice", async () => {
+    act(() => useBuilderStore.getState().toggleSkipSection("education"));
+    render(<EducationForm />);
+    await userEvent.click(screen.getByRole("button", { name: "Include Education" }));
+    expect(useBuilderStore.getState().sectionStatus.education).not.toBe("skipped");
+    expect(screen.getByText("+ Add education")).toBeInTheDocument();
+  });
+
   it("shows the fields again once un-skipped (e.g. via the section nav's switch)", () => {
     act(() => {
       useBuilderStore.getState().toggleSkipSection("education");

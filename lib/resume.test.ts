@@ -1,5 +1,6 @@
 import {
   forcedItemIndices,
+  getPlaceholderSections,
   getRenderableSections,
   hasAddedSection,
   hasForcedPageBreak,
@@ -28,6 +29,10 @@ describe("hasAddedSection", () => {
     expect(hasAddedSection(makeData({ sections: { skills: ["TypeScript"] } }))).toBe(true);
   });
 
+  it("is true when only the summary is filled", () => {
+    expect(hasAddedSection(makeData({ sections: { summary: "Backend engineer." } }))).toBe(true);
+  });
+
   it("is false when the only filled section is skipped", () => {
     expect(
       hasAddedSection(
@@ -37,6 +42,61 @@ describe("hasAddedSection", () => {
         }),
       ),
     ).toBe(false);
+  });
+});
+
+describe("getPlaceholderSections", () => {
+  it("lists every content section, including summary, when nothing is skipped", () => {
+    expect(getPlaceholderSections(makeData())).toEqual([
+      "summary",
+      "keyAchievements",
+      "experience",
+      "internships",
+      "partTime",
+      "projects",
+      "education",
+      "skills",
+      "certifications",
+      "patents",
+      "languages",
+      "hobbies",
+      "softSkills",
+      "additional",
+    ]);
+  });
+
+  it("drops skipped sections so they don't leave a heading on the placeholder", () => {
+    expect(
+      getPlaceholderSections(
+        makeData({
+          sectionStatus: { patents: "skipped", summary: "skipped" },
+        }),
+      ),
+    ).not.toContain("patents");
+    expect(
+      getPlaceholderSections(
+        makeData({
+          sectionStatus: { patents: "skipped", summary: "skipped" },
+        }),
+      ),
+    ).not.toContain("summary");
+    expect(
+      getPlaceholderSections(
+        makeData({
+          sectionStatus: { patents: "skipped", summary: "skipped" },
+        }),
+      ),
+    ).toContain("experience");
+  });
+
+  it("follows a custom section order, with summary still first", () => {
+    expect(
+      getPlaceholderSections(
+        makeData({
+          sectionOrder: ["skills", "education", "experience"],
+        }),
+      ),
+    ).toEqual(["summary", "skills", "education", "experience"]);
   });
 });
 

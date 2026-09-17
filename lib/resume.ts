@@ -1,4 +1,4 @@
-import { resolveSectionOrder } from "./persona";
+import { getNavSectionOrder, resolveSectionOrder } from "./persona";
 import type { ResumeData, SectionKey } from "./types";
 
 /** Compact sections that read well in a sidebar / narrow column. Narrative
@@ -24,9 +24,18 @@ export function getRenderableSections(data: ResumeData): SectionKey[] {
 /** True once the user has filled in at least one content section (not
  * skipped, with something to render). Basic info and photo don't count —
  * photo is skippable on its own, but it isn't a content block. Drives
- * whether the export step offers to save a copy on this device. */
+ * whether the export step offers to save a copy on this device, and whether
+ * the live preview still shows a template placeholder instead of the page. */
 export function hasAddedSection(data: ResumeData): boolean {
-  return getRenderableSections(data).length > 0;
+  return hasSummary(data) || getRenderableSections(data).length > 0;
+}
+
+/** Headings the empty-preview skeleton should draw: every content section
+ * that isn't skipped, in the same order the real templates will use.
+ * Skipped blocks stay off the placeholder the same way they stay off the
+ * printed page. */
+export function getPlaceholderSections(data: Pick<ResumeData, "sectionStatus" | "sectionOrder">): SectionKey[] {
+  return getNavSectionOrder(data.sectionOrder).filter((key) => data.sectionStatus[key] !== "skipped");
 }
 
 /** Whether a content section has anything worth putting on the page.

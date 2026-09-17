@@ -35,6 +35,7 @@ import { SummaryForm } from "./sections/SummaryForm";
 import { Navbar } from "./Navbar";
 import { BuilderTour } from "./BuilderTour";
 import { getWizardOrder, type NavKey } from "./nav";
+import { MobilePreviewSheet } from "./MobilePreviewSheet";
 import { PreviewPane } from "./PreviewPane";
 import { SectionFooterNav } from "./SectionFooterNav";
 import { SectionNav } from "./SectionNav";
@@ -104,10 +105,11 @@ function EyeIcon() {
   );
 }
 
-/** Mobile-only shortcut to the export step, which is where the preview lives
- * on a phone — no separate mobile preview view of its own. Pinned to the
- * viewport rather than sitting in the panel's scroll flow, so it's reachable
- * mid-section, and dropped once you're already on that step. */
+/** Mobile-only control that opens the preview as a bottom sheet over the
+ * current section — so reviewing pages doesn't dump you on export. Pinned
+ * to the viewport rather than sitting in the panel's scroll flow, and
+ * dropped on export (the preview is already on that step) and while the
+ * sheet is open. */
 function MobilePreviewButton({ onClick }: { onClick: () => void }) {
   return (
     <button
@@ -115,7 +117,8 @@ function MobilePreviewButton({ onClick }: { onClick: () => void }) {
       onClick={onClick}
       aria-label="Preview resume"
       title="Preview resume"
-      className="no-print fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-accent)] text-[var(--color-accent-ink)] shadow-cta transition duration-200 ease-out hover:-translate-y-px hover:brightness-110 active:translate-y-0 active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)] md:hidden"
+      aria-haspopup="dialog"
+      className="no-print fixed right-4 bottom-[calc(10.5rem+env(safe-area-inset-bottom))] z-30 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-accent)] text-[var(--color-accent-ink)] shadow-cta transition duration-200 ease-out hover:-translate-y-px hover:brightness-110 active:translate-y-0 active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)] md:hidden"
     >
       <EyeIcon />
     </button>
@@ -188,6 +191,7 @@ export function BuilderShell() {
   const [activeKey, setActiveKey] = useState<NavKey>("basicInfo");
   const [hydrated, setHydrated] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [saveConsentOpen, setSaveConsentOpen] = useState(false);
   const formPaneRef = useRef<HTMLElement>(null);
 
@@ -216,6 +220,7 @@ export function BuilderShell() {
     const media = window.matchMedia(BUILDER_TOUR_MEDIA);
     const sync = () => {
       if (media.matches) {
+        setPreviewOpen(false);
         if (shouldOfferBuilderTour()) setTourOpen(true);
       } else {
         setTourOpen(false);
@@ -335,91 +340,100 @@ export function BuilderShell() {
   }
 
   return (
-    <div className="print-unclip flex h-[100dvh] flex-col overflow-hidden" inert={tourOpen || undefined}>
-      <Navbar />
-      <div className="print-unclip flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
-        <aside className="no-print sticky top-0 z-20 shrink-0 border-b border-[var(--color-border)] bg-[var(--color-surface)] md:static md:h-full md:min-h-0 md:w-64 md:overflow-y-auto md:border-b-0 md:border-r">
-          <SectionNav active={activeKey} onSelect={selectSection} />
-        </aside>
+    <div className="print-unclip flex h-[100dvh] flex-col overflow-hidden">
+      <div
+        className="flex min-h-0 flex-1 flex-col overflow-hidden"
+        inert={tourOpen || previewOpen || undefined}
+      >
+        <Navbar />
+        <div className="print-unclip flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
+          <aside className="no-print sticky top-0 z-20 shrink-0 border-b border-[var(--color-border)] bg-[var(--color-surface)] md:static md:h-full md:min-h-0 md:w-64 md:overflow-y-auto md:border-b-0 md:border-r">
+            <SectionNav active={activeKey} onSelect={selectSection} />
+          </aside>
 
-        {activeKey === "export" ? (
-          <main ref={formPaneRef} className="print-unclip min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-6 sm:px-8">
-            <div className="mx-auto max-w-3xl">
-              <ExportSection />
-              <AdSlot
-                slot={ADSENSE_SLOTS.builderPreview}
-                name="Builder preview"
-                className="mt-8 mb-4 flex min-h-[8.5rem] flex-col items-center gap-1 md:hidden"
-              />
-            </div>
-          </main>
-        ) : (
-          <div className="flex min-h-0 flex-1 overflow-hidden">
-            {/* pb-24 on mobile only: leaves room under the scroll content so
-                the pinned preview button never covers the last row. */}
-            <main ref={formPaneRef} className="block min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-6 pb-24 sm:px-8 md:pb-6">
-              <div className="mx-auto max-w-2xl">
-                <ActivePanel activeKey={activeKey} />
-                <SectionFooterNav
-                  canGoBack={canGoBack}
-                  canGoNext={hasNextStep}
-                  nextEnabled={stepValid}
-                  nextBlockedReason={nextBlockedReason}
-                  canSkip={canSkip}
-                  canClear={canClear}
-                  clearLabel={stepLabel(activeKey)}
-                  onBack={goBack}
-                  onNext={goNext}
-                  onSkip={goSkip}
-                  onClear={goClear}
-                />
-                <AdSlot
-                  slot={ADSENSE_SLOTS.builderSectionFooter}
-                  name={`Section footer — ${activeKey}`}
-                  className="mt-6 flex flex-col items-center gap-1"
-                />
+          {activeKey === "export" ? (
+            <main ref={formPaneRef} className="print-unclip min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-6 sm:px-8">
+              <div className="mx-auto max-w-3xl">
+                <ExportSection />
                 <AdSlot
                   slot={ADSENSE_SLOTS.builderPreview}
                   name="Builder preview"
                   className="mt-8 mb-4 flex min-h-[8.5rem] flex-col items-center gap-1 md:hidden"
                 />
-                <AdSlot
-                  slot={ADSENSE_SLOTS.builderExport}
-                  name="Export page"
-                  className="mt-6 flex flex-col items-center gap-1"
-                />
               </div>
             </main>
-            {/* Side-by-side preview is a desktop affordance only — on mobile
-                the export step is where the preview is read. Height is
-                capped to this column so a long resume scrolls here instead
-                of stretching the whole builder. */}
-            <aside className="flex min-h-0 w-0 overflow-hidden border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-ink)_3.5%,var(--color-paper))] p-0 md:w-[420px] md:shrink-0 md:flex-col md:overflow-hidden md:border-l md:px-8 md:py-6">
-              <AdSlot
-                slot={ADSENSE_SLOTS.builderPreviewTop}
-                name="Builder preview top"
-                className="mb-4 flex shrink-0 flex-col items-center gap-1"
-              />
-              <div className="min-h-0 flex-1">
-                <PreviewPane />
-              </div>
-            </aside>
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="flex min-h-0 flex-1 overflow-hidden">
+              {/* Extra bottom padding on mobile: sticky step footer + preview
+                  button sit over the viewport, so the last field has to be
+                  able to scroll above them. */}
+              <main ref={formPaneRef} className="block min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-6 pb-[calc(13.5rem+env(safe-area-inset-bottom))] sm:px-8 md:pb-6">
+                <div className="mx-auto max-w-2xl">
+                  <ActivePanel activeKey={activeKey} />
+                  <SectionFooterNav
+                    canGoBack={canGoBack}
+                    canGoNext={hasNextStep}
+                    nextEnabled={stepValid}
+                    nextBlockedReason={nextBlockedReason}
+                    canSkip={canSkip}
+                    canClear={canClear}
+                    clearLabel={stepLabel(activeKey)}
+                    onBack={goBack}
+                    onNext={goNext}
+                    onSkip={goSkip}
+                    onClear={goClear}
+                  />
+                  <AdSlot
+                    slot={ADSENSE_SLOTS.builderSectionFooter}
+                    name={`Section footer — ${activeKey}`}
+                    className="mt-6 flex flex-col items-center gap-1"
+                  />
+                  <AdSlot
+                    slot={ADSENSE_SLOTS.builderPreview}
+                    name="Builder preview"
+                    className="mt-8 mb-4 flex min-h-[8.5rem] flex-col items-center gap-1 md:hidden"
+                  />
+                  <AdSlot
+                    slot={ADSENSE_SLOTS.builderExport}
+                    name="Export page"
+                    className="mt-6 flex flex-col items-center gap-1"
+                  />
+                </div>
+              </main>
+              {/* Side-by-side preview is a desktop affordance only — on mobile
+                  the eye button opens the same pane in a bottom sheet. Height
+                  is capped to this column so a long resume scrolls here
+                  instead of stretching the whole builder. */}
+              <aside className="flex min-h-0 w-0 overflow-hidden border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-ink)_3.5%,var(--color-paper))] p-0 md:w-[420px] md:shrink-0 md:flex-col md:overflow-hidden md:border-l md:px-8 md:py-6">
+                <AdSlot
+                  slot={ADSENSE_SLOTS.builderPreviewTop}
+                  name="Builder preview top"
+                  className="mb-4 flex shrink-0 flex-col items-center gap-1"
+                />
+                <div className="min-h-0 flex-1">
+                  <PreviewPane />
+                </div>
+              </aside>
+            </div>
+          )}
+        </div>
 
-      {activeKey !== "export" && <MobilePreviewButton onClick={() => selectSection("export")} />}
-      <ConfirmDialog
-        open={saveConsentOpen}
-        title="Save this resume on this device so you can pick it up again later?"
-        description="Stored only in this browser. Nothing is uploaded anywhere."
-        confirmLabel="Yes, save it"
-        cancelLabel="No, don’t save"
-        confirmVariant="primary"
-        onConfirm={acceptSaveConsent}
-        onCancel={declineSaveConsent}
-      />
-      <ToastHost />
+        {activeKey !== "export" && !previewOpen && (
+          <MobilePreviewButton onClick={() => setPreviewOpen(true)} />
+        )}
+        <ConfirmDialog
+          open={saveConsentOpen}
+          title="Save this resume on this device so you can pick it up again later?"
+          description="Stored only in this browser. Nothing is uploaded anywhere."
+          confirmLabel="Yes, save it"
+          cancelLabel="No, don’t save"
+          confirmVariant="primary"
+          onConfirm={acceptSaveConsent}
+          onCancel={declineSaveConsent}
+        />
+        <ToastHost />
+      </div>
+      {previewOpen && <MobilePreviewSheet onClose={() => setPreviewOpen(false)} />}
       <BuilderTour
         open={tourOpen}
         onDismiss={() => {

@@ -26,7 +26,7 @@ export function PatentsForm() {
     <div className="flex flex-col gap-5">
       <SectionFormHeader title="Patents" help="Patents granted or pending, with number and date." />
       {skipped ? (
-        <SkippedNotice label="Patents" />
+        <SkippedNotice label="Patents" sectionKey="patents" />
       ) : (
         <>
           <div className="flex flex-col gap-3">

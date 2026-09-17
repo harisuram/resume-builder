@@ -89,14 +89,16 @@ export function FieldGroup({
   const errorId = htmlFor ? `${htmlFor}-error` : undefined;
   return (
     <div>
-      <div className="mb-1.5 flex items-center gap-1">
-        <Label htmlFor={htmlFor}>{label}</Label>
+      <div className="mb-1.5 flex min-w-0 flex-wrap items-center gap-x-1 gap-y-1">
+        <Label htmlFor={htmlFor} className="min-w-0">
+          {label}
+        </Label>
         {required ? (
           <span className="text-[12px] text-red-600" aria-hidden="true">
             *
           </span>
         ) : null}
-        {labelRight ? <div className="ml-auto">{labelRight}</div> : null}
+        {labelRight ? <div className="ml-auto shrink-0">{labelRight}</div> : null}
       </div>
       {children}
       {error ? (

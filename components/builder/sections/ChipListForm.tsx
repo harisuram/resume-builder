@@ -37,7 +37,7 @@ export function ChipListForm({
     <div className="flex flex-col gap-5">
       <SectionFormHeader title={title} help={help} />
       {skipped ? (
-        <SkippedNotice label={title} />
+        <SkippedNotice label={title} sectionKey={sectionKey} />
       ) : (
         <ChipInput
           values={values}

@@ -139,6 +139,47 @@ input[type="month"]::-webkit-calendar-picker-indicator {
   }
 }
 
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@keyframes skeleton-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes skeleton-section-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes template-picker-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent) 42%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 7px color-mix(in srgb, var(--color-accent) 0%, transparent);
+  }
+}
+
 @keyframes tour-card-in {
   from {
     opacity: 0;
@@ -250,6 +291,47 @@ input[type="month"]::-webkit-calendar-picker-indicator {
 
 .animate-fade-up-delay {
   animation: fade-up 0.55s ease-out 0.1s both;
+}
+
+.skeleton-bone {
+  background: color-mix(in srgb, var(--r-ink) 13%, transparent);
+}
+
+.skeleton-bone[data-skeleton-light] {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.skeleton-animate {
+  animation: skeleton-page-in 0.45s ease-out both;
+}
+
+.skeleton-animate .skeleton-bone {
+  background-image: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--r-ink) 10%, transparent) 0%,
+    color-mix(in srgb, var(--r-ink) 22%, transparent) 46%,
+    color-mix(in srgb, var(--r-ink) 10%, transparent) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.55s ease-in-out infinite;
+}
+
+.skeleton-animate .skeleton-bone[data-skeleton-light] {
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(255, 255, 255, 0.46) 46%,
+    rgba(255, 255, 255, 0.16) 100%
+  );
+  background-size: 200% 100%;
+}
+
+.skeleton-section {
+  animation: skeleton-section-in 0.4s ease-out both;
+}
+
+.template-picker-callout {
+  animation: template-picker-glow 2.2s ease-in-out infinite;
 }
 
 .tour-card {

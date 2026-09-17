@@ -49,7 +49,7 @@ export function SummaryForm() {
     <div className="flex flex-col gap-5">
       <SectionFormHeader title={SUMMARY_COPY.label} help={SUMMARY_COPY.help} />
       {skipped ? (
-        <SkippedNotice label={SUMMARY_COPY.label} />
+        <SkippedNotice label={SUMMARY_COPY.label} sectionKey="summary" />
       ) : (
         <>
         <FieldGroup

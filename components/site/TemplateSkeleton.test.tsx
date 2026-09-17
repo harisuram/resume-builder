@@ -25,14 +25,16 @@ describe("TemplateSkeleton", () => {
     expect(container.querySelector('[data-layout="sidebar"]')).not.toBeNull();
   });
 
-  it("mirrors a right-hand rail and a two-column split", () => {
-    const aisle = render(<TemplateSkeleton theme={getTheme("bre-leftright")} />);
-    expect(aisle.container.querySelector(".flex-row-reverse")).not.toBeNull();
-    aisle.unmount();
-
-    const twin = render(<TemplateSkeleton theme={getTheme("deedy-reversed")} />);
-    expect(twin.container.querySelector('[data-layout="asymmetric"]')).not.toBeNull();
-    expect(twin.container.querySelector("[data-resume-column='rail']")).not.toBeNull();
-    expect(twin.container.querySelector("[data-resume-column='main']")).not.toBeNull();
+  it("renders only the sections it is given, including a custom additional title", () => {
+    const { container } = render(
+      <TemplateSkeleton
+        theme={getTheme("jakes-resume")}
+        sections={["summary", "additional"]}
+        additionalTitle="Publications"
+      />,
+    );
+    expect(container.querySelector("[data-preview-section='summary']")).not.toBeNull();
+    expect(container.querySelector("[data-preview-section='additional']")?.textContent).toContain("Publications");
+    expect(container.querySelector("[data-preview-section='experience']")).toBeNull();
   });
 });

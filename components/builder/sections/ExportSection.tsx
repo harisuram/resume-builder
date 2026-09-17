@@ -84,13 +84,13 @@ export function ExportSection() {
       {canDownload && (
         <div className="no-print rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-card">
           <FieldGroup label="File name">
-            <div className="flex items-center gap-1.5">
+            <div className="flex min-w-0 items-center gap-1.5">
               <TextInput
                 value={fileBaseName}
                 onChange={(e) => setFileBaseName(e.target.value)}
                 onBlur={() => setFileBaseName((current) => slugifyName(current))}
                 placeholder="resume"
-                className="max-w-[220px]"
+                className="w-full min-w-0 sm:max-w-[220px]"
                 aria-label="File name"
               />
               <span className="text-[12px] text-[var(--color-ink-faint)]">.pdf</span>

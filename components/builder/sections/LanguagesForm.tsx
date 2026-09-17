@@ -28,7 +28,7 @@ export function LanguagesForm() {
     <div className="flex flex-col gap-5">
       <SectionFormHeader title="Languages" help="Spoken languages, with proficiency." />
       {skipped ? (
-        <SkippedNotice label="Languages" />
+        <SkippedNotice label="Languages" sectionKey="languages" />
       ) : (
         <>
           <div className="flex flex-col gap-3">

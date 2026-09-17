@@ -217,7 +217,7 @@ export function BuilderTour({ open, onDismiss }: { open: boolean; onDismiss: () 
               <button
                 type="button"
                 onClick={onDismiss}
-                className="rounded-md px-1.5 py-0.5 text-[12px] font-medium text-[var(--color-ink-faint)] transition-colors hover:text-[var(--color-ink)]"
+                className="inline-flex items-center rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1 text-[12px] font-medium text-[var(--color-ink)] shadow-card transition duration-150 hover:border-[var(--color-accent)]/40 hover:text-[var(--color-accent)]"
               >
                 Skip tour
               </button>
@@ -249,7 +249,7 @@ export function BuilderTour({ open, onDismiss }: { open: boolean; onDismiss: () 
               </div>
               <div className="flex gap-2">
                 {step > 0 ? (
-                  <Button variant="ghost" size="sm" onClick={() => setStep((n) => n - 1)}>
+                  <Button variant="secondary" size="sm" onClick={() => setStep((n) => n - 1)}>
                     Previous
                   </Button>
                 ) : null}

@@ -26,11 +26,24 @@ function Chevron({ open }: { open: boolean }) {
 export function TemplatePicker({
   value,
   onChange,
+  emphasized = false,
+  open: openProp,
+  onOpenChange,
 }: {
   value: string;
   onChange: (id: string) => void;
+  /** Call out that the template can be changed — used on the empty preview. */
+  emphasized?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = openProp ?? internalOpen;
+  function setOpen(next: boolean | ((current: boolean) => boolean)) {
+    const resolved = typeof next === "function" ? next(open) : next;
+    if (openProp === undefined) setInternalOpen(resolved);
+    onOpenChange?.(resolved);
+  }
   const rootRef = useRef<HTMLDivElement>(null);
   const listId = useId();
   const theme = getTheme(value);
@@ -57,7 +70,7 @@ export function TemplatePicker({
   }
 
   return (
-    <div ref={rootRef} className="relative w-[12.5rem] shrink-0">
+    <div ref={rootRef} className={`relative w-full min-w-0 ${emphasized ? "template-picker-callout rounded-lg" : ""}`}>
       <button
         type="button"
         aria-haspopup="listbox"
@@ -65,12 +78,22 @@ export function TemplatePicker({
         aria-controls={listId}
         aria-label="Choose a template"
         onClick={() => setOpen((current) => !current)}
-        className="flex w-full items-center justify-between gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] py-1.5 pl-3 pr-2.5 text-left shadow-card transition duration-150 ease-out hover:border-[var(--color-accent)]/35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]"
+        className={`flex min-h-11 w-full items-center justify-between gap-2 rounded-lg border bg-[var(--color-surface)] py-1.5 pl-3 pr-2.5 text-left shadow-card transition duration-150 ease-out hover:border-[var(--color-accent)]/35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)] md:min-h-0 ${
+          emphasized
+            ? "border-[var(--color-accent)]/55 ring-2 ring-[var(--color-accent)]/25"
+            : "border-[var(--color-border)]"
+        }`}
         style={{ borderBottomWidth: 2, borderBottomColor: theme.accent }}
       >
         <span className="min-w-0">
-          <span className="block text-[9px] font-medium uppercase tracking-[0.18em] text-[var(--color-ink-faint)]">
-            Template
+          <span
+            className={`block text-[9px] font-medium uppercase ${
+              emphasized
+                ? "tracking-[0.12em] text-[var(--color-accent)]"
+                : "tracking-[0.18em] text-[var(--color-ink-faint)]"
+            }`}
+          >
+            {emphasized ? "Change template" : "Template"}
           </span>
           <span className="block truncate font-display text-[13.5px] font-semibold leading-tight text-[var(--color-ink)]">
             {theme.name}
@@ -84,7 +107,7 @@ export function TemplatePicker({
           id={listId}
           role="listbox"
           aria-label="Templates"
-          className="absolute inset-x-0 z-20 mt-1.5 max-h-64 overflow-y-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] py-1 shadow-card"
+          className="absolute inset-x-0 z-30 mt-1.5 max-h-64 list-none overflow-y-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] py-1 shadow-card"
         >
           {TEMPLATE_LIST.map((option) => {
             const selected = option.id === value;
@@ -95,15 +118,10 @@ export function TemplatePicker({
                   role="option"
                   aria-selected={selected}
                   onClick={() => choose(option.id)}
-                  className={`flex w-full items-center gap-2.5 px-3 py-1.5 text-left transition duration-100 ease-out hover:bg-[var(--color-accent-tint)] ${
+                  className={`flex min-h-11 w-full items-center px-3 py-1.5 text-left transition duration-100 ease-out hover:bg-[var(--color-accent-tint)] md:min-h-0 ${
                     selected ? "bg-[var(--color-accent-tint)]" : ""
                   }`}
                 >
-                  <span
-                    className="h-2.5 w-2.5 shrink-0 rounded-full"
-                    style={{ background: option.accent }}
-                    aria-hidden="true"
-                  />
                   <span
                     className={`min-w-0 truncate text-[12.5px] leading-tight ${
                       selected ? "font-semibold text-[var(--color-ink)]" : "font-medium text-[var(--color-ink)]"

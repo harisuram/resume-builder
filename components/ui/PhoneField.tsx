@@ -56,10 +56,12 @@ export function PhoneField({
     const button = buttonRef.current;
     if (!button) return;
     const rect = button.getBoundingClientRect();
+    const width = Math.min(Math.max(rect.width, 280), Math.max(160, window.innerWidth - 16));
+    const left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8));
     setMenuPos({
       top: rect.bottom + 4,
-      left: rect.left,
-      width: Math.max(rect.width, 280),
+      left,
+      width,
     });
   }, []);
 

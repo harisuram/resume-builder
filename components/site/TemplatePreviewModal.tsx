@@ -3,6 +3,7 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { layoutLabel, type TemplateTheme } from "@/components/templates/shared/theme";
+import { Button } from "@/components/ui/Button";
 import { ctaPrimary } from "@/components/ui/cta";
 import { TemplateSkeleton } from "./TemplateSkeleton";
 
@@ -245,13 +246,15 @@ export function TemplatePreviewModal({ theme, onClose }: { theme: TemplateTheme;
         </div>
 
         <div className="flex shrink-0 items-center justify-end gap-3 border-t border-[var(--color-border)] px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5 sm:pt-4 sm:pb-4">
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="sm"
             onClick={requestClose}
-            className="hidden rounded-lg px-3 py-2 text-[13px] font-medium text-[var(--color-ink-soft)] transition duration-150 hover:bg-[var(--color-accent-tint)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)] sm:inline-flex"
+            className="hidden min-h-11 sm:inline-flex sm:min-h-0"
           >
             Close
-          </button>
+          </Button>
           <Link href={`/builder?template=${encodeURIComponent(theme.id)}`} className={`${ctaPrimary.sm} min-h-11 w-full sm:min-h-0 sm:w-auto`}>
             Use this template
           </Link>

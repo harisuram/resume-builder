@@ -29,7 +29,7 @@ export function ProjectsForm() {
     <div className="flex flex-col gap-5">
       <SectionFormHeader title="Projects" help="Things you built — classwork, side projects, hackathons." />
       {skipped ? (
-        <SkippedNotice label="Projects" />
+        <SkippedNotice label="Projects" sectionKey="projects" />
       ) : (
         <>
       <div className="flex flex-col gap-3">

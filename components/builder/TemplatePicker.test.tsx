@@ -26,13 +26,23 @@ describe("TemplatePicker", () => {
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
   });
 
-  it("lists only template names, in a panel as wide as the trigger", async () => {
+  it("lists only template names, in a full-width panel", async () => {
     const { container } = render(<TemplatePicker value="jakes-resume" onChange={jest.fn()} />);
     await userEvent.click(screen.getByRole("button", { name: "Choose a template" }));
     expect(screen.queryByText("Warm coral sidebar")).not.toBeInTheDocument();
     const list = screen.getByRole("listbox", { name: "Templates" });
     expect(list.className).toContain("inset-x-0");
-    expect(container.firstElementChild?.className).toContain("w-[12.5rem]");
+    expect(list.className).toContain("list-none");
+    expect(container.firstElementChild?.className).toContain("w-full");
+    expect(container.firstElementChild?.className).not.toContain("w-[12.5rem]");
+    expect(list.querySelector("[class*='rounded-full']")).toBeNull();
+  });
+
+  it("relabels the trigger when the empty-preview callout is on", () => {
+    render(<TemplatePicker value="jakes-resume" onChange={jest.fn()} emphasized />);
+    const trigger = screen.getByRole("button", { name: "Choose a template" });
+    expect(trigger).toHaveTextContent("Change template");
+    expect(trigger).toHaveTextContent("Atlas");
   });
 
   it("closes on Escape without changing the selection", async () => {

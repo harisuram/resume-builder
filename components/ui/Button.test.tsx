@@ -23,6 +23,6 @@ describe("Button", () => {
 
   it("applies variant-specific classes", () => {
     render(<Button variant="danger">Delete</Button>);
-    expect(screen.getByRole("button", { name: "Delete" }).className).toContain("text-red-700");
+    expect(screen.getByRole("button", { name: "Delete" }).className).toContain("bg-red-600");
   });
 });

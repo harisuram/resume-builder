@@ -91,6 +91,11 @@ function writeMarginTop(el: HTMLElement, value: string) {
   if (el.style.marginTop !== value) el.style.marginTop = value;
 }
 
+/** Page-break pills. Padding/type is larger below `md` so a thumb can hit
+ * "move to next page" on the mobile sheet without changing desktop density. */
+const PAGE_GUIDE_PILL =
+  "max-w-[70%] shrink-0 truncate rounded-full px-2.5 py-1.5 text-[10px] font-medium uppercase tracking-wide min-h-9 md:min-h-0 md:px-2 md:py-0.5 md:text-[9px]";
+
 /**
  * The single rendering surface shared by the live preview and the export
  * path — never a second export-only copy, so a download can't visually
@@ -286,12 +291,12 @@ export function ResumePreviewFrame({
           type="button"
           onClick={toggle}
           title={`${text} — click to undo`}
-          className="pointer-events-auto max-w-[70%] shrink-0 truncate rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-0.5 text-[9px] font-medium uppercase tracking-wide text-[var(--color-ink-soft)] transition duration-150 hover:text-[var(--color-accent)]"
+          className={`pointer-events-auto border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink-soft)] transition duration-150 hover:text-[var(--color-accent)] ${PAGE_GUIDE_PILL}`}
         >
           {text} &mdash; Undo
         </button>
       ) : (
-        <span className="max-w-[70%] shrink-0 truncate rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-0.5 text-[9px] font-medium uppercase tracking-wide text-[var(--color-ink-soft)]">
+        <span className={`border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink-soft)] ${PAGE_GUIDE_PILL}`}>
           {text}
         </span>
       ),
@@ -322,12 +327,12 @@ export function ResumePreviewFrame({
             type="button"
             onClick={toggle}
             title={`Move "${split.label}" to page ${page}`}
-            className="pointer-events-auto max-w-[70%] shrink-0 truncate rounded-full bg-[var(--color-accent)] px-2 py-0.5 text-[9px] font-medium uppercase tracking-wide text-[var(--color-accent-ink)] transition duration-150 hover:brightness-110"
+            className={`pointer-events-auto bg-[var(--color-accent)] text-[var(--color-accent-ink)] transition duration-150 hover:brightness-110 ${PAGE_GUIDE_PILL}`}
           >
             Move &ldquo;{split.label}&rdquo; to page {page}
           </button>
         ) : (
-          <span className="max-w-[70%] shrink-0 truncate rounded-full bg-[var(--color-accent)] px-2 py-0.5 text-[9px] font-medium uppercase tracking-wide text-[var(--color-accent-ink)]">
+          <span className={`bg-[var(--color-accent)] text-[var(--color-accent-ink)] ${PAGE_GUIDE_PILL}`}>
             {split ? `"${split.label}" splits here` : `Page ${page} starts here`}
           </span>
         ),

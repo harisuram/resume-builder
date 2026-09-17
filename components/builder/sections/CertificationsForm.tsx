@@ -29,7 +29,7 @@ export function CertificationsForm() {
     <div className="flex flex-col gap-5">
       <SectionFormHeader title="Certifications" help="Licenses and certifications, with issuing body and date." />
       {skipped ? (
-        <SkippedNotice label="Certifications" />
+        <SkippedNotice label="Certifications" sectionKey="certifications" />
       ) : (
         <>
       <div className="flex flex-col gap-3">
@@ -39,7 +39,7 @@ export function CertificationsForm() {
           const issuerError = errorFor(`${i}.issuer`, errors.issuer);
           return (
           <ItemCard key={i} autoFocus={i === focusIndex} onRemove={() => removeListItem("certifications", i)}>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-3">
               <FieldGroup label="Name" htmlFor={`cert-${i}-name`} required error={nameError}>
                 <SuggestInput
                   id={`cert-${i}-name`}

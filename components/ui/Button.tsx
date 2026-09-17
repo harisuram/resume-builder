@@ -7,11 +7,11 @@ const VARIANT_CLASSES: Record<Variant, string> = {
   primary:
     "bg-[var(--color-accent)] text-[var(--color-accent-ink)] shadow-cta hover:-translate-y-px hover:brightness-110 active:translate-y-0 active:brightness-95 disabled:opacity-40 disabled:hover:translate-y-0",
   secondary:
-    "border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink)] hover:border-[var(--color-accent)]/40 hover:text-[var(--color-accent)] active:scale-[0.98] disabled:opacity-40",
+    "border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink)] shadow-card hover:border-[var(--color-accent)]/40 hover:text-[var(--color-accent)] active:scale-[0.98] disabled:opacity-40",
   ghost:
     "text-[var(--color-ink-soft)] hover:bg-[var(--color-accent-tint)] hover:text-[var(--color-ink)] disabled:opacity-40",
   danger:
-    "border border-transparent text-red-700 hover:bg-red-50 active:bg-red-100 disabled:opacity-40",
+    "bg-red-600 text-white shadow-cta hover:-translate-y-px hover:brightness-110 active:translate-y-0 active:brightness-95 disabled:opacity-40 disabled:hover:translate-y-0",
 };
 
 const SIZE_CLASSES: Record<Size, string> = {
