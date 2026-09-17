@@ -32,6 +32,13 @@ describe("print stylesheet", () => {
     expect(printBlock).toMatch(/html,\s*body\s*\{[^}]*height:\s*auto !important/);
   });
 
+  it("cancels enter animations so Chromium cannot print the resume at opacity 0", () => {
+    const printBlock = css.slice(css.indexOf("@media print"));
+    const bodyStar = printBlock.slice(printBlock.indexOf("body * {"));
+    expect(bodyStar).toMatch(/animation:\s*none !important/);
+    expect(printBlock).toMatch(/\.print-unclip\s*\{[^}]*opacity:\s*1 !important/);
+  });
+
   it("gives sidebar templates a full A4 min-height so the rail paints to the bottom of the page", () => {
     expect(css).toMatch(/\.resume-sidebar-page\s*\{[^}]*min-height:\s*297mm/);
     const printBlock = css.slice(css.indexOf("@media print"));

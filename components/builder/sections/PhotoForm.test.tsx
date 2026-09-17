@@ -41,7 +41,9 @@ describe("PhotoForm", () => {
   it("opens the crop modal after choosing an image file", async () => {
     renderPhoto();
     await userEvent.upload(fileInput(), makeImageFile());
-    expect(await screen.findByRole("dialog", { name: "Crop photo" })).toBeInTheDocument();
+    const dialog = await screen.findByRole("dialog", { name: "Crop photo" });
+    expect(dialog).toBeInTheDocument();
+    expect(dialog.parentElement).toBe(document.body);
   });
 
   it("rejects a non-image file with an error, without opening the crop modal", async () => {
@@ -92,6 +94,23 @@ describe("PhotoForm", () => {
     act(() => useBuilderStore.getState().setPhoto("data:image/jpeg;base64,abc123"));
     renderPhoto();
     await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+    const dialog = await screen.findByRole("dialog", { name: "Crop photo" });
+    expect(dialog).toBeInTheDocument();
+    expect(dialog.parentElement).toBe(document.body);
+  });
+
+  it("closes the crop modal on Escape or Cancel without keeping a photo", async () => {
+    renderPhoto();
+    await userEvent.upload(fileInput(), makeImageFile());
     expect(await screen.findByRole("dialog", { name: "Crop photo" })).toBeInTheDocument();
+
+    await userEvent.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog", { name: "Crop photo" })).not.toBeInTheDocument();
+    expect(useBuilderStore.getState().photo).toBeNull();
+
+    await userEvent.upload(fileInput(), makeImageFile());
+    await userEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+    expect(screen.queryByRole("dialog", { name: "Crop photo" })).not.toBeInTheDocument();
+    expect(useBuilderStore.getState().photo).toBeNull();
   });
 });

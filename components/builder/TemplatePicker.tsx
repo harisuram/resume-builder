@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { TEMPLATE_LIST } from "@/components/templates/registry";
 import { getTheme } from "@/components/templates/shared/theme";
 
@@ -45,6 +45,8 @@ export function TemplatePicker({
     onOpenChange?.(resolved);
   }
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
   const listId = useId();
   const theme = getTheme(value);
 
@@ -54,7 +56,10 @@ export function TemplatePicker({
       if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
     }
     function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
     }
     document.addEventListener("mousedown", onPointer);
     document.addEventListener("keydown", onKey);
@@ -64,14 +69,29 @@ export function TemplatePicker({
     };
   }, [open]);
 
+  useLayoutEffect(() => {
+    if (!open) return;
+    const list = listRef.current;
+    if (!list) return;
+    const selected = list.querySelector<HTMLElement>('[role="option"][aria-selected="true"]');
+    if (!selected) return;
+    // Scroll the list itself — scrollIntoView would also move the builder
+    // pane when the picker sits near the bottom of the screen.
+    const item = selected.closest("li") ?? selected;
+    list.scrollTop = Math.max(0, item.offsetTop - (list.clientHeight - item.offsetHeight) / 2);
+    selected.focus({ preventScroll: true });
+  }, [open, value]);
+
   function choose(id: string) {
     onChange(id);
     setOpen(false);
+    triggerRef.current?.focus();
   }
 
   return (
     <div ref={rootRef} className={`relative w-full min-w-0 ${emphasized ? "template-picker-callout rounded-lg" : ""}`}>
       <button
+        ref={triggerRef}
         type="button"
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -104,6 +124,7 @@ export function TemplatePicker({
 
       {open && (
         <ul
+          ref={listRef}
           id={listId}
           role="listbox"
           aria-label="Templates"

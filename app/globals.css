@@ -202,6 +202,67 @@ input[type="month"]::-webkit-calendar-picker-indicator {
   }
 }
 
+@keyframes template-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes template-dock-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes template-dock-name {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes template-check-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.55);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.template-card-in {
+  animation: template-card-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--template-card-delay, 0ms);
+}
+
+.template-dock-in {
+  animation: template-dock-in 0.42s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+.template-dock-name {
+  animation: template-dock-name 0.28s ease-out both;
+}
+
+.template-check-pop {
+  animation: template-check-pop 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 @keyframes tour-card-in {
   from {
     opacity: 0;
@@ -857,6 +918,12 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
 
   body * {
     visibility: hidden;
+    /* StepEnter (and any other enter animation) uses fill-mode `both` with
+       opacity 0 in the from-keyframe. Chromium restarts CSS animations when
+       building the print preview, so the resume would paint at opacity 0
+       and the PDF would come out blank. */
+    animation: none !important;
+    transition: none !important;
   }
 
   #resume-print-root,
@@ -881,6 +948,8 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
     max-height: none !important;
     transform: none !important;
     filter: none !important;
+    opacity: 1 !important;
+    animation: none !important;
   }
 
   .resume-scale-viewport,

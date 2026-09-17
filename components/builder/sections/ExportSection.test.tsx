@@ -14,6 +14,19 @@ beforeEach(() => {
   });
 });
 
+const COMPLETE_BASIC = {
+  name: "Jamie Rivera",
+  email: "jamie@example.com",
+  location: "Austin, TX",
+};
+
+function fillCompleteBasicInfo(consent: "yes" | "no" | null = "no") {
+  act(() => {
+    useBuilderStore.getState().updateBasicInfo(COMPLETE_BASIC);
+    useBuilderStore.getState().setSaveConsent(consent);
+  });
+}
+
 function renderExport() {
   return render(
     <>
@@ -66,7 +79,7 @@ describe("ExportSection", () => {
     expect(screen.queryByRole("button", { name: "Download PDF" })).not.toBeInTheDocument();
   });
 
-  it("does not ask to save on the export step", () => {
+  it("does not ask to save on the export step until download", () => {
     act(() => {
       useBuilderStore.getState().updateBasicInfo({ name: "Jamie Rivera" });
       useBuilderStore.getState().setSkills(["TypeScript"]);
@@ -79,10 +92,80 @@ describe("ExportSection", () => {
     expect(screen.queryByRole("button", { name: "No, don’t save" })).not.toBeInTheDocument();
   });
 
-  it("prints without writing localStorage when there is no saved copy", async () => {
+  it("toasts and does not print when required basic info is missing", async () => {
     act(() => {
       useBuilderStore.getState().updateBasicInfo({ name: "Jamie Rivera" });
     });
+    renderExport();
+    await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Fill in your name, email, and location in Basic info before downloading.",
+    );
+    expect(window.print).not.toHaveBeenCalled();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("toasts when basic info is filled but invalid", async () => {
+    act(() => {
+      useBuilderStore.getState().updateBasicInfo({
+        name: "Jamie Rivera",
+        email: "not-an-email",
+        location: "Austin, TX",
+      });
+    });
+    renderExport();
+    await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Fix the highlighted fields in Basic info before downloading.",
+    );
+    expect(window.print).not.toHaveBeenCalled();
+  });
+
+  it("asks for save consent on download when the user has not chosen yet", async () => {
+    fillCompleteBasicInfo(null);
+    renderExport();
+    await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
+
+    expect(
+      screen.getByRole("dialog", {
+        name: "Save this resume on this device so you can pick it up again later?",
+      }),
+    ).toBeInTheDocument();
+    expect(window.print).not.toHaveBeenCalled();
+
+    await userEvent.click(screen.getByRole("button", { name: "No, don’t save" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(localStorage.getItem("resumeData")).toBeNull();
+    expect(useBuilderStore.getState().saveConsent).toBe("no");
+    expect(window.print).toHaveBeenCalledTimes(1);
+  });
+
+  it("saves a copy and prints when download consent is accepted", async () => {
+    fillCompleteBasicInfo(null);
+    renderExport();
+    await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
+    await userEvent.click(screen.getByRole("button", { name: "Yes, save it" }));
+
+    expect(JSON.parse(localStorage.getItem("resumeData")!).basicInfo.name).toBe("Jamie Rivera");
+    expect(useBuilderStore.getState().saveConsent).toBe("yes");
+    expect(useBuilderStore.getState().hasSavedCopy).toBe(true);
+    expect(window.print).toHaveBeenCalledTimes(1);
+  });
+
+  it("prints without asking again once save consent is already chosen", async () => {
+    fillCompleteBasicInfo("no");
+    renderExport();
+    await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(localStorage.getItem("resumeData")).toBeNull();
+    expect(window.print).toHaveBeenCalledTimes(1);
+  });
+
+  it("prints without writing localStorage when there is no saved copy", async () => {
+    fillCompleteBasicInfo("no");
     renderExport();
     await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
 
@@ -93,7 +176,7 @@ describe("ExportSection", () => {
   it("keeps the existing saved copy up to date when downloading", async () => {
     localStorage.setItem("resumeData", JSON.stringify({ basicInfo: { name: "Stale" } }));
     act(() => {
-      useBuilderStore.getState().updateBasicInfo({ name: "Jamie Rivera" });
+      useBuilderStore.getState().updateBasicInfo(COMPLETE_BASIC);
       useBuilderStore.getState().setSkills(["TypeScript"]);
       useBuilderStore.getState().setHasSavedCopy(true);
     });
@@ -102,6 +185,7 @@ describe("ExportSection", () => {
 
     expect(JSON.parse(localStorage.getItem("resumeData")!).basicInfo.name).toBe("Jamie Rivera");
     expect(window.print).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("renders the live preview alongside the export controls", () => {
@@ -122,9 +206,7 @@ describe("ExportSection", () => {
     (window.print as jest.Mock).mockImplementationOnce(() => {
       throw new Error("blocked");
     });
-    act(() => {
-      useBuilderStore.getState().updateBasicInfo({ name: "Jamie Rivera" });
-    });
+    fillCompleteBasicInfo("no");
     renderExport();
     await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
     expect(screen.getByRole("alert")).toHaveTextContent(/print dialog/);
@@ -135,7 +217,7 @@ describe("ExportSection", () => {
       throw new DOMException("quota", "QuotaExceededError");
     });
     act(() => {
-      useBuilderStore.getState().updateBasicInfo({ name: "Jamie Rivera" });
+      useBuilderStore.getState().updateBasicInfo(COMPLETE_BASIC);
       useBuilderStore.getState().setHasSavedCopy(true);
     });
     renderExport();
@@ -144,11 +226,22 @@ describe("ExportSection", () => {
     spy.mockRestore();
   });
 
+  it("toasts when accepting download save consent fails to write, then still prints", async () => {
+    const spy = jest.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("quota", "QuotaExceededError");
+    });
+    fillCompleteBasicInfo(null);
+    renderExport();
+    await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
+    await userEvent.click(screen.getByRole("button", { name: "Yes, save it" }));
+    expect(screen.getByRole("alert")).toHaveTextContent(/Storage may be full/);
+    expect(window.print).toHaveBeenCalledTimes(1);
+    spy.mockRestore();
+  });
+
   describe("editable file name", () => {
     beforeEach(() => {
-      act(() => {
-        useBuilderStore.getState().updateBasicInfo({ name: "Jamie Rivera" });
-      });
+      fillCompleteBasicInfo("no");
     });
 
     it("defaults to a slug of the resume's name", () => {

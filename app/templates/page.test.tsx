@@ -4,13 +4,28 @@ import TemplatesPage from "./page";
 import { TEMPLATES } from "@/components/templates/shared/theme";
 
 describe("templates gallery", () => {
-  it("lists every template name and still offers a generic builder CTA", () => {
+  it("lists every template name as a selectable layout preview", () => {
     render(<TemplatesPage />);
     expect(screen.getByRole("heading", { level: 1, name: /free resume templates/i })).toBeInTheDocument();
     for (const template of TEMPLATES) {
       expect(screen.getByRole("heading", { name: template.name })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: `Select ${template.name} template` })).toBeInTheDocument();
     }
-    expect(screen.getByRole("link", { name: /make a resume with these templates/i })).toHaveAttribute("href", "/builder");
+    expect(document.querySelector('[data-template-skeleton="jakes-resume"]')).not.toBeNull();
+    expect(document.querySelector('[data-layout="single"]')).not.toBeNull();
+    expect(screen.getByText(/select a template to continue building/i)).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /continue with/i })).not.toBeInTheDocument();
+  });
+
+  it("selects a template and continues into the builder with that layout", async () => {
+    render(<TemplatesPage />);
+    await userEvent.click(screen.getByRole("button", { name: "Select Atlas template" }));
+
+    expect(screen.getByRole("button", { name: "Select Atlas template" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("link", { name: /continue with atlas/i })).toHaveAttribute(
+      "href",
+      "/builder?template=jakes-resume",
+    );
   });
 
   it("opens a skeleton preview of the layout and sends that template to the builder", async () => {
@@ -44,5 +59,14 @@ describe("templates gallery", () => {
       "href",
       "/builder?template=bre-creative",
     );
+  });
+
+  it("filters the gallery by layout family", async () => {
+    render(<TemplatesPage />);
+    await userEvent.click(screen.getByRole("button", { name: /sidebar/i }));
+
+    expect(screen.getByRole("heading", { name: "Ember" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Atlas" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /sidebar/i })).toHaveAttribute("aria-pressed", "true");
   });
 });

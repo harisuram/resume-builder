@@ -232,6 +232,9 @@ describe("BuilderShell", () => {
     expect(container.querySelectorAll("aside")).toHaveLength(1);
     expect(container.querySelector("main")!.className).toContain("print-unclip");
     expect(container.querySelector("main")!.className).toContain("overflow-y-auto");
+    expect(container.querySelector(".animate-step-in-from-right, .animate-step-in-from-left")?.className).toContain(
+      "print-unclip",
+    );
     // Nested preview scroll is for the side column only — on this step the
     // main pane is the scroller, or the wheel over the resume goes nowhere.
     expect(container.querySelector("main")!.querySelector(".overflow-y-auto")).toBeNull();
@@ -259,6 +262,7 @@ describe("BuilderShell", () => {
     const shell = container.firstElementChild as HTMLElement;
     expect(shell.className).toContain("h-[100dvh]");
     expect(shell.className).toContain("overflow-hidden");
+    expect((shell.firstElementChild as HTMLElement).className).toContain("print-unclip");
 
     const previewAside = container.querySelectorAll("aside")[container.querySelectorAll("aside").length - 1];
     expect(previewAside.className).toContain("md:overflow-hidden");
@@ -489,5 +493,57 @@ describe("BuilderShell", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(/Storage may be full/);
     expect(screen.getByRole("heading", { name: "Summary", level: 2 })).toBeInTheDocument();
     spy.mockRestore();
+  });
+
+  it("toasts on download when required basic info is missing", async () => {
+    (window.print as jest.Mock).mockClear();
+    render(<BuilderShell />);
+    await screen.findByRole("heading", { name: "Basic info" });
+    act(() => useBuilderStore.getState().setSkills(["TypeScript"]));
+    await userEvent.click(nav().getByText("Template & export"));
+    await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Fill in your name, email, and location in Basic info before downloading.",
+    );
+    expect(window.print).not.toHaveBeenCalled();
+  });
+
+  it("asks for save consent on download if Basic info Next was skipped", async () => {
+    (window.print as jest.Mock).mockClear();
+    render(<BuilderShell />);
+    await screen.findByRole("heading", { name: "Basic info" });
+    act(() =>
+      useBuilderStore.getState().updateBasicInfo({ name: "Jamie", email: "jamie@example.com", location: "Austin, TX" }),
+    );
+    await userEvent.click(nav().getByText("Template & export"));
+    await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
+
+    expect(
+      screen.getByRole("dialog", {
+        name: "Save this resume on this device so you can pick it up again later?",
+      }),
+    ).toBeInTheDocument();
+    expect(window.print).not.toHaveBeenCalled();
+
+    await userEvent.click(screen.getByRole("button", { name: "No, don’t save" }));
+    expect(useBuilderStore.getState().saveConsent).toBe("no");
+    expect(window.print).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not re-ask save consent on download after the Basic info prompt", async () => {
+    (window.print as jest.Mock).mockClear();
+    render(<BuilderShell />);
+    await screen.findByRole("heading", { name: "Basic info" });
+    act(() =>
+      useBuilderStore.getState().updateBasicInfo({ name: "Jamie", email: "jamie@example.com", location: "Austin, TX" }),
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Next" }));
+    await userEvent.click(screen.getByRole("button", { name: "No, don’t save" }));
+    await userEvent.click(nav().getByText("Template & export"));
+    await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(window.print).toHaveBeenCalledTimes(1);
   });
 });

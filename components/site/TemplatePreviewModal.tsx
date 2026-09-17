@@ -1,16 +1,12 @@
 "use client";
 
-import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { layoutLabel, type TemplateTheme } from "@/components/templates/shared/theme";
 import { Button } from "@/components/ui/Button";
 import { ctaPrimary } from "@/components/ui/cta";
-import { TemplateSkeleton } from "./TemplateSkeleton";
+import { ScaledTemplatePreview } from "./ScaledTemplatePreview";
 
-/** Layout width the skeleton is drawn at before it is scaled down to the
- * modal body. Narrow phones otherwise squash the sidebar until headings
- * like EDUCATION clip. */
-const PAPER_WIDTH = 520;
 const SHEET_EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
 const SHEET_MS = 480;
 const DISMISS_PX = 96;
@@ -27,49 +23,6 @@ function CloseIcon() {
         strokeLinecap="round"
       />
     </svg>
-  );
-}
-
-function ScaledSkeleton({ theme }: { theme: TemplateTheme }) {
-  const viewportRef = useRef<HTMLDivElement>(null);
-  const pageRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
-  const [height, setHeight] = useState(0);
-
-  useLayoutEffect(() => {
-    const viewport = viewportRef.current;
-    const page = pageRef.current;
-    if (!viewport || !page) return;
-
-    function measure() {
-      const width = viewport!.clientWidth;
-      const nextScale = width > 0 ? Math.min(1, width / PAPER_WIDTH) : 1;
-      const nextHeight = page!.offsetHeight * nextScale;
-      setScale((prev) => (prev === nextScale ? prev : nextScale));
-      setHeight((prev) => (Math.abs(prev - nextHeight) < 0.5 ? prev : nextHeight));
-    }
-
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(viewport);
-    observer.observe(page);
-    return () => observer.disconnect();
-  }, [theme.id]);
-
-  const scaled = scale < 0.999;
-
-  return (
-    <div ref={viewportRef} className="w-full">
-      <div className="relative overflow-hidden" style={height > 0 && scaled ? { height } : undefined}>
-        <div
-          ref={pageRef}
-          className="origin-top-left"
-          style={scaled ? { width: PAPER_WIDTH, transform: `scale(${scale})` } : { width: "100%" }}
-        >
-          <TemplateSkeleton theme={theme} />
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -241,7 +194,7 @@ export function TemplatePreviewModal({ theme, onClose }: { theme: TemplateTheme;
 
         <div className="min-h-0 overflow-x-hidden overflow-y-auto overscroll-contain bg-[var(--color-paper)]">
           <div className="w-full px-3 py-3 sm:px-6 sm:py-5">
-            <ScaledSkeleton theme={theme} />
+            <ScaledTemplatePreview theme={theme} />
           </div>
         </div>
 

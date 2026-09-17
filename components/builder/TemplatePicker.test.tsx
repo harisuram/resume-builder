@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TEMPLATE_LIST } from "@/components/templates/registry";
@@ -52,5 +53,43 @@ describe("TemplatePicker", () => {
     await userEvent.keyboard("{Escape}");
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
     expect(onChange).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Choose a template" })).toHaveFocus();
+  });
+
+  it("focuses the selected template and scrolls it into view when the list opens", async () => {
+    const offsetTop = jest.spyOn(HTMLElement.prototype, "offsetTop", "get").mockImplementation(function (this: HTMLElement) {
+      return this.tagName === "LI" ? 480 : 0;
+    });
+    const offsetHeight = jest.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(40);
+    const clientHeight = jest.spyOn(HTMLUListElement.prototype, "clientHeight", "get").mockReturnValue(200);
+
+    render(<TemplatePicker value="jsonresume-futura" onChange={jest.fn()} />);
+    await userEvent.click(screen.getByRole("button", { name: "Choose a template" }));
+
+    const list = screen.getByRole("listbox", { name: "Templates" });
+    const selected = screen.getByRole("option", { name: "Nova" });
+    expect(selected).toHaveAttribute("aria-selected", "true");
+    expect(selected).toHaveFocus();
+    expect(list.scrollTop).toBe(400);
+
+    offsetTop.mockRestore();
+    offsetHeight.mockRestore();
+    clientHeight.mockRestore();
+  });
+
+  it("keeps the newly chosen template focused the next time the list opens", async () => {
+    function Harness() {
+      const [value, setValue] = useState("jakes-resume");
+      return <TemplatePicker value={value} onChange={setValue} />;
+    }
+    render(<Harness />);
+    await userEvent.click(screen.getByRole("button", { name: "Choose a template" }));
+    await userEvent.click(screen.getByRole("option", { name: "Ember" }));
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Choose a template" }));
+    const selected = screen.getByRole("option", { name: "Ember" });
+    expect(selected).toHaveAttribute("aria-selected", "true");
+    expect(selected).toHaveFocus();
   });
 });

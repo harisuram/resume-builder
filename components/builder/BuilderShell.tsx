@@ -101,7 +101,7 @@ function StepEnter({
 }) {
   return (
     <div
-      className={`min-w-0 ${
+      className={`print-unclip min-w-0 ${
         enabled ? (direction === 1 ? "animate-step-in-from-right" : "animate-step-in-from-left") : ""
       }`}
     >
@@ -338,7 +338,7 @@ export function BuilderShell() {
   return (
     <div className="print-unclip flex h-[100dvh] flex-col overflow-hidden">
       <div
-        className="flex min-h-0 flex-1 flex-col overflow-hidden"
+        className="print-unclip flex min-h-0 flex-1 flex-col overflow-hidden"
         inert={tourOpen || previewOpen || undefined}
       >
         <Navbar />

@@ -1,6 +1,7 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
 import { showToast } from "@/lib/toast";
 
@@ -39,8 +40,10 @@ export function PhotoCropModal({
   onCancel: () => void;
   onSave: (dataUrl: string) => void;
 }) {
+  const titleId = useId();
   const imgRef = useRef<HTMLImageElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ startX: number; startY: number; offset: Offset } | null>(null);
   const [frame, setFrame] = useState(FRAME_MAX);
   const [natural, setNatural] = useState<Natural | null>(null);
@@ -48,6 +51,20 @@ export function PhotoCropModal({
   const [offset, setOffset] = useState<Offset>({ x: 0, y: 0 });
 
   const scale = natural ? coverScale(natural, frame) * zoom : 1;
+
+  useEffect(() => {
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    panelRef.current?.focus();
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") onCancel();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = previous;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [onCancel]);
 
   useLayoutEffect(() => {
     function update() {
@@ -129,22 +146,36 @@ export function PhotoCropModal({
     }
   }
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  // Portaled to body: StepEnter's transform animation and the form pane's
+  // overflow-x-clip would otherwise trap `position: fixed` inside the
+  // column, so the overlay only covered the photo fields and the circle
+  // painted outside the card.
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 backdrop-blur-[2px] sm:items-center"
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4 backdrop-blur-[2px]"
       role="dialog"
       aria-modal="true"
-      aria-label="Crop photo"
+      aria-labelledby={titleId}
+      onClick={onCancel}
     >
-      <div className="my-auto flex w-full min-w-0 max-w-sm flex-col gap-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-card">
+      <div
+        ref={panelRef}
+        tabIndex={-1}
+        onClick={(event) => event.stopPropagation()}
+        className="flex w-full min-w-0 max-w-sm flex-col gap-4 overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-card outline-none"
+      >
         <div>
-          <h2 className="font-display text-[17px] font-semibold tracking-tight text-[var(--color-ink)]">Crop photo</h2>
+          <h2 id={titleId} className="font-display text-[17px] font-semibold tracking-tight text-[var(--color-ink)]">
+            Crop photo
+          </h2>
           <p className="mt-1 text-[12.5px] text-[var(--color-ink-soft)]">Drag to reposition, use the slider to zoom.</p>
         </div>
 
         <div
           ref={frameRef}
-          className="relative mx-auto aspect-square w-full max-w-[260px] touch-none overflow-hidden rounded-full border border-[var(--color-border)] bg-[var(--color-border)]/20"
+          className="relative mx-auto aspect-square w-full max-w-[260px] touch-none overflow-hidden rounded-full border border-[var(--color-border)] bg-[var(--color-border)]/20 [clip-path:circle(50%)]"
           style={{ cursor: natural ? "grab" : "default" }}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
@@ -192,6 +223,7 @@ export function PhotoCropModal({
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
