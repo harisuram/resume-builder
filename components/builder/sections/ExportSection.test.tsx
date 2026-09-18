@@ -118,13 +118,17 @@ describe("ExportSection", () => {
 
   it("saves a copy and prints on download without asking", async () => {
     fillCompleteBasicInfo();
+    const prepare = jest.fn();
+    window.addEventListener("resume:prepare-print", prepare);
     renderExport();
     await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(JSON.parse(localStorage.getItem("resumeData")!).basicInfo.name).toBe("Jamie Rivera");
     expect(useBuilderStore.getState().hasSavedCopy).toBe(true);
+    expect(prepare).toHaveBeenCalled();
     expect(window.print).toHaveBeenCalledTimes(1);
+    window.removeEventListener("resume:prepare-print", prepare);
   });
 
   it("prints without asking again once a copy is already saved", async () => {

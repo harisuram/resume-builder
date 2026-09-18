@@ -11,7 +11,6 @@ import {
   contentHeightPx,
   heightToPageMultiple,
   nextPageBoundaryY,
-  pageStartMarginCss,
 } from "@/lib/page";
 import { itemBreakKey, parseItemBreakKey } from "@/lib/resume";
 import type { ResumeData, SectionKey } from "@/lib/types";
@@ -99,18 +98,89 @@ function markersEqual(a: LineMarker[], b: LineMarker[]): boolean {
   });
 }
 
-function writeMarginTop(el: HTMLElement, value: string) {
-  // `important` so print's sibling gap rules (`> * + * { margin-top: 1rem
-  // !important }`) cannot squash a simulated page start. Print keeps these
-  // gaps: `break-before: page` is ignored inside the absolutely positioned
-  // `#resume-print-root`, which is why wiping them made the PDF ignore the
-  // page-separator control.
+function getGapSpacer(el: HTMLElement): HTMLElement | null {
+  const prev = el.previousElementSibling as HTMLElement | null;
+  return prev?.getAttribute("data-page-gap-spacer") === "true" ? prev : null;
+}
+
+/** Concrete px height for a page-gap spacer. Prefer resolved pixels over
+ * `calc(... + var(--page-inset))` so print/table layout cannot drop the gap
+ * when custom properties fail to resolve on the spacer. */
+function pageGapHeightCss(skipPx: number): string {
+  return `${Math.max(0, skipPx) + PAGE_INSET}px`;
+}
+
+function writePageGap(el: HTMLElement, value: string, kind: "break" | "inset" = "break") {
+  // Spacer sibling (not margin/padding on the section):
+  // - margin-top collapses at print fragment boundaries → PDF ignored the cut
+  // - padding-top kept offsetTop on the old page → Undo + "Page N" twin guides
+  // Preview: a block with height pushes the section to the paper edge.
+  // Print: `data-page-gap-kind="break"` becomes a real CSS page break (see
+  // globals.css); inset-only spacers keep a small top pad on the next sheet.
+  let spacer = getGapSpacer(el);
   if (!value) {
+    spacer?.remove();
+    if (el.style.paddingTop) el.style.removeProperty("padding-top");
     if (el.style.marginTop) el.style.removeProperty("margin-top");
     return;
   }
-  if (el.style.marginTop === value && el.style.getPropertyPriority("margin-top") === "important") return;
-  el.style.setProperty("margin-top", value, "important");
+  if (!spacer) {
+    spacer = document.createElement("div");
+    spacer.setAttribute("data-page-gap-spacer", "true");
+    spacer.setAttribute("aria-hidden", "true");
+    el.parentElement?.insertBefore(spacer, el);
+  }
+  spacer.setAttribute("data-page-gap-kind", kind);
+  el.style.setProperty("margin-top", "0px", "important");
+  if (el.style.paddingTop) el.style.removeProperty("padding-top");
+  spacer.style.cssText =
+    "display:block;width:100%;height:" +
+    value +
+    ";min-height:" +
+    value +
+    ";margin:0;padding:0;border:0;overflow:hidden;pointer-events:none;flex-shrink:0;";
+}
+
+function hasPageGap(el: HTMLElement): boolean {
+  return Boolean(getGapSpacer(el));
+}
+
+/** Print switches sidebar/split columns from flex to table. Spacers sized
+ * against the flex preview are too short in the PDF, so Projects still
+ * started at the bottom of page 1. Force the print display model, remesure,
+ * then restore after printing. */
+const PRINT_LAYOUT: { sel: string; display: string }[] = [
+  { sel: ".resume-sidebar-columns, .resume-split-columns", display: "table" },
+  { sel: ".resume-sidebar-page-pad, .resume-split-page-pad", display: "table-header-group" },
+  { sel: ".resume-sidebar-columns tbody, .resume-split-columns tbody", display: "table-row-group" },
+  { sel: ".resume-sidebar-columns tr, .resume-split-columns tr", display: "table-row" },
+  {
+    sel: ".resume-sidebar-rail, .resume-main-column, .resume-sidebar-pad-rail, .resume-sidebar-pad-main, .resume-split-narrow, .resume-split-wide, .resume-split-pad-narrow, .resume-split-pad-wide",
+    display: "table-cell",
+  },
+  { sel: ".resume-page-body", display: "block" },
+  { sel: ".resume-split-narrow > div, .resume-split-wide > div", display: "block" },
+];
+
+function setPrintLayoutSimulation(stage: HTMLElement, on: boolean) {
+  for (const { sel, display } of PRINT_LAYOUT) {
+    for (const el of stage.querySelectorAll<HTMLElement>(sel)) {
+      if (on) {
+        if (el.dataset.printDisp === undefined) {
+          el.dataset.printDisp = el.style.getPropertyValue("display");
+          el.dataset.printDispPri = el.style.getPropertyPriority("display");
+        }
+        el.style.setProperty("display", display, "important");
+      } else if (el.dataset.printDisp !== undefined) {
+        const prev = el.dataset.printDisp;
+        const pri = el.dataset.printDispPri ?? "";
+        delete el.dataset.printDisp;
+        delete el.dataset.printDispPri;
+        if (prev) el.style.setProperty("display", prev, pri || undefined);
+        else el.style.removeProperty("display");
+      }
+    }
+  }
 }
 
 function straddlesPage(top: number, height: number, pageHeight = PAGE_HEIGHT): boolean {
@@ -128,8 +198,8 @@ function packRedundantMargin(
   scale: number,
   reapply: () => void,
 ): boolean {
-  if (!el.style.marginTop) return false;
-  writeMarginTop(el, "");
+  if (!hasPageGap(el)) return false;
+  writePageGap(el, "");
   const top = offsetTopIn(el, stage, scale);
   const height = el.offsetHeight;
   if (!straddlesPage(top, height)) return true;
@@ -138,13 +208,73 @@ function packRedundantMargin(
 }
 
 /** Page-break pills. Padding/type is larger below `md` so a thumb can hit
- * "move to next page" on the mobile sheet without changing desktop density. */
+ * "move to next page" on the mobile sheet without changing desktop density.
+ * No truncate — labels like "Move … to page N" must stay fully readable. */
 const PAGE_GUIDE_PILL =
-  "max-w-[70%] shrink-0 truncate rounded-full px-2.5 py-1.5 text-[10px] font-medium uppercase tracking-wide min-h-9 md:min-h-0 md:px-2 md:py-0.5 md:text-[9px]";
+  "shrink-0 whitespace-nowrap rounded-full px-2.5 py-1.5 text-[10px] font-medium uppercase tracking-wide min-h-9 md:min-h-0 md:px-2 md:py-0.5 md:text-[9px]";
+
+/** Shared Move / Undo control — colors come from CSS vars so the pill can
+ * morph accent ↔ burgundy instead of remounting. Both labels stay in the
+ * layout (one invisible) so width — and the centered arrow — don't shift. */
+function PageSplitControl({
+  mode,
+  offerLabel,
+  undoLabel,
+  title,
+  ariaLabel,
+  onClick,
+  arrowAbove,
+}: {
+  mode: "offer" | "undo";
+  offerLabel: string;
+  undoLabel: string;
+  title: string;
+  ariaLabel: string;
+  onClick: () => void;
+  arrowAbove?: boolean;
+}) {
+  const label = mode === "offer" ? offerLabel : undoLabel;
+  return (
+    <div className={`pointer-events-auto relative z-10 shrink-0 page-split-control page-split-control--${mode}`}>
+      <button
+        type="button"
+        onClick={onClick}
+        title={title}
+        className={`page-split-pill hover:brightness-110 ${PAGE_GUIDE_PILL}`}
+      >
+        <span className="page-split-pill-sizer" aria-hidden="true">
+          <span>{offerLabel}</span>
+          <span>{undoLabel}</span>
+        </span>
+        <span key={mode} className="page-split-pill-label">
+          {label}
+        </span>
+      </button>
+      {/* Outer shell owns left:50% centering; inner button only bounces on Y
+          so a mode change can't interpolate translateX and slide the arrow. */}
+      <div
+        className={`page-split-arrow-anchor absolute left-1/2 -translate-x-1/2 ${
+          arrowAbove ? "bottom-full mb-1" : "top-full mt-1"
+        }`}
+      >
+        <button
+          type="button"
+          onClick={onClick}
+          title={title}
+          aria-label={ariaLabel}
+          className="page-split-arrow flex h-5 w-5 items-center justify-center rounded-full ring-2 ring-white/90 hover:brightness-110"
+        >
+          <PageSplitArrowIcon
+            direction={mode === "undo" ? "up" : "down"}
+            className="page-split-arrow-icon h-3 w-3"
+          />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function ScissorsIcon({ className }: { className?: string }) {
-  // Lucide-style scissors; callers rotate −90° so the blades cut along the
-  // horizontal page-break rule.
   return (
     <svg
       viewBox="0 0 24 24"
@@ -161,6 +291,19 @@ function ScissorsIcon({ className }: { className?: string }) {
       <path d="M8.12 8.12 12 12" />
       <path d="M20 4 8.12 15.88" />
       <path d="M14.8 14.8 20 20" />
+    </svg>
+  );
+}
+
+function PageSplitArrowIcon({ className, direction = "down" }: { className?: string; direction?: "down" | "up" }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="currentColor"
+      className={`${className ?? ""} ${direction === "up" ? "rotate-180" : ""}`}
+      aria-hidden="true"
+    >
+      <path d="M7.25 2.25a.75.75 0 0 1 1.5 0v7.19l2.22-2.22a.75.75 0 1 1 1.06 1.06l-3.5 3.5a.75.75 0 0 1-1.06 0l-3.5-3.5a.75.75 0 0 1 1.06-1.06l2.22 2.22V2.25Z" />
     </svg>
   );
 }
@@ -231,7 +374,7 @@ export function ResumePreviewFrame({
       // Undo any previous simulation before recomputing from scratch —
       // otherwise a section un-forced since the last pass would keep
       // whatever margin was last applied to it.
-      for (const el of breakEls) writeMarginTop(el, "");
+      for (const el of breakEls) writePageGap(el, "");
 
       // Push a forced section down to the next A4 paper edge. PAGE_INSET is
       // layered on via `--page-inset` (JS margins only — print must not also
@@ -241,8 +384,8 @@ export function ResumePreviewFrame({
         if (inRailColumn(el)) continue;
         const top = offsetTopIn(el, stage!, nextScale);
         const extra = nextPageBoundaryY(top) - top;
-        if (extra > 0.5) writeMarginTop(el, pageStartMarginCss(extra));
-        else if (Math.floor(top / PAGE_HEIGHT) >= 1) writeMarginTop(el, pageStartMarginCss(0));
+        if (extra > 0.5) writePageGap(el, pageGapHeightCss(extra), "break");
+        else if (Math.floor(top / PAGE_HEIGHT) >= 1) writePageGap(el, pageGapHeightCss(0), "inset");
       }
 
       // After an earlier "move to page N", later forced breaks are often
@@ -254,22 +397,22 @@ export function ResumePreviewFrame({
       for (const el of [...breakEls].reverse()) {
         if (el.getAttribute("data-force-break") !== "true") continue;
         if (inRailColumn(el)) continue;
-        if (!el.style.marginTop) continue;
+        if (!hasPageGap(el)) continue;
         const topBefore = offsetTopIn(el, stage!, nextScale);
         const pageBefore = Math.floor(topBefore / PAGE_HEIGHT);
         const packed = packRedundantMargin(el, stage!, nextScale, () => {
           const top = offsetTopIn(el, stage!, nextScale);
           const extra = nextPageBoundaryY(top) - top;
-          if (extra > 0.5) writeMarginTop(el, pageStartMarginCss(extra));
-          else if (Math.floor(top / PAGE_HEIGHT) >= 1) writeMarginTop(el, pageStartMarginCss(0));
+          if (extra > 0.5) writePageGap(el, pageGapHeightCss(extra), "break");
+          else if (Math.floor(top / PAGE_HEIGHT) >= 1) writePageGap(el, pageGapHeightCss(0), "inset");
         });
         if (!packed) continue;
         const topAfter = offsetTopIn(el, stage!, nextScale);
         const pageAfter = Math.floor(topAfter / PAGE_HEIGHT);
         if (pageAfter >= pageBefore || pageAfter < 1) {
           const extra = nextPageBoundaryY(topAfter) - topAfter;
-          if (extra > 0.5) writeMarginTop(el, pageStartMarginCss(extra));
-          else if (pageAfter >= 1) writeMarginTop(el, pageStartMarginCss(0));
+          if (extra > 0.5) writePageGap(el, pageGapHeightCss(extra), "break");
+          else if (pageAfter >= 1) writePageGap(el, pageGapHeightCss(0), "inset");
           continue;
         }
         const marker = markerFor(el);
@@ -288,10 +431,14 @@ export function ResumePreviewFrame({
         if (inRailColumn(el)) continue;
         const top = offsetTopIn(el, stage!, nextScale);
         const bottom = top + el.offsetHeight;
-        if (el.getAttribute("data-force-break") === "true" && el.style.marginTop) {
-          nextForced.push({ ...marker, y: top * nextScale });
+        // Forced wins over split detection. Require only the attribute —
+        // pack may have cleared the page gap this pass, and an item inside a
+        // forced section must not also offer "Move …" on the same edge.
+        if (el.getAttribute("data-force-break") === "true") {
+          if (hasPageGap(el)) nextForced.push({ ...marker, y: top * nextScale });
           continue;
         }
+        if (el.closest("[data-force-break='true']")) continue;
         // Guards a degenerate zero-height element (bottom === top, e.g. an
         // unmeasured node) from being misread as split: floor() of a
         // negative `bottom - 0.5` rounds further down than floor(top),
@@ -310,27 +457,27 @@ export function ResumePreviewFrame({
       // will have already moved onto the next sheet.
       const avoidBreakEls = Array.from(stage!.querySelectorAll<HTMLElement>(".break-inside-avoid"));
       for (const el of avoidBreakEls) {
-        if (el.getAttribute("data-force-break") === "true" && el.style.marginTop) continue;
+        if (el.getAttribute("data-force-break") === "true" && hasPageGap(el)) continue;
         if (inRailColumn(el)) continue;
         const top = offsetTopIn(el, stage!, nextScale);
         const height = el.offsetHeight;
         if (height < 1 || height >= PAGE_HEIGHT) continue;
         if (!straddlesPage(top, height)) continue;
         const extra = nextPageBoundaryY(top, true) - top;
-        if (extra > 0.5) writeMarginTop(el, pageStartMarginCss(extra));
+        if (extra > 0.5) writePageGap(el, pageGapHeightCss(extra), "break");
       }
 
       // Same pack pass for avoid-break nudges: if a later move freed room on
       // page 2, pull the nudged entry back instead of leaving it on page 3.
       for (const el of [...avoidBreakEls].reverse()) {
-        if (el.getAttribute("data-force-break") === "true" && el.style.marginTop) continue;
+        if (el.getAttribute("data-force-break") === "true" && hasPageGap(el)) continue;
         if (inRailColumn(el)) continue;
         packRedundantMargin(el, stage!, nextScale, () => {
           const top = offsetTopIn(el, stage!, nextScale);
           const height = el.offsetHeight;
           if (height < 1 || height >= PAGE_HEIGHT || !straddlesPage(top, height)) return;
           const extra = nextPageBoundaryY(top, true) - top;
-          if (extra > 0.5) writeMarginTop(el, pageStartMarginCss(extra));
+          if (extra > 0.5) writePageGap(el, pageGapHeightCss(extra), "break");
         });
       }
 
@@ -340,13 +487,13 @@ export function ResumePreviewFrame({
       // including rail columns, where a 32px pad is inside the colored strip,
       // not a hole on page 1.
       for (const el of breakEls) {
-        if (el.style.marginTop) continue;
+        if (hasPageGap(el)) continue;
         const top = offsetTopIn(el, stage!, nextScale);
         const page = Math.floor(top / PAGE_HEIGHT);
         if (page < 1) continue;
         const offset = top - page * PAGE_HEIGHT;
         if (offset >= PAGE_INSET - 0.5) continue;
-        writeMarginTop(el, pageStartMarginCss(0));
+        writePageGap(el, pageGapHeightCss(0), "inset");
       }
 
       // Sidebar / split templates paint a page-tall rail or column. The
@@ -376,7 +523,10 @@ export function ResumePreviewFrame({
       setSplits((prev) => (markersEqual(prev, splitList) ? prev : splitList));
       setForced((prev) => (markersEqual(prev, nextForced) ? prev : nextForced));
 
-      if (redundantForced.length > 0) {
+      // Only the live (non-print) frame may clear leftover breaks from the
+      // store. The export frame shares the same toggles — packing there would
+      // silently drop the user's separator before window.print().
+      if (!printable && redundantForced.length > 0) {
         for (const marker of redundantForced) {
           if (marker.index === undefined) onToggleSectionBreakRef.current?.(marker.section);
           else onToggleItemBreakRef.current?.(marker.section, marker.index);
@@ -387,14 +537,58 @@ export function ResumePreviewFrame({
     measure("data");
     const observer = new ResizeObserver(() => measure("resize"));
     observer.observe(viewport);
-    return () => observer.disconnect();
+
+    // Print: park the export viewport on document.body so we can hide every
+    // other body child with display:none (no visibility:hidden gap, no
+    // absolute #resume-print-root). CSS page breaks on gap spacers then work
+    // in the PDF the same way the preview dashed line does.
+    let parked: { parent: Node; next: ChildNode | null } | null = null;
+    const parkForPrint = () => {
+      if (!printable || parked) return;
+      parked = { parent: viewport!.parentNode!, next: viewport!.nextSibling };
+      document.body.appendChild(viewport!);
+      setPrintLayoutSimulation(stage!, true);
+      measure("data");
+      // Force layout so Chromium's print snapshot sees the updated spacers.
+      void viewport!.offsetHeight;
+    };
+    const unparkAfterPrint = () => {
+      if (!printable) return;
+      setPrintLayoutSimulation(stage!, false);
+      if (parked) {
+        parked.parent.insertBefore(viewport!, parked.next);
+        parked = null;
+      }
+      measure("data");
+    };
+    const onBeforePrint = () => parkForPrint();
+    const onAfterPrint = () => unparkAfterPrint();
+    const onPreparePrint = () => parkForPrint();
+    const onEndPrint = () => unparkAfterPrint();
+    if (printable) {
+      window.addEventListener("beforeprint", onBeforePrint);
+      window.addEventListener("afterprint", onAfterPrint);
+      window.addEventListener("resume:prepare-print", onPreparePrint);
+      window.addEventListener("resume:end-print", onEndPrint);
+    }
+    return () => {
+      observer.disconnect();
+      if (printable) {
+        window.removeEventListener("beforeprint", onBeforePrint);
+        window.removeEventListener("afterprint", onAfterPrint);
+        window.removeEventListener("resume:prepare-print", onPreparePrint);
+        window.removeEventListener("resume:end-print", onEndPrint);
+        unparkAfterPrint();
+      }
+    };
   }, [data, printable]);
 
   // Where a new printed page starts, in on-screen (scaled) pixels — purely
   // informational overlay so someone can see a resume has spilled onto a
-  // second page before they ever open the print dialog.
+  // second page before they ever open the print dialog. Ignore ~2px of
+  // stage chrome so a 2-page snap doesn't invent a phantom page-3 guide.
   const pageBreaks: number[] = [];
-  for (let i = 1; i * PAGE_HEIGHT < naturalHeight; i++) {
+  for (let i = 1; i * PAGE_HEIGHT < naturalHeight - 2; i++) {
     pageBreaks.push(i * PAGE_HEIGHT * scale);
   }
 
@@ -409,26 +603,34 @@ export function ResumePreviewFrame({
     return onToggleItemBreak ? () => onToggleItemBreak(marker.section, index) : null;
   }
 
-  function forcedMarker(f: LineMarker, y: number) {
+  function forcedMarker(f: LineMarker, y: number, atBoundary: boolean, stableId?: string, page = 2) {
+    const undoLabel = `"${f.label}" starts a new page — Undo`;
+    const offerLabel = `Move “${f.label}” to page ${page}`;
     const text = `"${f.label}" starts a new page`;
     const toggle = toggleFor(f);
+    const undoable = Boolean(toggle);
+    // On the paper edge, sit on the cut like Move. Only float into the blank
+    // gap when the guide is pinned to the section's own top (unpaired).
+    const above = !(undoable && atBoundary);
     return {
-      id: `forced-${markerId(f)}`,
+      // Keep page-N when paired so Move ↔ Undo remounts as the same row and
+      // CSS can morph the colors instead of popping a new pill.
+      id: stableId ?? `forced-${markerId(f)}-${Math.round(y)}`,
       y,
-      // Forcing a section down leaves the rest of the previous page blank,
-      // so the row drops into that gap rather than onto the boundary, where
-      // it struck a line through the section heading directly below it.
-      above: true,
-      faint: true,
-      label: toggle ? (
-        <button
-          type="button"
-          onClick={toggle}
+      above,
+      faint: !undoable,
+      actionable: false,
+      undoable,
+      label: undoable ? (
+        <PageSplitControl
+          mode="undo"
+          offerLabel={offerLabel}
+          undoLabel={undoLabel}
           title={`${text} — click to undo`}
-          className={`pointer-events-auto border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink-soft)] transition duration-150 hover:text-[var(--color-accent)] ${PAGE_GUIDE_PILL}`}
-        >
-          {text} &mdash; Undo
-        </button>
+          ariaLabel={`Undo page break for ${f.label}`}
+          onClick={toggle!}
+          arrowAbove={!above}
+        />
       ) : (
         <span className={`border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink-soft)] ${PAGE_GUIDE_PILL}`}>
           {text}
@@ -439,14 +641,30 @@ export function ResumePreviewFrame({
 
   // Forcing a section onto a new page lands it PAGE_INSET below the paper
   // edge, so Undo sits in that gap. Pair it with the boundary marker rather
-  // than drawing a second row 32px down.
+  // than drawing a second row ~32px down. Also pair when the forced top is
+  // slightly *above* the boundary (subpixel / packing) or within a page of
+  // it after a large spacer — never leave "Page N" beside Undo.
   const insetScreen = PAGE_INSET * scale;
+  const mergePx = Math.max(insetScreen + Math.max(24, insetScreen), PAGE_HEIGHT * scale * 0.15);
+  function nearGuide(a: number, b: number) {
+    return Math.abs(a - b) <= mergePx;
+  }
+  function forcedPairsWithBoundary(f: { y: number }, boundaryY: number) {
+    // Forced content sits on or just below the paper edge after the spacer.
+    return f.y + mergePx >= boundaryY && f.y <= boundaryY + mergePx;
+  }
+
+  const pairedForced = new Set<string>();
   const markers = pageBreaks.map((y, i) => {
     const page = i + 2;
-    const forcedHere = forced.find((f) => f.y + 0.5 >= y && f.y <= y + insetScreen + 0.5);
-    if (forcedHere) return forcedMarker(forcedHere, y);
+    const forcedHere = forced.find((f) => forcedPairsWithBoundary(f, y));
+    if (forcedHere) {
+      pairedForced.add(markerId(forcedHere));
+      return forcedMarker(forcedHere, y, true, `page-${page}`, page);
+    }
     const split = splits.find((s) => Math.abs(s.y - y) < 0.5);
     const toggle = split ? toggleFor(split) : null;
+    const actionable = Boolean(split && toggle);
     return {
       id: `page-${page}`,
       y,
@@ -454,21 +672,22 @@ export function ResumePreviewFrame({
       // the row stays centered on the boundary it describes.
       above: false,
       faint: false,
-      label:
-        split && toggle ? (
-          <button
-            type="button"
-            onClick={toggle}
-            title={`Move "${split.label}" to page ${page}`}
-            className={`pointer-events-auto bg-[var(--color-accent)] text-[var(--color-accent-ink)] transition duration-150 hover:brightness-110 ${PAGE_GUIDE_PILL}`}
-          >
-            Move &ldquo;{split.label}&rdquo; to page {page}
-          </button>
-        ) : (
-          <span className={`bg-[var(--color-accent)] text-[var(--color-accent-ink)] ${PAGE_GUIDE_PILL}`}>
-            {split ? `"${split.label}" splits here` : `Page ${page} starts here`}
-          </span>
-        ),
+      actionable,
+      undoable: false,
+      label: actionable ? (
+        <PageSplitControl
+          mode="offer"
+          offerLabel={`Move “${split!.label}” to page ${page}`}
+          undoLabel={`"${split!.label}" starts a new page — Undo`}
+          title={`Move "${split!.label}" to page ${page}`}
+          ariaLabel={`Move ${split!.label} to page ${page}`}
+          onClick={toggle!}
+        />
+      ) : (
+        <span className={`bg-[var(--color-accent)] text-[var(--color-accent-ink)] ${PAGE_GUIDE_PILL}`}>
+          {split ? `"${split.label}" splits here` : `Page ${page} starts here`}
+        </span>
+      ),
     };
   });
 
@@ -476,13 +695,30 @@ export function ResumePreviewFrame({
   // boundary to pair with — nothing was broken, so it gets no marker.
   for (const f of forced) {
     if (f.y <= 0.5) continue;
-    if (markers.some((m) => f.y + 0.5 >= m.y && f.y <= m.y + insetScreen + 0.5)) continue;
-    markers.push(forcedMarker(f, f.y));
+    if (pairedForced.has(markerId(f))) continue;
+    // Drop any page-guide twin in the inset band before adding Undo.
+    for (let i = markers.length - 1; i >= 0; i--) {
+      if (nearGuide(markers[i].y, f.y) || forcedPairsWithBoundary(f, markers[i].y)) {
+        markers.splice(i, 1);
+      }
+    }
+    markers.push(forcedMarker(f, f.y, false));
+  }
+
+  // Last pass: collapse any remaining near-duplicates (refresh subpixel
+  // noise). Prefer forced, then actionable Move, over a plain "Page N".
+  markers.sort((a, b) => a.y - b.y);
+  for (let i = markers.length - 1; i > 0; i--) {
+    if (!nearGuide(markers[i].y, markers[i - 1].y)) continue;
+    const score = (m: (typeof markers)[number]) => (m.undoable ? 2 : m.actionable ? 1 : 0);
+    const drop = score(markers[i]) >= score(markers[i - 1]) ? i - 1 : i;
+    markers.splice(drop, 1);
   }
 
   return (
     <div
       ref={viewportRef}
+      data-print-viewport={printable ? "true" : undefined}
       className="resume-scale-viewport relative mx-auto w-full max-w-[760px] overflow-hidden"
       style={{ height: stageHeight || undefined }}
     >
@@ -509,23 +745,30 @@ export function ResumePreviewFrame({
       {markers.length > 0 && (
         <div className="no-print pointer-events-none absolute inset-0">
           {markers.map((marker) => {
-            const lineColor = marker.faint
-              ? "border-[var(--color-ink-faint)] text-[var(--color-ink-faint)]"
-              : "border-[var(--color-accent)] text-[var(--color-accent)]";
+            const emphasis = marker.actionable ? "offer" : marker.undoable ? "undo" : marker.faint ? "faint" : "plain";
             return (
               <div
                 key={marker.id}
-                className={`absolute inset-x-0 flex items-center gap-1.5 ${marker.above ? "-translate-y-full" : ""}`}
+                className={`page-split-guide pointer-events-none absolute inset-x-0 ${
+                  emphasis === "offer" || emphasis === "undo" ? `z-10 page-split-guide--${emphasis}` : ""
+                } ${emphasis === "faint" ? "page-split-guide--faint" : ""} ${
+                  emphasis === "plain" ? "page-split-guide--plain" : ""
+                }`}
                 style={{ top: marker.y }}
               >
-                <div className={`flex min-w-0 flex-1 items-center ${lineColor}`}>
-                  <div className="h-0 min-w-0 flex-1 border-t-2 border-dashed" />
-                  <span className="mx-0.5 shrink-0 bg-white px-0.5">
-                    <ScissorsIcon className="h-3.5 w-3.5 -rotate-90 md:h-3.5 md:w-3.5" />
+                {/* One rule, pinned to the paper edge — never translated with
+                    the label, or a forced break drew a twin line in the gap. */}
+                <div className="page-split-rule pointer-events-none absolute inset-x-0 top-0 border-t-2 border-dashed" />
+                <div
+                  className={`page-split-cluster absolute right-0 flex items-center gap-1.5 ${
+                    marker.above ? "-translate-y-[calc(100%+2px)]" : "-translate-y-1/2"
+                  }`}
+                >
+                  <span className="flex shrink-0 items-center bg-white px-0.5">
+                    <ScissorsIcon className="page-split-scissors h-3.5 w-3.5" />
                   </span>
-                  <div className="h-0 min-w-0 flex-1 border-t-2 border-dashed" />
+                  {marker.label}
                 </div>
-                {marker.label}
               </div>
             );
           })}

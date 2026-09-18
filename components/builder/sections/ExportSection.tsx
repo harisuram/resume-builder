@@ -63,12 +63,18 @@ export function ExportSection() {
     // page has over that filename, since the dialog itself is native chrome.
     originalTitle.current = document.title;
     document.title = slugifyName(fileBaseName);
+    // Park/remesure the print viewport *before* the dialog opens. Relying on
+    // beforeprint alone races Chromium's snapshot, so Move-to-page spacers
+    // never made it into the PDF.
+    window.dispatchEvent(new Event("resume:prepare-print"));
     try {
       window.print();
     } catch {
       showToast("Couldn't open the print dialog. Try again.");
+      window.dispatchEvent(new Event("resume:end-print"));
     } finally {
-      document.title = originalTitle.current;
+      document.title = originalTitle.current ?? document.title;
+      originalTitle.current = null;
     }
   }
 

@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { PAGE_HEIGHT_PX, pageStartMarginCss } from "@/lib/page";
+import { PAGE_HEIGHT_PX } from "@/lib/page";
 import { makeFullResumeData } from "@/test-utils/fixtures";
 import { TEMPLATE_LIST } from "@/components/templates/registry";
 import { ResumePreviewFrame } from "./ResumePreviewFrame";
@@ -16,11 +16,18 @@ function setBox(el: Element, box: { top: number; height: number }) {
 
 /** offsetTop that tracks whether a page-start margin is currently applied —
  * used to simulate packing page 3 back onto page 2 after an earlier move. */
+function hasGapSpacer(el: HTMLElement, kind?: "break" | "inset") {
+  const prev = el.previousElementSibling as HTMLElement | null;
+  if (prev?.getAttribute("data-page-gap-spacer") !== "true") return false;
+  if (!kind) return true;
+  return prev.getAttribute("data-page-gap-kind") === kind;
+}
+
 function setPackableBox(el: HTMLElement, positioned: { forced: number; natural: number; height: number }) {
   Object.defineProperty(el, "offsetTop", {
     configurable: true,
     get() {
-      return el.style.marginTop ? positioned.forced : positioned.natural;
+      return hasGapSpacer(el) ? positioned.forced : positioned.natural;
     },
   });
   Object.defineProperty(el, "offsetHeight", { configurable: true, value: positioned.height });
@@ -45,9 +52,11 @@ describe("ResumePreviewFrame", () => {
     const data = makeFullResumeData();
     const { container, rerender } = render(<ResumePreviewFrame data={data} printable={false} />);
     expect(container.querySelector("#resume-print-root")).not.toBeInTheDocument();
+    expect(container.querySelector("[data-print-viewport]")).not.toBeInTheDocument();
 
     rerender(<ResumePreviewFrame data={data} printable />);
     expect(container.querySelector("#resume-print-root")).toBeInTheDocument();
+    expect(container.querySelector('[data-print-viewport="true"]')).toBeInTheDocument();
   });
 
   it("snaps a sidebar surface to whole A4 pages from real section bottoms, not a stretched cell", () => {
@@ -116,7 +125,7 @@ describe("ResumePreviewFrame", () => {
     setBox(edu, { top: 200, height: 80 });
     setBox(container.querySelector(".resume-scale-stage")!, { top: 0, height: 2500 });
     rerender(<ResumePreviewFrame data={{ ...data }} />);
-    expect(edu.style.marginTop).toBe("");
+    expect(hasGapSpacer(edu)).toBe(false);
     expect(screen.queryByRole("button", { name: /Education. starts a new page/ })).not.toBeInTheDocument();
   });
 
@@ -241,6 +250,27 @@ describe("ResumePreviewFrame", () => {
       expect(screen.queryByText("Page 2 starts here")).not.toBeInTheDocument();
     });
 
+    it("still shows one marker when the forced block sits PAGE_INSET below the edge", async () => {
+      const data = makeFullResumeData({
+        templateId: "jakes-resume",
+        pageBreakSections: ["certifications"],
+      });
+      const { container, rerender } = render(<ResumePreviewFrame data={data} onToggleSectionBreak={jest.fn()} />);
+
+      const stage = container.querySelector(".resume-scale-stage")!;
+      const certEl = container.querySelector('[data-section-key="certifications"]')!;
+      // Real layout after pageStartMarginCss: content starts inset below the
+      // paper edge. A tight pair window used to leave both Undo and Move.
+      setBox(certEl, { top: PAGE_HEIGHT_PX + 32, height: 100 });
+      setBox(stage, { top: 0, height: 2000 });
+      rerender(<ResumePreviewFrame data={{ ...data }} onToggleSectionBreak={jest.fn()} />);
+
+      expect(await screen.findByRole("button", { name: /.Certifications. starts a new page/ })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /Move / })).not.toBeInTheDocument();
+      expect(screen.queryByText("Page 2 starts here")).not.toBeInTheDocument();
+      expect(screen.queryByText(/splits here/)).not.toBeInTheDocument();
+    });
+
     it("still labels a forced section when no callback is given, without the Undo control", async () => {
       const data = makeFullResumeData({
         templateId: "jakes-resume",
@@ -293,7 +323,7 @@ describe("ResumePreviewFrame", () => {
 
       expect(onToggle).toHaveBeenCalledWith("certifications");
       expect(onToggle).not.toHaveBeenCalledWith("experience");
-      expect(certifications.style.marginTop).toBe("");
+      expect(hasGapSpacer(certifications)).toBe(false);
     });
 
     it("keeps a page-2 force break that would otherwise fall back onto page 1", () => {
@@ -315,7 +345,7 @@ describe("ResumePreviewFrame", () => {
       rerender(<ResumePreviewFrame data={{ ...data }} onToggleSectionBreak={onToggle} />);
 
       expect(onToggle).not.toHaveBeenCalled();
-      expect(experience.style.marginTop).not.toBe("");
+      expect(hasGapSpacer(experience)).toBe(true);
     });
   });
 
@@ -349,8 +379,9 @@ describe("ResumePreviewFrame", () => {
       setBox(item, { top: PAGE_HEIGHT_PX - 40, height: 120 });
       setBox(container.querySelector(".resume-scale-stage")!, { top: 0, height: 1400 });
       rerender(<ResumePreviewFrame data={threeProjects()} />);
-      expect(item.style.marginTop).toBe(pageStartMarginCss(40));
-      expect(item.style.getPropertyPriority("margin-top")).toBe("important");
+      expect(hasGapSpacer(item)).toBe(true);
+      expect(hasGapSpacer(item, "break")).toBe(true);
+      expect((item.previousElementSibling as HTMLElement).style.height).toBe("72px");
     });
 
     it("insets a section that starts on page 2 so it is not flush with the paper", () => {
@@ -360,13 +391,14 @@ describe("ResumePreviewFrame", () => {
       setBox(education, { top: PAGE_HEIGHT_PX, height: 80 });
       setBox(container.querySelector(".resume-scale-stage")!, { top: 0, height: 1400 });
       rerender(<ResumePreviewFrame data={{ ...data }} />);
-      expect(education.style.marginTop).toBe(pageStartMarginCss(0));
-      expect(education.style.getPropertyPriority("margin-top")).toBe("important");
+      expect(hasGapSpacer(education)).toBe(true);
+      expect(hasGapSpacer(education, "inset")).toBe(true);
+      expect((education.previousElementSibling as HTMLElement).style.height).toBe("32px");
     });
 
     it("does not clear that nudge when only the preview column's height changes", () => {
       // Soft skills (or any last section) pushing the stack over a page used
-      // to resize the viewport, re-enter measure, wipe marginTop, then
+      // to resize the viewport, re-enter measure, wipe the page-gap spacer, then
       // re-apply it — the right-hand preview glittered. Height-only resizes
       // must leave simulation styles alone; download never ran this path.
       const resizeCallbacks: Array<() => void> = [];
@@ -386,26 +418,13 @@ describe("ResumePreviewFrame", () => {
         setBox(item, { top: PAGE_HEIGHT_PX - 40, height: 120 });
         setBox(container.querySelector(".resume-scale-stage")!, { top: 0, height: 1400 });
         rerender(<ResumePreviewFrame data={threeProjects()} />);
-        expect(item.style.marginTop).toBe(pageStartMarginCss(40));
-
-        const assignments: string[] = [];
-        const proto = Object.getPrototypeOf(item.style);
-        const descriptor = Object.getOwnPropertyDescriptor(proto, "marginTop");
-        const originalSet = descriptor?.set;
-        if (originalSet) {
-          Object.defineProperty(item.style, "marginTop", {
-            configurable: true,
-            get: descriptor.get?.bind(item.style),
-            set(value: string) {
-              assignments.push(value);
-              originalSet.call(this, value);
-            },
-          });
-        }
+        expect(hasGapSpacer(item)).toBe(true);
+        const spacer = item.previousElementSibling as HTMLElement;
+        const heightBefore = spacer.style.height;
 
         for (const fire of resizeCallbacks) fire();
-        expect(item.style.marginTop).toBe(pageStartMarginCss(40));
-        expect(assignments).toEqual([]);
+        expect(hasGapSpacer(item)).toBe(true);
+        expect((item.previousElementSibling as HTMLElement).style.height).toBe(heightBefore);
       } finally {
         global.ResizeObserver = OriginalRO;
       }
@@ -490,7 +509,7 @@ describe("ResumePreviewFrame", () => {
         setBox(experience, { top: PAGE_HEIGHT_PX, height: 80 });
         setBox(container.querySelector(".resume-scale-stage")!, { top: 0, height: 1400 });
         rerender(<ResumePreviewFrame data={{ ...data }} />);
-        expect(experience.style.marginTop).toBe(pageStartMarginCss(0));
+        expect(hasGapSpacer(experience)).toBe(true);
       },
     );
 
@@ -506,7 +525,7 @@ describe("ResumePreviewFrame", () => {
         setBox(education, { top: PAGE_HEIGHT_PX, height: 80 });
         setBox(container.querySelector(".resume-scale-stage")!, { top: 0, height: 1400 });
         rerender(<ResumePreviewFrame data={{ ...data }} />);
-        expect(education.style.marginTop).toBe(pageStartMarginCss(0));
+        expect(hasGapSpacer(education)).toBe(true);
       },
     );
   });

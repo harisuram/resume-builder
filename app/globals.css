@@ -11,6 +11,8 @@
   --color-accent-ink: #ffffff;
   --color-accent-tint: #eef2ff;
   --color-focus: #0891b2;
+  --color-undo: #8b1e3a;
+  --color-undo-ink: #ffffff;
   --shadow-card: 0 1px 2px color-mix(in srgb, var(--color-ink) 5%, transparent),
     0 16px 32px -20px color-mix(in srgb, var(--color-ink) 16%, transparent);
   --shadow-cta: 0 1px 2px color-mix(in srgb, var(--color-accent) 28%, transparent),
@@ -28,6 +30,8 @@
   --color-accent-ink: #0b1020;
   --color-accent-tint: #1c2440;
   --color-focus: #22d3ee;
+  --color-undo: #c45a78;
+  --color-undo-ink: #1a0a10;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -42,6 +46,8 @@
     --color-accent-ink: #0b1020;
     --color-accent-tint: #1c2440;
     --color-focus: #22d3ee;
+    --color-undo: #c45a78;
+    --color-undo-ink: #1a0a10;
   }
 }
 
@@ -56,6 +62,8 @@
   --color-accent-ink: var(--color-accent-ink);
   --color-accent-tint: var(--color-accent-tint);
   --color-focus: var(--color-focus);
+  --color-undo: var(--color-undo);
+  --color-undo-ink: var(--color-undo-ink);
   --shadow-card: var(--shadow-card);
   --shadow-cta: var(--shadow-cta);
   --font-display: var(--font-geist), var(--font-inter), system-ui, sans-serif;
@@ -395,6 +403,223 @@ input[type="month"]::-webkit-calendar-picker-indicator {
   }
   50% {
     transform: scale(1.06);
+  }
+}
+
+/* Page-split Move / Undo — shared tokens so accent ↔ burgundy morphs
+   smoothly when the same guide row flips mode (stable React key). */
+.page-split-guide {
+  --split-line: var(--color-accent);
+  --split-bg: var(--color-accent);
+  --split-fg: var(--color-accent-ink);
+  --split-glow: color-mix(in srgb, var(--color-accent) 35%, transparent);
+  color: var(--split-line);
+}
+
+.page-split-guide--undo {
+  --split-line: var(--color-undo);
+  --split-bg: var(--color-undo);
+  --split-fg: var(--color-undo-ink);
+  --split-glow: color-mix(in srgb, var(--color-undo) 40%, transparent);
+}
+
+.page-split-guide--faint {
+  --split-line: var(--color-ink-faint);
+  color: var(--color-ink-faint);
+}
+
+.page-split-guide--plain {
+  --split-line: var(--color-accent);
+}
+
+.page-split-rule {
+  border-color: var(--split-line);
+  transition: border-color 0.55s ease, opacity 0.55s ease;
+}
+
+.page-split-guide--offer .page-split-rule,
+.page-split-guide--undo .page-split-rule {
+  animation: page-split-offer-rule 2.1s ease-in-out infinite;
+}
+
+.page-split-scissors {
+  color: var(--split-line);
+  transition: color 0.55s ease;
+}
+
+.page-split-guide--offer .page-split-scissors,
+.page-split-guide--undo .page-split-scissors {
+  animation: page-split-offer-scissors 2.1s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.page-split-control {
+  --split-bg: var(--color-accent);
+  --split-fg: var(--color-accent-ink);
+  --split-glow: color-mix(in srgb, var(--color-accent) 35%, transparent);
+  cursor: pointer;
+}
+
+.page-split-control--undo {
+  --split-bg: var(--color-undo);
+  --split-fg: var(--color-undo-ink);
+  --split-glow: color-mix(in srgb, var(--color-undo) 40%, transparent);
+}
+
+.page-split-pill {
+  position: relative;
+  z-index: 10;
+  display: inline-grid;
+  justify-items: center;
+  align-items: center;
+  cursor: pointer;
+  background-color: var(--split-bg);
+  color: var(--split-fg);
+  box-shadow:
+    0 2px 6px color-mix(in srgb, var(--color-ink) 18%, transparent),
+    0 8px 20px var(--split-glow),
+    0 0 0 2px color-mix(in srgb, #fff 90%, transparent);
+  transition:
+    background-color 0.55s ease,
+    color 0.55s ease,
+    box-shadow 0.55s ease,
+    filter 0.25s ease,
+    transform 0.25s ease;
+  animation: page-split-pill-float 2.1s ease-in-out infinite;
+}
+
+.page-split-pill-sizer {
+  grid-column: 1;
+  grid-row: 1;
+  display: grid;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.page-split-pill-sizer > span {
+  grid-column: 1;
+  grid-row: 1;
+  white-space: nowrap;
+}
+
+.page-split-pill:hover,
+.page-split-pill:focus-visible {
+  animation: none;
+  transform: translateY(-3px);
+  filter: brightness(1.1);
+}
+
+.page-split-pill-label {
+  grid-column: 1;
+  grid-row: 1;
+  display: inline-block;
+  white-space: nowrap;
+  animation: page-split-label-in 0.4s ease both;
+}
+
+.page-split-arrow {
+  cursor: pointer;
+  background-color: var(--split-bg);
+  color: var(--split-fg);
+  box-shadow:
+    0 2px 6px color-mix(in srgb, var(--color-ink) 18%, transparent),
+    0 6px 14px var(--split-glow),
+    0 0 0 2px color-mix(in srgb, #fff 90%, transparent);
+  transition:
+    background-color 0.55s ease,
+    color 0.55s ease,
+    box-shadow 0.55s ease,
+    filter 0.25s ease;
+}
+
+.page-split-control--offer .page-split-arrow {
+  animation: page-split-offer-arrow 2.1s ease-in-out 0.15s infinite;
+}
+
+.page-split-control--undo .page-split-arrow {
+  animation: page-split-undo-arrow 2.1s ease-in-out 0.15s infinite;
+}
+
+.page-split-arrow-icon {
+  transition: transform 0.45s ease;
+}
+
+@keyframes page-split-pill-float {
+  0%,
+  100% {
+    transform: translateY(0);
+    filter: brightness(1);
+  }
+  50% {
+    transform: translateY(-3px);
+    filter: brightness(1.08);
+  }
+}
+
+@keyframes page-split-label-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes page-split-offer-scissors {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(2px);
+  }
+}
+
+@keyframes page-split-offer-rule {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes page-split-offer-arrow {
+  0%,
+  100% {
+    transform: translateY(0);
+    filter: brightness(1);
+  }
+  50% {
+    transform: translateY(3px);
+    filter: brightness(1.08);
+  }
+}
+
+@keyframes page-split-undo-arrow {
+  0%,
+  100% {
+    transform: translateY(0);
+    filter: brightness(1);
+  }
+  50% {
+    transform: translateY(-3px);
+    filter: brightness(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-split-pill,
+  .page-split-arrow,
+  .page-split-rule,
+  .page-split-scissors,
+  .page-split-arrow-icon,
+  .page-split-pill-label {
+    animation: none !important;
+    transition: none !important;
   }
 }
 
@@ -924,8 +1149,16 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
     padding: 0 !important;
   }
 
+  /* ResumePreviewFrame parks `[data-print-viewport]` on document.body before
+     print. Hide every other body child with display:none — visibility:hidden
+     reserved chrome space and forced an absolutely positioned print root,
+     which made CSS page breaks (and undersized flex spacers) fail so e.g.
+     Projects still began at the bottom of page 1 in the PDF. */
+  body > *:not([data-print-viewport]) {
+    display: none !important;
+  }
+
   body * {
-    visibility: hidden;
     /* StepEnter (and any other enter animation) uses fill-mode `both` with
        opacity 0 in the from-keyframe. Chromium restarts CSS animations when
        building the print preview, so the resume would paint at opacity 0
@@ -934,9 +1167,9 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
     transition: none !important;
   }
 
-  #resume-print-root,
-  #resume-print-root * {
-    visibility: visible;
+  [data-print-viewport],
+  [data-print-viewport] * {
+    visibility: visible !important;
     /* Browsers drop background colors/images from print output unless a
        page opts back in — without this, every accent sidebar, header band,
        avatar, skill chip, and boxed section heading prints as plain white
@@ -946,10 +1179,7 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
   }
 
   /* On-screen the resume lives inside overflow:auto/hidden flex panes and a
-     CSS-scaled preview stage. Print hides the chrome with visibility, which
-     collapses those flex boxes to a 0-width clip — `width: 100%` on the
-     stage then resolved to 0 and Chrome painted an empty page. Punch through
-     the clip, drop the scale, and pin PAGE_WIDTH in px instead. */
+     CSS-scaled preview stage. Drop the scale and pin PAGE_WIDTH in px. */
   .print-unclip {
     overflow: visible !important;
     height: auto !important;
@@ -974,16 +1204,10 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
     margin: 0 !important;
   }
 
-  /* Taken out of flow so the hidden siblings above don't leave blank
-     reserved space where the app chrome used to be. Width is pinned to
-     PAGE_WIDTH (760px) rather than stretched to fill the page box —
-     stretching to 100% made every percentage-based column reflow
-     differently than what the preview actually showed. */
+  /* In normal flow (not absolute) so forced page breaks on gap spacers are
+     honored. Width stays at PAGE_WIDTH (760px). */
   #resume-print-root {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: auto;
+    position: static;
     width: 760px;
     margin: 0;
     padding: 0;
@@ -1158,16 +1382,47 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
     break-after: auto;
   }
 
-  /* Page separators are simulated in ResumePreviewFrame as an inline
-     margin-top that fills the rest of the current A4 page. Keep those gaps:
-     `#resume-print-root` is `position: absolute` (so hidden chrome does not
-     leave a blank first page), and `break-before: page` inside that box is
-     ignored — zeroing the margin made "move to next page" a preview-only
-     effect. Tailwind `break-inside: avoid` is already simulated the same
-     way; leaving it on would double-push if a browser honored it. */
+  /* Preview spacers simulate the cut with height. Print turns "break" spacers
+     into real page breaks (preview px heights never matched Chrome's page
+     box inside abspos/table). Inset-only spacers keep the 32px page-2 pad. */
   [data-section-key],
   [data-item-key] {
     break-before: auto;
+  }
+
+  [data-force-break="true"] {
+    margin-top: 0 !important;
+  }
+
+  [data-page-gap-spacer="true"] {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+    flex-shrink: 0 !important;
+  }
+
+  [data-page-gap-spacer="true"][data-page-gap-kind="break"] {
+    /* Zero height + forced break. Keeping the preview px height here would
+       leave empty space on page 2 and then break again → blank sheet. */
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    break-after: page !important;
+    page-break-after: always !important;
+  }
+
+  [data-page-gap-spacer="true"][data-page-gap-kind="inset"] {
+    break-after: auto !important;
+    page-break-after: auto !important;
+  }
+
+  /* Page-2 top inset the preview carried in the spacer height. */
+  [data-page-gap-spacer="true"][data-page-gap-kind="break"] + * {
+    padding-top: 32px !important;
   }
 
   #resume-print-root .break-inside-avoid {
@@ -1178,6 +1433,12 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
      column. A CSS page break there punches a hole in the colored strip. */
   [data-resume-column="rail"] [data-force-break="true"] {
     break-before: auto !important;
+  }
+  [data-resume-column="rail"] [data-page-gap-spacer="true"] {
+    break-after: auto !important;
+    page-break-after: auto !important;
+    height: 0 !important;
+    min-height: 0 !important;
   }
 
   .no-print {

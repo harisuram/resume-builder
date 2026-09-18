@@ -34,8 +34,7 @@ describe("print stylesheet", () => {
 
   it("cancels enter animations so Chromium cannot print the resume at opacity 0", () => {
     const printBlock = css.slice(css.indexOf("@media print"));
-    const bodyStar = printBlock.slice(printBlock.indexOf("body * {"));
-    expect(bodyStar).toMatch(/animation:\s*none !important/);
+    expect(printBlock).toMatch(/body \*\s*\{[^}]*animation:\s*none !important/);
     expect(printBlock).toMatch(/\.print-unclip\s*\{[^}]*opacity:\s*1 !important/);
   });
 
@@ -70,11 +69,15 @@ describe("print stylesheet", () => {
 
   it("keeps preview-simulated page-separator gaps in the PDF", () => {
     const printBlock = css.slice(css.indexOf("@media print"));
-    // Wiping every section's margin-top dropped forced breaks: break-before:page
-    // is ignored inside the absolutely positioned print root, and sibling
-    // !important gap rules would squash the leftover inline margin.
+    // Print parks the viewport on body and turns break-kind spacers into
+    // real CSS page breaks (absolute print root ignored break-before).
+    expect(printBlock).toContain('body > *:not([data-print-viewport])');
+    expect(printBlock).toMatch(/#resume-print-root\s*\{[^}]*position:\s*static/);
+    expect(printBlock).not.toMatch(/#resume-print-root\s*\{[^}]*position:\s*absolute/);
     expect(printBlock).not.toMatch(/\[data-section-key\],\s*\[data-item-key\]\s*\{[^}]*margin-top:\s*0 !important/);
-    expect(printBlock).not.toMatch(/\[data-section-key\]\[data-force-break="true"\][^{]*\{[^}]*break-before:\s*page/);
+    expect(printBlock).toContain('[data-page-gap-spacer="true"]');
+    expect(printBlock).toMatch(/data-page-gap-kind="break"[^{]*\{[^}]*break-after:\s*page/);
+    expect(printBlock).toMatch(/\[data-force-break="true"\]\s*\{[^}]*margin-top:\s*0 !important/);
     expect(printBlock).toContain("#resume-print-root .break-inside-avoid");
   });
 
