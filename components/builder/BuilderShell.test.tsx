@@ -24,7 +24,7 @@ describe("BuilderShell", () => {
     render(<BuilderShell />);
     expect(await screen.findByRole("heading", { name: "Basic info" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Choose file" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Import resume" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Import resume" })).not.toBeInTheDocument();
     expect(nav().getByText("Summary")).toBeInTheDocument();
     expect(nav().getByText("Internships")).toBeInTheDocument();
     expect(screen.queryByText("Which best describes you?")).not.toBeInTheDocument();

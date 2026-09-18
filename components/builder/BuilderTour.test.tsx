@@ -19,15 +19,11 @@ beforeEach(() => {
 });
 
 describe("BuilderTour", () => {
-  it("walks through import, switches, page order, and the page separator", async () => {
+  it("walks through switches, page order, and the page separator", async () => {
     const onDismiss = jest.fn();
     render(<BuilderTour open onDismiss={onDismiss} />);
 
-    expect(screen.getByRole("dialog", { name: /drop a resume to fill the form/i })).toBeInTheDocument();
-    expect(screen.getByText(/work history, technical skills/i)).toBeInTheDocument();
-
-    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(screen.getByRole("heading", { name: /skip what this resume/i })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: /skip what this resume/i })).toBeInTheDocument();
     expect(screen.getByText(/every section has a switch/i)).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
@@ -61,7 +57,7 @@ describe("BuilderTour", () => {
 describe("BuilderShell first-run tour", () => {
   it("shows the tour when local storage has no section values", async () => {
     render(<BuilderShell />);
-    expect(await screen.findByRole("dialog", { name: /drop a resume to fill the form/i })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: /skip what this resume/i })).toBeInTheDocument();
   });
 
   it("does not show the tour on a mobile viewport", async () => {
@@ -88,7 +84,7 @@ describe("BuilderShell first-run tour", () => {
     };
     window.matchMedia = jest.fn().mockReturnValue(media);
     render(<BuilderShell />);
-    expect(await screen.findByRole("dialog", { name: /drop a resume to fill the form/i })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: /skip what this resume/i })).toBeInTheDocument();
     media.matches = false;
     act(() => {
       listeners.forEach((cb) => cb({ matches: false } as MediaQueryListEvent));

@@ -1,9 +1,7 @@
 "use client";
 
 import {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useRef,
   useState,
@@ -19,21 +17,6 @@ import type { ImportedResume } from "@/lib/resumeImport/normalize";
 import { hasAnyResumeValue, useBuilderStore } from "@/lib/store";
 import { saveResumeData } from "@/lib/storage";
 import { showToast } from "@/lib/toast";
-
-interface ResumeImportApi {
-  openPicker: () => void;
-  queueFile: (file: File) => void;
-  result: ImportedResume | null;
-  fileName: string | null;
-  dismissResult: () => void;
-  reviewSection: (key: ImportedResume["filled"][number]) => void;
-}
-
-const ResumeImportContext = createContext<ResumeImportApi | null>(null);
-
-export function useResumeImport(): ResumeImportApi | null {
-  return useContext(ResumeImportContext);
-}
 
 const PROGRESS_COPY: Record<ImportProgress, string> = {
   reading: "Opening the file",
@@ -65,7 +48,7 @@ export function ResumeImportProvider({
   onImported,
   onReviewSection,
 }: {
-  children: ReactNode;
+  children?: ReactNode;
   onImported?: () => void;
   onReviewSection?: (key: ImportedResume["filled"][number]) => void;
 }) {
@@ -176,17 +159,8 @@ export function ResumeImportProvider({
     };
   }, [queueFile]);
 
-  const api: ResumeImportApi = {
-    openPicker,
-    queueFile,
-    result,
-    fileName,
-    dismissResult: () => setResult(null),
-    reviewSection: (key) => onReviewSectionRef.current?.(key),
-  };
-
   return (
-    <ResumeImportContext.Provider value={api}>
+    <>
       {children}
       <input
         ref={inputRef}
@@ -295,7 +269,7 @@ export function ResumeImportProvider({
             document.body,
           )
         : null}
-    </ResumeImportContext.Provider>
+    </>
   );
 }
 
@@ -355,21 +329,5 @@ export function ResumeImportResult({
         </div>
       </div>
     </div>
-  );
-}
-
-export function ImportResumeButton() {
-  const api = useResumeImport();
-  return (
-    <Button
-      variant="secondary"
-      size="sm"
-      onClick={() => api?.openPicker()}
-      aria-label="Import resume"
-      data-tour="resume-import"
-    >
-      <DocumentIcon className="h-3.5 w-3.5 shrink-0" />
-      <span aria-hidden="true">Import</span>
-    </Button>
   );
 }

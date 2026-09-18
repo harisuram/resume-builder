@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Logo } from "@/components/ui/Logo";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import { ImportResumeButton } from "@/components/builder/ResumeImport";
 import { clearResumeData } from "@/lib/storage";
 import { useBuilderStore } from "@/lib/store";
 import { showToast } from "@/lib/toast";
@@ -40,7 +39,6 @@ export function Navbar() {
       <Logo />
       <div className="flex shrink-0 items-center gap-2">
         <ThemeToggle />
-        <ImportResumeButton />
         <Button variant="secondary" size="sm" onClick={() => setConfirming(true)} aria-label="Start new resume">
           <NewResumeIcon />
           <span className="hidden sm:inline" aria-hidden="true">

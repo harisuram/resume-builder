@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { ImportResumeButton, ResumeImportProvider } from "./ResumeImport";
+import { ResumeImportProvider } from "./ResumeImport";
 import { importResumeFromFile } from "../../lib/resumeImport/fromFile";
 import type { ImportTarget } from "../../lib/resumeImport/synonyms";
 import { useBuilderStore } from "@/lib/store";
@@ -29,15 +29,11 @@ function fileInput() {
 }
 
 function renderImport(onReviewSection?: (key: ImportTarget) => void) {
-  return render(
-    <ResumeImportProvider onReviewSection={onReviewSection}>
-      <ImportResumeButton />
-    </ResumeImportProvider>,
-  );
+  return render(<ResumeImportProvider onReviewSection={onReviewSection} />);
 }
 
 describe("resume import", () => {
-  it("imports a file into the store from the header control", async () => {
+  it("imports a dropped file into the store", async () => {
     mockImport.mockResolvedValue({
       basicInfo: { name: "Jamie", email: "jamie@example.com", phone: "", location: "Austin, TX", links: {} },
       sections: { skills: ["TypeScript"] },
@@ -45,7 +41,7 @@ describe("resume import", () => {
     });
     renderImport();
 
-    expect(screen.getByRole("button", { name: "Import resume" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Import resume" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Choose file" })).not.toBeInTheDocument();
 
     const file = new File(["Jamie\nSkills\nTypeScript"], "jamie.txt", { type: "text/plain" });

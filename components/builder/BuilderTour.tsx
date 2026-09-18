@@ -4,7 +4,7 @@ import { useCallback, useEffect, useId, useLayoutEffect, useState, type CSSPrope
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
 
-type TourTarget = "resume-import" | "skip-switch" | "section-sort" | "page-separator";
+type TourTarget = "skip-switch" | "section-sort" | "page-separator";
 
 interface TourStep {
   target: TourTarget;
@@ -14,12 +14,6 @@ interface TourStep {
 }
 
 const STEPS: TourStep[] = [
-  {
-    target: "resume-import",
-    title: "Drop a resume to fill the form",
-    body: "PDF, Word, or text. Headings like Work History, Technical Skills, or Academic Background map to the matching sections. Empty ones stay off until you need them.",
-    placement: "left",
-  },
   {
     target: "skip-switch",
     title: "Skip what this resume doesn’t need",
@@ -117,21 +111,7 @@ function PageDemo() {
   );
 }
 
-function ImportDemo() {
-  return (
-    <div className="relative overflow-hidden rounded-xl bg-[linear-gradient(135deg,color-mix(in_srgb,var(--color-accent)_18%,transparent),color-mix(in_srgb,var(--color-focus)_12%,transparent))] p-3">
-      <div className="rounded-xl border-2 border-dashed border-[var(--color-accent)]/70 bg-[var(--color-surface)]/90 px-3 py-4 text-center shadow-card">
-        <p className="text-[12.5px] font-medium text-[var(--color-ink)]">PDF · Word · text</p>
-        <p className="tour-caption mt-1.5 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--color-ink-soft)]">
-          Work History → Experience
-        </p>
-      </div>
-    </div>
-  );
-}
-
 function Demo({ target }: { target: TourTarget }) {
-  if (target === "resume-import") return <ImportDemo />;
   if (target === "skip-switch") return <SwitchDemo />;
   if (target === "section-sort") return <SortDemo />;
   return <PageDemo />;
