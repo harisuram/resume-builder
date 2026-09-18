@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { create } from "zustand";
 import { type ImportedResume } from "./resumeImport/normalize";
-import { placeSectionAt, resolveSectionOrder, SECTION_ORDER } from "./persona";
+import { getNavSectionOrder, placeSectionAt, resolveSectionOrder, SECTION_ORDER } from "./persona";
 import { itemBreakKey, parseItemBreakKey } from "./resume";
 import { isBasicInfoValid, isSectionValid } from "./validation";
 import type {

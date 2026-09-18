@@ -3,9 +3,16 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { getTemplateComponent } from "@/components/templates/registry";
 import { experienceTitle } from "@/components/templates/shared/atoms";
-import { getTheme } from "@/components/templates/shared/theme";
 import { getSectionMeta } from "@/lib/persona";
-import { PAGE_HEIGHT_PX as PAGE_HEIGHT, PAGE_WIDTH_PX as PAGE_WIDTH, contentHeightPx, heightToPageMultiple } from "@/lib/page";
+import {
+  PAGE_HEIGHT_PX as PAGE_HEIGHT,
+  PAGE_INSET_PX as PAGE_INSET,
+  PAGE_WIDTH_PX as PAGE_WIDTH,
+  contentHeightPx,
+  heightToPageMultiple,
+  nextPageBoundaryY,
+  pageStartMarginCss,
+} from "@/lib/page";
 import { itemBreakKey, parseItemBreakKey } from "@/lib/resume";
 import type { ResumeData, SectionKey } from "@/lib/types";
 
@@ -57,10 +64,15 @@ function offerRank(marker: Pick<LineMarker, "index">): number {
   return marker.index !== undefined && marker.index > 0 ? 1 : 0;
 }
 
-/** Sum offsetTop through offsetParent so a section inside a table cell still
- * reports its Y on the preview stage. jsdom's offsetParent is null, so tests
- * that stub offsetTop on the node itself keep working. */
-function offsetTopIn(el: HTMLElement, root: HTMLElement): number {
+/** Y of `el` on the preview stage. Prefer the layout box so sidebar/split
+ * tables (display:flex on screen, display:table in print) still report the
+ * right page. jsdom has no layout, so tests that stub offsetTop keep working. */
+function offsetTopIn(el: HTMLElement, root: HTMLElement, scale = 1): number {
+  const rootRect = root.getBoundingClientRect();
+  const elRect = el.getBoundingClientRect();
+  if (rootRect.width > 1 && elRect.height > 1) {
+    return (elRect.top - rootRect.top) / (scale || 1);
+  }
   let top = 0;
   let node: HTMLElement | null = el;
   while (node && node !== root) {
@@ -101,6 +113,30 @@ function writeMarginTop(el: HTMLElement, value: string) {
   el.style.setProperty("margin-top", value, "important");
 }
 
+function straddlesPage(top: number, height: number, pageHeight = PAGE_HEIGHT): boolean {
+  if (height < 1) return false;
+  const bottom = top + height;
+  return Math.floor(top / pageHeight) !== Math.floor((bottom - 0.5) / pageHeight);
+}
+
+/** Drop a simulated page-start margin when the block already fits on the
+ * page natural flow puts it on — e.g. after moving A to page 2, a later
+ * "start on page 3" break is often leftover empty space and should pack up. */
+function packRedundantMargin(
+  el: HTMLElement,
+  stage: HTMLElement,
+  scale: number,
+  reapply: () => void,
+): boolean {
+  if (!el.style.marginTop) return false;
+  writeMarginTop(el, "");
+  const top = offsetTopIn(el, stage, scale);
+  const height = el.offsetHeight;
+  if (!straddlesPage(top, height)) return true;
+  reapply();
+  return false;
+}
+
 /** Page-break pills. Padding/type is larger below `md` so a thumb can hit
  * "move to next page" on the mobile sheet without changing desktop density. */
 const PAGE_GUIDE_PILL =
@@ -134,11 +170,12 @@ export function ResumePreviewFrame({
   // Looked up from a registry built once at module scope (components/templates/registry.tsx),
   // so this is a stable reference per templateId, not a fresh component per render.
   const Template = getTemplateComponent(data.templateId);
-  const theme = getTheme(data.templateId);
-  const guideLeft =
-    theme.layout === "sidebar" && (theme.sidebarSide ?? "left") === "left" ? "calc(34% + 8px)" : undefined;
   const viewportRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
+  const onToggleSectionBreakRef = useRef(onToggleSectionBreak);
+  const onToggleItemBreakRef = useRef(onToggleItemBreak);
+  onToggleSectionBreakRef.current = onToggleSectionBreak;
+  onToggleItemBreakRef.current = onToggleItemBreak;
   const [scale, setScale] = useState(1);
   const [stageHeight, setStageHeight] = useState(0);
   const [naturalHeight, setNaturalHeight] = useState(0);
@@ -173,18 +210,47 @@ export function ResumePreviewFrame({
       // whatever margin was last applied to it.
       for (const el of breakEls) writeMarginTop(el, "");
 
-      // Push a forced section down to the top of the next A4 page. The same
-      // inline gap is what the PDF uses — print slices `#resume-print-root`
-      // at PAGE_HEIGHT, and `break-before: page` does not fire inside that
-      // absolutely positioned box. Processed in document order so an earlier
-      // push correctly shifts everything below it.
+      // Push a forced section down to the next A4 paper edge. PAGE_INSET is
+      // layered on via `--page-inset` (JS margins only — print must not also
+      // clone cell padding-top or it invents a blank trailing sheet).
       for (const el of breakEls) {
         if (el.getAttribute("data-force-break") !== "true") continue;
         if (inRailColumn(el)) continue;
-        const top = offsetTopIn(el, stage!);
-        const target = Math.ceil((top - 0.5) / PAGE_HEIGHT) * PAGE_HEIGHT;
-        const extra = target - top;
-        if (extra > 0.5) writeMarginTop(el, `${extra}px`);
+        const top = offsetTopIn(el, stage!, nextScale);
+        const extra = nextPageBoundaryY(top) - top;
+        if (extra > 0.5) writeMarginTop(el, pageStartMarginCss(extra));
+        else if (Math.floor(top / PAGE_HEIGHT) >= 1) writeMarginTop(el, pageStartMarginCss(0));
+      }
+
+      // After an earlier "move to page N", later forced breaks are often
+      // leftover: the block already fits on the previous sheet. Drop those
+      // margins and clear them from the store so page 3 packs onto page 2.
+      // Keep breaks that only add the page-2 inset, or that would fall back
+      // onto page 1 (the user's intentional "start on page 2").
+      const redundantForced: Omit<LineMarker, "y">[] = [];
+      for (const el of [...breakEls].reverse()) {
+        if (el.getAttribute("data-force-break") !== "true") continue;
+        if (inRailColumn(el)) continue;
+        if (!el.style.marginTop) continue;
+        const topBefore = offsetTopIn(el, stage!, nextScale);
+        const pageBefore = Math.floor(topBefore / PAGE_HEIGHT);
+        const packed = packRedundantMargin(el, stage!, nextScale, () => {
+          const top = offsetTopIn(el, stage!, nextScale);
+          const extra = nextPageBoundaryY(top) - top;
+          if (extra > 0.5) writeMarginTop(el, pageStartMarginCss(extra));
+          else if (Math.floor(top / PAGE_HEIGHT) >= 1) writeMarginTop(el, pageStartMarginCss(0));
+        });
+        if (!packed) continue;
+        const topAfter = offsetTopIn(el, stage!, nextScale);
+        const pageAfter = Math.floor(topAfter / PAGE_HEIGHT);
+        if (pageAfter >= pageBefore || pageAfter < 1) {
+          const extra = nextPageBoundaryY(topAfter) - topAfter;
+          if (extra > 0.5) writeMarginTop(el, pageStartMarginCss(extra));
+          else if (pageAfter >= 1) writeMarginTop(el, pageStartMarginCss(0));
+          continue;
+        }
+        const marker = markerFor(el);
+        if (marker) redundantForced.push(marker);
       }
 
       // Detect splits before the avoid-break nudge below. That nudge is
@@ -197,9 +263,9 @@ export function ResumePreviewFrame({
         const marker = markerFor(el);
         if (!marker) continue;
         if (inRailColumn(el)) continue;
-        const top = offsetTopIn(el, stage!);
+        const top = offsetTopIn(el, stage!, nextScale);
         const bottom = top + el.offsetHeight;
-        if (el.getAttribute("data-force-break") === "true") {
+        if (el.getAttribute("data-force-break") === "true" && el.style.marginTop) {
           nextForced.push({ ...marker, y: top * nextScale });
           continue;
         }
@@ -219,32 +285,60 @@ export function ResumePreviewFrame({
       // Print also honors `break-inside: avoid` on list entries. Without
       // this, the preview still draws a split through an entry that the PDF
       // will have already moved onto the next sheet.
-      for (const el of stage!.querySelectorAll<HTMLElement>(".break-inside-avoid")) {
-        if (el.getAttribute("data-force-break") === "true") continue;
+      const avoidBreakEls = Array.from(stage!.querySelectorAll<HTMLElement>(".break-inside-avoid"));
+      for (const el of avoidBreakEls) {
+        if (el.getAttribute("data-force-break") === "true" && el.style.marginTop) continue;
         if (inRailColumn(el)) continue;
-        const top = offsetTopIn(el, stage!);
+        const top = offsetTopIn(el, stage!, nextScale);
         const height = el.offsetHeight;
         if (height < 1 || height >= PAGE_HEIGHT) continue;
-        const bottom = top + height;
-        if (Math.floor(top / PAGE_HEIGHT) === Math.floor((bottom - 0.5) / PAGE_HEIGHT)) continue;
-        const target = Math.ceil((top + 0.5) / PAGE_HEIGHT) * PAGE_HEIGHT;
-        const extra = target - top;
-        if (extra > 0.5) writeMarginTop(el, `${extra}px`);
+        if (!straddlesPage(top, height)) continue;
+        const extra = nextPageBoundaryY(top, true) - top;
+        if (extra > 0.5) writeMarginTop(el, pageStartMarginCss(extra));
+      }
+
+      // Same pack pass for avoid-break nudges: if a later move freed room on
+      // page 2, pull the nudged entry back instead of leaving it on page 3.
+      for (const el of [...avoidBreakEls].reverse()) {
+        if (el.getAttribute("data-force-break") === "true" && el.style.marginTop) continue;
+        if (inRailColumn(el)) continue;
+        packRedundantMargin(el, stage!, nextScale, () => {
+          const top = offsetTopIn(el, stage!, nextScale);
+          const height = el.offsetHeight;
+          if (height < 1 || height >= PAGE_HEIGHT || !straddlesPage(top, height)) return;
+          const extra = nextPageBoundaryY(top, true) - top;
+          if (extra > 0.5) writeMarginTop(el, pageStartMarginCss(extra));
+        });
+      }
+
+      // A section that merely *starts* on a later sheet (previous block ended
+      // at the page edge) never straddles and was never forced, so the two
+      // loops above leave it flush with the paper. Give it the same inset —
+      // including rail columns, where a 32px pad is inside the colored strip,
+      // not a hole on page 1.
+      for (const el of breakEls) {
+        if (el.style.marginTop) continue;
+        const top = offsetTopIn(el, stage!, nextScale);
+        const page = Math.floor(top / PAGE_HEIGHT);
+        if (page < 1) continue;
+        const offset = top - page * PAGE_HEIGHT;
+        if (offset >= PAGE_INSET - 0.5) continue;
+        writeMarginTop(el, pageStartMarginCss(0));
       }
 
       // Sidebar / split templates paint a page-tall rail or column. The
       // surface's offsetHeight is often one A4 page even when the main
-      // column has overflowed onto page 2. Measure that overflowing
-      // column, snap to whole pages, and set both min-height and height
-      // so the 34% gradient (and any 100%-tall children) fill the leftover
-      // band. The snapped value is always >= content, so nothing clips.
+      // column has overflowed onto page 2. Clear any previous snap before
+      // measuring — otherwise a one-time overshoot (page-2 inset, avoid-break
+      // gap) locks the height at an extra blank sheet forever, and Inkwell /
+      // other sidebar PDFs download 3 pages for 2 pages of content.
       const paged = stage!.querySelectorAll<HTMLElement>(".resume-sidebar-page, .resume-split-page");
       for (const page of paged) {
+        page.style.height = "";
+        page.style.minHeight = "";
         const snapped = `${heightToPageMultiple(contentHeightPx(page))}px`;
-        if (page.style.height !== snapped) {
-          page.style.minHeight = snapped;
-          page.style.height = snapped;
-        }
+        page.style.minHeight = snapped;
+        page.style.height = snapped;
       }
 
       // offsetHeight is the stage's natural layout height at PAGE_WIDTH —
@@ -258,13 +352,20 @@ export function ResumePreviewFrame({
       setNaturalHeight((prev) => (Math.abs(prev - nextNaturalHeight) < 0.5 ? prev : nextNaturalHeight));
       setSplits((prev) => (markersEqual(prev, splitList) ? prev : splitList));
       setForced((prev) => (markersEqual(prev, nextForced) ? prev : nextForced));
+
+      if (redundantForced.length > 0) {
+        for (const marker of redundantForced) {
+          if (marker.index === undefined) onToggleSectionBreakRef.current?.(marker.section);
+          else onToggleItemBreakRef.current?.(marker.section, marker.index);
+        }
+      }
     }
 
     measure("data");
     const observer = new ResizeObserver(() => measure("resize"));
     observer.observe(viewport);
     return () => observer.disconnect();
-  }, [data]);
+  }, [data, printable]);
 
   // Where a new printed page starts, in on-screen (scaled) pixels — purely
   // informational overlay so someone can see a resume has spilled onto a
@@ -313,14 +414,13 @@ export function ResumePreviewFrame({
     };
   }
 
-  // Forcing a section onto a new page pushes its top to exactly a page
-  // boundary, so its Undo control and that boundary's own "Page N starts
-  // here" label describe the same line — drawn as two separate rows they
-  // landed at identical coordinates, stacking two dashed rules and two pills
-  // on top of each other. Pairing them up front keeps one row per boundary.
+  // Forcing a section onto a new page lands it PAGE_INSET below the paper
+  // edge, so Undo sits in that gap. Pair it with the boundary marker rather
+  // than drawing a second row 32px down.
+  const insetScreen = PAGE_INSET * scale;
   const markers = pageBreaks.map((y, i) => {
     const page = i + 2;
-    const forcedHere = forced.find((f) => Math.abs(f.y - y) < 0.5);
+    const forcedHere = forced.find((f) => f.y + 0.5 >= y && f.y <= y + insetScreen + 0.5);
     if (forcedHere) return forcedMarker(forcedHere, y);
     const split = splits.find((s) => Math.abs(s.y - y) < 0.5);
     const toggle = split ? toggleFor(split) : null;
@@ -353,7 +453,7 @@ export function ResumePreviewFrame({
   // boundary to pair with — nothing was broken, so it gets no marker.
   for (const f of forced) {
     if (f.y <= 0.5) continue;
-    if (markers.some((m) => Math.abs(m.y - f.y) < 0.5)) continue;
+    if (markers.some((m) => f.y + 0.5 >= m.y && f.y <= m.y + insetScreen + 0.5)) continue;
     markers.push(forcedMarker(f, f.y));
   }
 
@@ -366,7 +466,14 @@ export function ResumePreviewFrame({
       <div
         ref={stageRef}
         className="resume-scale-stage relative origin-top-left rounded-sm border border-[var(--color-border)] shadow-card"
-        style={{ width: PAGE_WIDTH, transform: `scale(${scale})` }}
+        style={{
+          width: PAGE_WIDTH,
+          transform: `scale(${scale})`,
+          // Same inset for preview and export so page-2 top padding is the
+          // JS margin (kept in the PDF). Print no longer clones cell
+          // padding-top — that was inventing a blank trailing sheet.
+          ["--page-inset" as string]: `${PAGE_INSET}px`,
+        }}
       >
         <div id={printable ? "resume-print-root" : undefined}>
           {/* eslint-disable-next-line react-hooks/static-components -- stable registry lookup, see comment above */}
@@ -378,12 +485,6 @@ export function ResumePreviewFrame({
           page, and never part of the print/export output itself. */}
       {markers.length > 0 && (
         <div className="no-print pointer-events-none absolute inset-0">
-          <div
-            className="absolute top-2 rounded-full bg-[var(--color-ink)]/70 px-2 py-0.5 text-[9px] font-medium uppercase tracking-wide text-white"
-            style={{ left: guideLeft ?? 8 }}
-          >
-            Page 1
-          </div>
           {markers.map((marker) => (
             <div
               key={marker.id}

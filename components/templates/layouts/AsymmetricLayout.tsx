@@ -43,7 +43,7 @@ export function AsymmetricLayout({ data, theme }: { data: ResumeData; theme: Tem
         </thead>
         <tbody>
           <tr>
-            <td data-resume-column="rail" className="resume-split-narrow w-[32%] align-top">
+            <td data-resume-column="rail" className="resume-split-narrow relative w-[32%] align-top">
               <div className="flex flex-col gap-4 border-r border-[var(--r-border)] pr-5">
                 {narrow.map((key) => (
                   <section key={key} {...sectionBreakProps(data, key)}>
@@ -52,7 +52,7 @@ export function AsymmetricLayout({ data, theme }: { data: ResumeData; theme: Tem
                 ))}
               </div>
             </td>
-            <td data-resume-column="main" className="resume-split-wide align-top">
+            <td data-resume-column="main" className="resume-split-wide relative align-top">
               <div className="flex flex-col gap-4 pl-1">
                 {hasSummary(data) && (
                   <section {...sectionBreakProps(data, "summary")}>

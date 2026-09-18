@@ -21,7 +21,7 @@ export function SidebarLayout({ data, theme }: { data: ResumeData; theme: Templa
   const sidebar = (
     <td
       data-resume-column="rail"
-      className={`resume-sidebar-rail flex w-[34%] shrink-0 flex-col gap-5 self-stretch p-6 ${solid ? "text-white" : ""}`}
+      className={`resume-sidebar-rail relative flex w-[34%] shrink-0 flex-col gap-5 self-stretch p-6 ${solid ? "text-white" : ""}`}
       style={{ background: railBg }}
     >
       {!theme.darkHeader && (
@@ -49,7 +49,7 @@ export function SidebarLayout({ data, theme }: { data: ResumeData; theme: Templa
   );
 
   const main = (
-    <td data-resume-column="main" className="resume-main-column flex flex-1 flex-col gap-5 p-8">
+    <td data-resume-column="main" className="resume-main-column relative flex flex-1 flex-col gap-5 p-8">
       {hasSummary(data) && (
         <section {...sectionBreakProps(data, "summary")}>
           <SectionHeading theme={theme} section="summary" title={SUMMARY_COPY.label} />

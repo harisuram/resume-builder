@@ -1005,17 +1005,21 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
   }
 
   /* Flex columns fragment independently: page 2 kept overflowing main
-     content, dropped the rail, and started flush with the paper because
-     padding-top does not clone onto later fragments. Printing as a table
-     repeats the 32px header-group on every sheet and lets both cells
-     continue as one row. The page is stretched to a whole number of A4
+     content and dropped the rail. Printing as a table keeps both cells
+     as one row. Page-2 inset is JS (`--page-inset` / pageStartMarginCss),
+     not cloned cell padding — that overshot the snapped height and left
+     a blank gray-rail third sheet. The page is stretched to whole A4
      sheets in ResumePreviewFrame; leftover space is the same 34%-of-760
      stripe as the rail cell, not a second overlay. */
   .resume-sidebar-columns {
     display: table !important;
     width: 760px !important;
-    height: 100% !important;
-    min-height: 100%;
+    /* Do not use height:100% — Inkwell/Sable/etc. put a dark header above
+       this table, so 100% of the snapped page plus the header overflowed by
+       ~header height and Chrome painted a blank third sheet (gray rail stub).
+       The page's own 34% gradient still fills leftover last-page rail. */
+    height: auto !important;
+    min-height: 0;
     border-collapse: separate !important;
     border-spacing: 0 !important;
     table-layout: fixed;
@@ -1039,7 +1043,7 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
   .resume-sidebar-pad-rail,
   .resume-sidebar-pad-main {
     display: table-cell;
-    height: 32px;
+    height: 0;
     padding: 0;
     font-size: 0;
     line-height: 0;
@@ -1049,7 +1053,10 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
     display: table-cell !important;
     vertical-align: top;
     direction: ltr;
-    /* Header-group supplies the top inset on every page, including page 1. */
+    /* Page-2 inset comes from ResumePreviewFrame margins (PAGE_INSET_PX),
+       not padding-top + box-decoration-break:clone — cloning padding onto
+       every fragment added height past the snapped page stack and left
+       Inkwell/Pacific PDFs with a blank third sheet (gray rail stub only). */
     padding-top: 0 !important;
     break-inside: auto;
   }
@@ -1090,7 +1097,7 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
   }
   .resume-split-pad-narrow,
   .resume-split-pad-wide {
-    height: 28px;
+    height: 0;
     padding: 0;
     font-size: 0;
     line-height: 0;
@@ -1103,6 +1110,7 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
   .resume-split-wide {
     display: table-cell !important;
     vertical-align: top;
+    padding-top: 0 !important;
     break-inside: auto;
   }
   .resume-split-narrow {

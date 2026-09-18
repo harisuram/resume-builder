@@ -1,7 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { PAGE_HEIGHT_PX } from "@/lib/page";
+import { PAGE_HEIGHT_PX, pageStartMarginCss } from "@/lib/page";
 import { makeFullResumeData } from "@/test-utils/fixtures";
+import { TEMPLATE_LIST } from "@/components/templates/registry";
 import { ResumePreviewFrame } from "./ResumePreviewFrame";
 
 /** jsdom never lays anything out for real, so offsetTop/offsetHeight are
@@ -11,6 +12,18 @@ import { ResumePreviewFrame } from "./ResumePreviewFrame";
 function setBox(el: Element, box: { top: number; height: number }) {
   Object.defineProperty(el, "offsetTop", { configurable: true, value: box.top });
   Object.defineProperty(el, "offsetHeight", { configurable: true, value: box.height });
+}
+
+/** offsetTop that tracks whether a page-start margin is currently applied —
+ * used to simulate packing page 3 back onto page 2 after an earlier move. */
+function setPackableBox(el: HTMLElement, positioned: { forced: number; natural: number; height: number }) {
+  Object.defineProperty(el, "offsetTop", {
+    configurable: true,
+    get() {
+      return el.style.marginTop ? positioned.forced : positioned.natural;
+    },
+  });
+  Object.defineProperty(el, "offsetHeight", { configurable: true, value: positioned.height });
 }
 
 describe("ResumePreviewFrame", () => {
@@ -37,17 +50,63 @@ describe("ResumePreviewFrame", () => {
     expect(container.querySelector("#resume-print-root")).toBeInTheDocument();
   });
 
-  it("snaps a sidebar surface to whole A4 pages using the overflowing main column, not the clipped page box", () => {
+  it("snaps a sidebar surface to whole A4 pages from real section bottoms, not a stretched cell", () => {
     const data = makeFullResumeData({ templateId: "bre-sidebar" });
     const { container, rerender } = render(<ResumePreviewFrame data={data} />);
-    const page = container.querySelector(".resume-sidebar-page")!;
-    const main = container.querySelector(".resume-main-column")!;
+    const page = container.querySelector(".resume-sidebar-page") as HTMLElement;
+    const main = container.querySelector(".resume-main-column") as HTMLElement;
+    const experience = container.querySelector('[data-section-key="experience"]') as HTMLElement;
     Object.defineProperty(page, "offsetHeight", { configurable: true, value: PAGE_HEIGHT_PX });
     Object.defineProperty(page, "scrollHeight", { configurable: true, value: PAGE_HEIGHT_PX });
-    Object.defineProperty(main, "offsetHeight", { configurable: true, value: PAGE_HEIGHT_PX + 400 });
-    Object.defineProperty(main, "scrollHeight", { configurable: true, value: PAGE_HEIGHT_PX + 400 });
+    Object.defineProperty(main, "offsetHeight", { configurable: true, value: PAGE_HEIGHT_PX * 3 });
+    Object.defineProperty(main, "scrollHeight", { configurable: true, value: PAGE_HEIGHT_PX * 3 });
+    Object.defineProperty(experience, "offsetTop", { configurable: true, value: PAGE_HEIGHT_PX + 200 });
+    Object.defineProperty(experience, "offsetHeight", { configurable: true, value: 100 });
+    Object.defineProperty(experience, "offsetParent", { configurable: true, get: () => main });
+    Object.defineProperty(main, "offsetTop", { configurable: true, value: 0 });
+    Object.defineProperty(main, "offsetParent", { configurable: true, get: () => page });
     rerender(<ResumePreviewFrame data={{ ...data }} />);
     expect(page).toHaveStyle({ height: `${PAGE_HEIGHT_PX * 2}px`, minHeight: `${PAGE_HEIGHT_PX * 2}px` });
+  });
+
+  it("lets a sidebar page snap back down after a prior overshoot so PDFs do not keep a blank trailing sheet", () => {
+    const data = makeFullResumeData({ templateId: "inkwell" });
+    const { container, rerender } = render(<ResumePreviewFrame data={data} printable />);
+    const page = container.querySelector(".resume-sidebar-page") as HTMLElement;
+    const main = container.querySelector(".resume-main-column") as HTMLElement;
+    const experience = container.querySelector('[data-section-key="experience"]') as HTMLElement;
+
+    for (const el of page.querySelectorAll<HTMLElement>("[data-section-key], .resume-dark-header")) {
+      Object.defineProperty(el, "offsetTop", { configurable: true, value: 0 });
+      Object.defineProperty(el, "offsetHeight", { configurable: true, value: 0 });
+      Object.defineProperty(el, "offsetParent", { configurable: true, get: () => main });
+    }
+    Object.defineProperty(experience, "offsetTop", { configurable: true, value: PAGE_HEIGHT_PX + 200 });
+    Object.defineProperty(experience, "offsetHeight", { configurable: true, value: 80 });
+    Object.defineProperty(experience, "offsetParent", { configurable: true, get: () => main });
+    Object.defineProperty(main, "offsetTop", { configurable: true, value: 0 });
+    Object.defineProperty(main, "offsetParent", { configurable: true, get: () => page });
+    Object.defineProperty(page, "offsetHeight", {
+      configurable: true,
+      get() {
+        return page.style.height ? parseFloat(page.style.height) : PAGE_HEIGHT_PX;
+      },
+    });
+    Object.defineProperty(page, "scrollHeight", {
+      configurable: true,
+      get() {
+        return page.style.height ? parseFloat(page.style.height) : PAGE_HEIGHT_PX;
+      },
+    });
+    rerender(<ResumePreviewFrame data={{ ...data }} printable />);
+    expect(page).toHaveStyle({ height: `${PAGE_HEIGHT_PX * 2}px`, minHeight: `${PAGE_HEIGHT_PX * 2}px` });
+  });
+
+  it("keeps page-inset on the export frame so print matches the preview gaps", () => {
+    const data = makeFullResumeData({ templateId: "inkwell" });
+    const { container } = render(<ResumePreviewFrame data={data} printable />);
+    const stage = container.querySelector(".resume-scale-stage") as HTMLElement;
+    expect(stage.style.getPropertyValue("--page-inset")).toBe("32px");
   });
 
   it("does not push a sidebar-rail section down — that opened a hole in the colored column", () => {
@@ -82,22 +141,16 @@ describe("ResumePreviewFrame", () => {
     it("marks where each additional page starts once content overflows one page", () => {
       mockContentHeight(2500); // spills across 3 pages at PAGE_HEIGHT_PX (1123)
       render(<ResumePreviewFrame data={makeFullResumeData()} />);
-      expect(screen.getByText("Page 1")).toBeInTheDocument();
+      expect(screen.queryByText("Page 1")).not.toBeInTheDocument();
       expect(screen.getByText("Page 2 starts here")).toBeInTheDocument();
       expect(screen.getByText("Page 3 starts here")).toBeInTheDocument();
       expect(screen.queryByText("Page 4 starts here")).not.toBeInTheDocument();
     });
 
-    it("places the Page 1 badge on the main column of a left-sidebar template", () => {
-      mockContentHeight(2500);
-      render(<ResumePreviewFrame data={makeFullResumeData({ templateId: "bre-sidebar" })} />);
-      expect(screen.getByText("Page 1")).toHaveStyle({ left: "calc(34% + 8px)" });
-    });
-
     it("keeps the guides out of the print output (marked no-print)", () => {
       mockContentHeight(2500);
       const { container } = render(<ResumePreviewFrame data={makeFullResumeData()} printable />);
-      const guideContainer = screen.getByText("Page 1").closest(".no-print");
+      const guideContainer = screen.getByText("Page 2 starts here").closest(".no-print");
       expect(guideContainer).not.toBeNull();
       // And it isn't nested inside the print target itself.
       expect(container.querySelector("#resume-print-root")?.contains(guideContainer)).toBe(false);
@@ -176,7 +229,9 @@ describe("ResumePreviewFrame", () => {
 
       const stage = container.querySelector(".resume-scale-stage")!;
       const certEl = container.querySelector('[data-section-key="certifications"]')!;
-      // Exactly where the push puts it in a real browser: the top of page 2.
+      // The push lands PAGE_INSET_PX below the paper edge so page 2 has a
+      // default top margin. Tests stub offsetTop, so it still reads as the
+      // boundary; pairing treats that inset band as the same marker.
       setBox(certEl, { top: PAGE_HEIGHT_PX, height: 100 });
       setBox(stage, { top: 0, height: 2000 });
       rerender(<ResumePreviewFrame data={{ ...data }} onToggleSectionBreak={jest.fn()} />);
@@ -207,6 +262,60 @@ describe("ResumePreviewFrame", () => {
       const { container } = render(<ResumePreviewFrame data={data} />);
       expect(container.querySelector('[data-section-key="skills"]')).toHaveAttribute("data-force-break", "true");
       expect(container.querySelector('[data-section-key="education"]')).not.toHaveAttribute("data-force-break");
+    });
+
+    it("clears a later page-3 force break when it already fits on page 2 after an earlier move", () => {
+      const data = makeFullResumeData({
+        templateId: "jakes-resume",
+        pageBreakSections: ["experience", "certifications"],
+      });
+      const onToggle = jest.fn();
+      const { container, rerender } = render(<ResumePreviewFrame data={data} onToggleSectionBreak={onToggle} />);
+
+      const stage = container.querySelector(".resume-scale-stage") as HTMLElement;
+      const experience = container.querySelector('[data-section-key="experience"]') as HTMLElement;
+      const certifications = container.querySelector('[data-section-key="certifications"]') as HTMLElement;
+      // Experience still needs its page-2 break (straddles page 1 without it).
+      setPackableBox(experience, {
+        forced: PAGE_HEIGHT_PX + 32,
+        natural: PAGE_HEIGHT_PX - 40,
+        height: 120,
+      });
+      // Certifications was forced onto page 3, but after Experience moves it
+      // fits entirely on page 2 — pack it up and clear the leftover break.
+      setPackableBox(certifications, {
+        forced: PAGE_HEIGHT_PX * 2 + 32,
+        natural: PAGE_HEIGHT_PX + 200,
+        height: 80,
+      });
+      setBox(stage, { top: 0, height: 3000 });
+      rerender(<ResumePreviewFrame data={{ ...data }} onToggleSectionBreak={onToggle} />);
+
+      expect(onToggle).toHaveBeenCalledWith("certifications");
+      expect(onToggle).not.toHaveBeenCalledWith("experience");
+      expect(certifications.style.marginTop).toBe("");
+    });
+
+    it("keeps a page-2 force break that would otherwise fall back onto page 1", () => {
+      const data = makeFullResumeData({
+        templateId: "jakes-resume",
+        pageBreakSections: ["experience"],
+      });
+      const onToggle = jest.fn();
+      const { container, rerender } = render(<ResumePreviewFrame data={data} onToggleSectionBreak={onToggle} />);
+
+      const stage = container.querySelector(".resume-scale-stage") as HTMLElement;
+      const experience = container.querySelector('[data-section-key="experience"]') as HTMLElement;
+      setPackableBox(experience, {
+        forced: PAGE_HEIGHT_PX + 32,
+        natural: 200,
+        height: 100,
+      });
+      setBox(stage, { top: 0, height: 2000 });
+      rerender(<ResumePreviewFrame data={{ ...data }} onToggleSectionBreak={onToggle} />);
+
+      expect(onToggle).not.toHaveBeenCalled();
+      expect(experience.style.marginTop).not.toBe("");
     });
   });
 
@@ -240,8 +349,19 @@ describe("ResumePreviewFrame", () => {
       setBox(item, { top: PAGE_HEIGHT_PX - 40, height: 120 });
       setBox(container.querySelector(".resume-scale-stage")!, { top: 0, height: 1400 });
       rerender(<ResumePreviewFrame data={threeProjects()} />);
-      expect(item.style.marginTop).toBe("40px");
+      expect(item.style.marginTop).toBe(pageStartMarginCss(40));
       expect(item.style.getPropertyPriority("margin-top")).toBe("important");
+    });
+
+    it("insets a section that starts on page 2 so it is not flush with the paper", () => {
+      const data = makeFullResumeData({ templateId: "jakes-resume" });
+      const { container, rerender } = render(<ResumePreviewFrame data={data} />);
+      const education = container.querySelector('[data-section-key="education"]') as HTMLElement;
+      setBox(education, { top: PAGE_HEIGHT_PX, height: 80 });
+      setBox(container.querySelector(".resume-scale-stage")!, { top: 0, height: 1400 });
+      rerender(<ResumePreviewFrame data={{ ...data }} />);
+      expect(education.style.marginTop).toBe(pageStartMarginCss(0));
+      expect(education.style.getPropertyPriority("margin-top")).toBe("important");
     });
 
     it("does not clear that nudge when only the preview column's height changes", () => {
@@ -266,7 +386,7 @@ describe("ResumePreviewFrame", () => {
         setBox(item, { top: PAGE_HEIGHT_PX - 40, height: 120 });
         setBox(container.querySelector(".resume-scale-stage")!, { top: 0, height: 1400 });
         rerender(<ResumePreviewFrame data={threeProjects()} />);
-        expect(item.style.marginTop).toBe("40px");
+        expect(item.style.marginTop).toBe(pageStartMarginCss(40));
 
         const assignments: string[] = [];
         const proto = Object.getPrototypeOf(item.style);
@@ -284,7 +404,7 @@ describe("ResumePreviewFrame", () => {
         }
 
         for (const fire of resizeCallbacks) fire();
-        expect(item.style.marginTop).toBe("40px");
+        expect(item.style.marginTop).toBe(pageStartMarginCss(40));
         expect(assignments).toEqual([]);
       } finally {
         global.ResizeObserver = OriginalRO;
@@ -357,5 +477,37 @@ describe("ResumePreviewFrame", () => {
       expect(await screen.findByText('"Static site host" splits here')).toBeInTheDocument();
       expect(screen.queryByRole("button")).not.toBeInTheDocument();
     });
+  });
+
+  describe("page-2 inset on every template", () => {
+    it.each(TEMPLATE_LIST.map((t) => [t.id, t.name, t.layout] as const))(
+      "%s (%s, %s) insets a main-column section that starts on page 2",
+      (id) => {
+        const data = makeFullResumeData({ templateId: id });
+        const { container, rerender } = render(<ResumePreviewFrame data={data} />);
+        const experience = container.querySelector('[data-section-key="experience"]') as HTMLElement;
+        expect(experience).not.toBeNull();
+        setBox(experience, { top: PAGE_HEIGHT_PX, height: 80 });
+        setBox(container.querySelector(".resume-scale-stage")!, { top: 0, height: 1400 });
+        rerender(<ResumePreviewFrame data={{ ...data }} />);
+        expect(experience.style.marginTop).toBe(pageStartMarginCss(0));
+      },
+    );
+
+    it.each(TEMPLATE_LIST.filter((t) => t.layout !== "single").map((t) => [t.id, t.name, t.layout] as const))(
+      "%s (%s, %s) insets a rail section that starts on page 2",
+      (id) => {
+        const data = makeFullResumeData({ templateId: id });
+        const { container, rerender } = render(<ResumePreviewFrame data={data} />);
+        const education = container.querySelector(
+          '[data-resume-column="rail"] [data-section-key="education"]',
+        ) as HTMLElement;
+        expect(education).not.toBeNull();
+        setBox(education, { top: PAGE_HEIGHT_PX, height: 80 });
+        setBox(container.querySelector(".resume-scale-stage")!, { top: 0, height: 1400 });
+        rerender(<ResumePreviewFrame data={{ ...data }} />);
+        expect(education.style.marginTop).toBe(pageStartMarginCss(0));
+      },
+    );
   });
 });

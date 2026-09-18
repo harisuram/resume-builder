@@ -55,6 +55,9 @@ describe("print stylesheet", () => {
     expect(printBlock).not.toContain("position: fixed");
     const columnsBlock = printBlock.slice(printBlock.indexOf(".resume-sidebar-columns {"));
     expect(columnsBlock).toContain("background: none !important");
+    // height:100% + dark header overflowed into a blank third sheet.
+    expect(columnsBlock).toMatch(/height:\s*auto !important/);
+    expect(columnsBlock).not.toMatch(/height:\s*100% !important/);
   });
 
   it("lets a forced section inside a two-column template start a page instead of dragging its column", () => {
@@ -81,10 +84,16 @@ describe("print stylesheet", () => {
     expect(printBlock).toContain(".resume-dark-header");
   });
 
-  it("prints sidebar columns as a table so page 2 keeps the rail and a top inset", () => {
+  it("clones sidebar/split columns as table cells and leaves page-2 inset to JS margins", () => {
     const printBlock = css.slice(css.indexOf("@media print"));
     expect(printBlock).toContain("table-header-group");
     expect(printBlock).toContain("border-collapse: separate");
     expect(printBlock).toContain(".resume-sidebar-pad-rail");
+    expect(printBlock).toMatch(/\.resume-sidebar-pad-rail,\s*\n\s*\.resume-sidebar-pad-main\s*\{[^}]*height:\s*0/);
+    // Cloning padding-top onto every fragment invented a blank trailing page
+    // (gray rail stub) on Inkwell/Pacific downloads — page-2 inset is JS only.
+    expect(printBlock).not.toMatch(/\.resume-sidebar-rail,\s*\n\s*\.resume-main-column\s*\{[^}]*padding-top:\s*32px/);
+    expect(printBlock).toMatch(/\.resume-sidebar-rail,\s*\n\s*\.resume-main-column\s*\{[^}]*padding-top:\s*0 !important/);
+    expect(printBlock).not.toMatch(/--page-inset:\s*0px/);
   });
 });
