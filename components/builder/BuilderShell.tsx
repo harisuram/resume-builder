@@ -330,7 +330,7 @@ export function BuilderShell() {
 
           {activeKey === "export" ? (
             <main ref={formPaneRef} className="print-unclip min-h-0 flex-1 overflow-y-auto overflow-x-clip overscroll-contain px-5 py-6 sm:px-8">
-              <div className="mx-auto max-w-3xl">
+              <div className="mx-auto w-full max-w-[820px]">
                 <StepEnter key={activeKey} direction={stepDir} enabled={animateStep}>
                   <ExportSection />
                 </StepEnter>
@@ -345,8 +345,8 @@ export function BuilderShell() {
             <div className="flex min-h-0 flex-1 overflow-hidden">
               {/* Extra bottom padding on mobile: the sticky step footer sits
                   over the viewport, so the last field has to scroll above it. */}
-              <main ref={formPaneRef} className="block min-h-0 flex-1 overflow-y-auto overflow-x-clip overscroll-contain px-5 py-6 pb-[calc(11rem+env(safe-area-inset-bottom))] sm:px-8 md:pb-6">
-                <div className="mx-auto max-w-2xl">
+              <main ref={formPaneRef} className="block min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-clip overscroll-contain px-5 py-6 pb-[calc(11rem+env(safe-area-inset-bottom))] sm:px-8 md:pb-6">
+                <div className="mx-auto w-full max-w-2xl">
                   <StepEnter key={activeKey} direction={stepDir} enabled={animateStep}>
                     <ActivePanel activeKey={activeKey} />
                   </StepEnter>
@@ -382,16 +382,17 @@ export function BuilderShell() {
                 </div>
               </main>
               {/* Side-by-side preview is a desktop affordance only — on mobile
-                  the eye button opens the same pane in a bottom sheet. Height
-                  is capped to this column so a long resume scrolls here
-                  instead of stretching the whole builder. */}
-              <aside className="flex min-h-0 w-0 overflow-hidden border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-ink)_3.5%,var(--color-paper))] p-0 md:w-[420px] md:shrink-0 md:flex-col md:overflow-hidden md:border-l md:px-8 md:py-6">
+                  the eye button opens the same pane in a bottom sheet. Width
+                  grows with the viewport (up to the 760px design + chrome) so
+                  the CSS-scaled résumé stays readable on laptops and large
+                  monitors instead of sitting in a fixed ~420px column. */}
+              <aside className="flex min-h-0 w-0 overflow-hidden border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-ink)_3.5%,var(--color-paper))] p-0 md:w-[min(760px,max(380px,50%))] md:shrink-0 md:flex-col md:overflow-hidden md:border-l md:px-3 md:py-5 lg:px-4 lg:py-6 xl:px-5">
                 <AdSlot
                   slot={ADSENSE_SLOTS.builderPreviewTop}
                   name="Builder preview top"
                   className="mb-4 flex shrink-0 flex-col items-center gap-1"
                 />
-                <div className="min-h-0 flex-1">
+                <div className="min-h-0 min-w-0 flex-1">
                   <PreviewPane />
                 </div>
               </aside>

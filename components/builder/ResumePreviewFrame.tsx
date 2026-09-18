@@ -142,6 +142,29 @@ function packRedundantMargin(
 const PAGE_GUIDE_PILL =
   "max-w-[70%] shrink-0 truncate rounded-full px-2.5 py-1.5 text-[10px] font-medium uppercase tracking-wide min-h-9 md:min-h-0 md:px-2 md:py-0.5 md:text-[9px]";
 
+function ScissorsIcon({ className }: { className?: string }) {
+  // Lucide-style scissors; callers rotate −90° so the blades cut along the
+  // horizontal page-break rule.
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <circle cx="6" cy="6" r="3" />
+      <circle cx="6" cy="18" r="3" />
+      <path d="M8.12 8.12 12 12" />
+      <path d="M20 4 8.12 15.88" />
+      <path d="M14.8 14.8 20 20" />
+    </svg>
+  );
+}
+
 /**
  * The single rendering surface shared by the live preview and the export
  * path — never a second export-only copy, so a download can't visually
@@ -485,20 +508,27 @@ export function ResumePreviewFrame({
           page, and never part of the print/export output itself. */}
       {markers.length > 0 && (
         <div className="no-print pointer-events-none absolute inset-0">
-          {markers.map((marker) => (
-            <div
-              key={marker.id}
-              className={`absolute inset-x-0 flex items-center gap-2 ${marker.above ? "-translate-y-full" : ""}`}
-              style={{ top: marker.y }}
-            >
+          {markers.map((marker) => {
+            const lineColor = marker.faint
+              ? "border-[var(--color-ink-faint)] text-[var(--color-ink-faint)]"
+              : "border-[var(--color-accent)] text-[var(--color-accent)]";
+            return (
               <div
-                className={`h-0 flex-1 border-t border-dashed ${
-                  marker.faint ? "border-[var(--color-ink-faint)]" : "border-[var(--color-accent)]"
-                }`}
-              />
-              {marker.label}
-            </div>
-          ))}
+                key={marker.id}
+                className={`absolute inset-x-0 flex items-center gap-1.5 ${marker.above ? "-translate-y-full" : ""}`}
+                style={{ top: marker.y }}
+              >
+                <div className={`flex min-w-0 flex-1 items-center ${lineColor}`}>
+                  <div className="h-0 min-w-0 flex-1 border-t-2 border-dashed" />
+                  <span className="mx-0.5 shrink-0 bg-white px-0.5">
+                    <ScissorsIcon className="h-3.5 w-3.5 -rotate-90 md:h-3.5 md:w-3.5" />
+                  </span>
+                  <div className="h-0 min-w-0 flex-1 border-t-2 border-dashed" />
+                </div>
+                {marker.label}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
