@@ -128,13 +128,9 @@ interface BuilderState {
   sectionStatus: Record<string, SectionStatus>;
   templateId: TemplateId;
   /** Whether a copy currently lives in localStorage. Not itself persisted;
-   * refreshed from localStorage on mount and after every save/clear decision. */
+   * refreshed from localStorage on mount and after every save/clear. */
   hasSavedCopy: boolean;
   setHasSavedCopy: (value: boolean) => void;
-  /** Answer to the post-basic-info save prompt for this session. null until
-   * asked (or skipped because a saved copy already exists). */
-  saveConsent: "yes" | "no" | null;
-  setSaveConsent: (value: "yes" | "no" | null) => void;
 
   updateBasicInfo: (patch: Partial<Omit<BasicInfo, "links">>) => void;
   updateLinks: (patch: Partial<BasicInfo["links"]>) => void;
@@ -211,8 +207,6 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
   templateId: DEFAULT_TEMPLATE,
   hasSavedCopy: false,
   setHasSavedCopy: (value) => set({ hasSavedCopy: value }),
-  saveConsent: null,
-  setSaveConsent: (value) => set({ saveConsent: value }),
 
   updateBasicInfo: (patch) =>
     set((state) => ({ basicInfo: { ...state.basicInfo, ...patch } })),
@@ -464,7 +458,6 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       sectionStatus: {},
       templateId: DEFAULT_TEMPLATE,
       hasSavedCopy: false,
-      saveConsent: null,
       pageBreakSections: [],
       pageBreakItems: [],
       sectionOrder: null,

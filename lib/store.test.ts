@@ -18,7 +18,6 @@ describe("initial state", () => {
     expect(state.sections).toEqual({});
     expect(state.sectionStatus).toEqual({});
     expect(state.hasSavedCopy).toBe(false);
-    expect(state.saveConsent).toBeNull();
   });
 });
 
@@ -523,7 +522,6 @@ describe("loadFromData / resetStore", () => {
     useBuilderStore.getState().setSkills(["TypeScript"]);
     useBuilderStore.getState().setPhoto("data:image/jpeg;base64,abc123");
     useBuilderStore.getState().setHasSavedCopy(true);
-    useBuilderStore.getState().setSaveConsent("yes");
     useBuilderStore.getState().toggleSectionPageBreak("experience");
     useBuilderStore.getState().moveSection("skills", "up");
     useBuilderStore.getState().resetStore();
@@ -531,7 +529,6 @@ describe("loadFromData / resetStore", () => {
     expect(state.sections).toEqual({});
     expect(state.photo).toBeNull();
     expect(state.hasSavedCopy).toBe(false);
-    expect(state.saveConsent).toBeNull();
     expect(state.pageBreakSections).toEqual([]);
     expect(state.sectionOrder).toBeNull();
   });

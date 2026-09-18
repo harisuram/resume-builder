@@ -26,8 +26,9 @@ export default function PrivacyPage() {
 
         <SectionHeading>Browser storage</SectionHeading>
         <Body>
-          If you choose to save, a copy is written to this browser’s local storage on this device. Clearing site data
-          in the browser removes it. We cannot read that copy from our side.
+          Clicking Save &amp; Next or Skip in the builder writes a copy to this browser’s local storage on this device.
+          Importing a resume or downloading a PDF updates that copy. Clearing site data in the browser, or Start new
+          resume, removes it. We cannot read that copy from our side.
         </Body>
 
         <SectionHeading>Optional ads</SectionHeading>

@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { AdSlot } from "@/components/ads/AdSlot";
 import { requestedTemplateId } from "@/components/templates/shared/theme";
 import { ADSENSE_SLOTS } from "@/lib/ads";
-import { hasSavedResumeData, loadResumeData, saveResumeData } from "@/lib/storage";
+import { persistCurrentResume } from "@/lib/persistResume";
+import { hasSavedResumeData, loadResumeData } from "@/lib/storage";
 import {
   BUILDER_TOUR_MEDIA,
   dismissBuilderTour,
@@ -15,7 +16,6 @@ import { isBasicInfoComplete, hasBasicInfoContent, hasSectionContent, useBuilder
 import { showToast } from "@/lib/toast";
 import { getSectionMeta } from "@/lib/persona";
 import type { BasicInfo, SectionKey, SectionStatus } from "@/lib/types";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ToastHost } from "@/components/ui/Toast";
 import { BasicInfoForm } from "./sections/BasicInfoForm";
 import { CertificationsForm } from "./sections/CertificationsForm";
@@ -161,10 +161,6 @@ function ActivePanel({ activeKey }: { activeKey: NavKey }) {
 export function BuilderShell() {
   const loadFromData = useBuilderStore((s) => s.loadFromData);
   const setHasSavedCopy = useBuilderStore((s) => s.setHasSavedCopy);
-  const hasSavedCopy = useBuilderStore((s) => s.hasSavedCopy);
-  const saveConsent = useBuilderStore((s) => s.saveConsent);
-  const setSaveConsent = useBuilderStore((s) => s.setSaveConsent);
-  const getResumeData = useBuilderStore((s) => s.getResumeData);
   const basicInfo = useBuilderStore((s) => s.basicInfo);
   const photo = useBuilderStore((s) => s.photo);
   const sections = useBuilderStore((s) => s.sections);
@@ -180,7 +176,6 @@ export function BuilderShell() {
   const [hydrated, setHydrated] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [saveConsentOpen, setSaveConsentOpen] = useState(false);
   const formPaneRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -277,34 +272,8 @@ export function BuilderShell() {
   }
   function goNext() {
     if (!stepValid) return;
-    // First time past basic info, ask whether to keep a copy on this device
-    // — skipped when a saved copy already exists or they already answered.
-    if (activeKey === "basicInfo" && !hasSavedCopy && saveConsent === null) {
-      setSaveConsentOpen(true);
-      return;
-    }
+    persistCurrentResume();
     advance();
-  }
-
-  function closeSaveConsentAndAdvance() {
-    setSaveConsentOpen(false);
-    advance();
-  }
-
-  function acceptSaveConsent() {
-    try {
-      saveResumeData(getResumeData());
-      setHasSavedCopy(true);
-      setSaveConsent("yes");
-    } catch {
-      showToast("Couldn't save this resume on this device. Storage may be full.");
-    }
-    closeSaveConsentAndAdvance();
-  }
-
-  function declineSaveConsent() {
-    setSaveConsent("no");
-    closeSaveConsentAndAdvance();
   }
 
   function goSkip() {
@@ -316,6 +285,7 @@ export function BuilderShell() {
     const shouldMarkSkipped = isSkippableStep(current) && sectionStatus[current] !== "skipped";
     advance();
     if (shouldMarkSkipped) toggleSkipSection(current);
+    persistCurrentResume();
   }
   function goClear() {
     if (activeKey === "basicInfo") {
@@ -429,16 +399,6 @@ export function BuilderShell() {
           )}
         </div>
 
-        <ConfirmDialog
-          open={saveConsentOpen}
-          title="Save this resume on this device so you can pick it up again later?"
-          description="Stored only in this browser. Nothing is uploaded anywhere."
-          confirmLabel="Yes, save it"
-          cancelLabel="No, don’t save"
-          confirmVariant="primary"
-          onConfirm={acceptSaveConsent}
-          onCancel={declineSaveConsent}
-        />
         <ToastHost />
       </div>
       {previewOpen && <MobilePreviewSheet onClose={() => setPreviewOpen(false)} />}

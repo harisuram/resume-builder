@@ -23,7 +23,7 @@ const STEPS: TourStep[] = [
   {
     target: "section-sort",
     title: "Drag a section to set the page order",
-    body: "Grab the dotted handle next to a section and drop it where you want. The preview and Next follow this list. Skipped sections stay locked until you include them again.",
+    body: "Grab the dotted handle next to a section and drop it where you want. The preview and Save & Next follow this list. Skipped sections stay locked until you include them again.",
     placement: "right",
   },
   {

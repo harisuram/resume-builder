@@ -19,6 +19,7 @@ jest.mock("../../lib/resumeImport/fromFile", () => ({
 const mockImport = importResumeFromFile as jest.MockedFunction<typeof importResumeFromFile>;
 
 beforeEach(() => {
+  localStorage.clear();
   useBuilderStore.getState().resetStore();
   useToastStore.getState().clear();
   mockImport.mockReset();
@@ -48,6 +49,8 @@ describe("resume import", () => {
     await userEvent.upload(fileInput(), file);
 
     await waitFor(() => expect(useBuilderStore.getState().basicInfo.name).toBe("Jamie"));
+    expect(JSON.parse(localStorage.getItem("resumeData")!).basicInfo.name).toBe("Jamie");
+    expect(useBuilderStore.getState().hasSavedCopy).toBe(true);
     expect(useBuilderStore.getState().sections.skills).toEqual(["TypeScript"]);
     expect(useBuilderStore.getState().sectionStatus.experience).toBe("skipped");
     expect(await screen.findByText(/Filled 2 sections/)).toBeInTheDocument();

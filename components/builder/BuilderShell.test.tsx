@@ -74,20 +74,15 @@ describe("BuilderShell", () => {
     render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
 
-    expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Save & Next" })).toBeDisabled();
     expect(screen.getAllByText("Fill in your name, email, and location to continue.")).not.toHaveLength(0);
 
     act(() => useBuilderStore.getState().updateBasicInfo({ name: "Jamie", email: "jamie@example.com", location: "Austin, TX" }));
-    expect(screen.getByRole("button", { name: "Next" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Save & Next" })).toBeEnabled();
 
-    await userEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(
-      screen.getByRole("dialog", {
-        name: "Save this resume on this device so you can pick it up again later?",
-      }),
-    ).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "No, don’t save" }));
+    await userEvent.click(screen.getByRole("button", { name: "Save & Next" }));
     expect(screen.getByRole("heading", { name: "Summary", level: 2 })).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem("resumeData")!).basicInfo.name).toBe("Jamie");
   });
 
   it("blocks Next on a content section until it's filled in or skipped, and lets Skip past it regardless", async () => {
@@ -95,11 +90,12 @@ describe("BuilderShell", () => {
     await screen.findByRole("heading", { name: "Basic info" });
     await userEvent.click(nav().getByText("Skills"));
 
-    expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Save & Next" })).toBeDisabled();
 
     // Skip works even though the section is unresolved — that's its purpose.
     await userEvent.click(screen.getByRole("button", { name: "Skip" }));
     expect(useBuilderStore.getState().sectionStatus.skills).toBe("skipped");
+    expect(JSON.parse(localStorage.getItem("resumeData")!).sectionStatus.skills).toBe("skipped");
     expect(screen.getByRole("heading", { name: "Certifications", level: 2 })).toBeInTheDocument();
 
     // Back walks over the skipped Skills step to the previous included one.
@@ -107,7 +103,7 @@ describe("BuilderShell", () => {
     expect(screen.getByRole("heading", { name: "Education", level: 2 })).toBeInTheDocument();
 
     await userEvent.click(nav().getByText("Skills"));
-    expect(screen.getByRole("button", { name: "Next" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Save & Next" })).toBeEnabled();
   });
 
   it("Next and Skip jump over sections already turned off in the nav", async () => {
@@ -130,8 +126,7 @@ describe("BuilderShell", () => {
     expect(await screen.findByRole("heading", { name: "Basic info" })).toBeInTheDocument();
     act(() => useBuilderStore.getState().updateBasicInfo({ name: "Jamie", email: "jamie@example.com", location: "Austin, TX" }));
 
-    await userEvent.click(screen.getByRole("button", { name: "Next" }));
-    await userEvent.click(screen.getByRole("button", { name: "No, don’t save" }));
+    await userEvent.click(screen.getByRole("button", { name: "Save & Next" }));
     expect(screen.getByRole("heading", { name: "Summary", level: 2 })).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "Back" }));
@@ -145,8 +140,7 @@ describe("BuilderShell", () => {
     expect(document.querySelector(".animate-step-in-from-left")).toBeNull();
 
     act(() => useBuilderStore.getState().updateBasicInfo({ name: "Jamie", email: "jamie@example.com", location: "Austin, TX" }));
-    await userEvent.click(screen.getByRole("button", { name: "Next" }));
-    await userEvent.click(screen.getByRole("button", { name: "No, don’t save" }));
+    await userEvent.click(screen.getByRole("button", { name: "Save & Next" }));
 
     expect(screen.getByRole("heading", { name: "Summary", level: 2 }).closest(".animate-step-in-from-right")).not.toBeNull();
 
@@ -159,8 +153,7 @@ describe("BuilderShell", () => {
     render(<BuilderShell />);
     expect(await screen.findByRole("heading", { name: "Basic info" })).toBeInTheDocument();
     act(() => useBuilderStore.getState().updateBasicInfo({ name: "Jamie", email: "jamie@example.com", location: "Austin, TX" }));
-    await userEvent.click(screen.getByRole("button", { name: "Next" }));
-    await userEvent.click(screen.getByRole("button", { name: "No, don’t save" }));
+    await userEvent.click(screen.getByRole("button", { name: "Save & Next" }));
     expect(screen.getByRole("heading", { name: "Summary", level: 2 })).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "Skip" }));
@@ -177,8 +170,7 @@ describe("BuilderShell", () => {
     main.scrollTop = 480;
     expect(main.scrollTop).toBe(480);
 
-    await userEvent.click(screen.getByRole("button", { name: "Next" }));
-    await userEvent.click(screen.getByRole("button", { name: "No, don’t save" }));
+    await userEvent.click(screen.getByRole("button", { name: "Save & Next" }));
     expect(screen.getByRole("heading", { name: "Summary", level: 2 })).toBeInTheDocument();
     expect(main.scrollTop).toBe(0);
   });
@@ -199,14 +191,13 @@ describe("BuilderShell", () => {
     render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
     act(() => useBuilderStore.getState().updateBasicInfo({ name: "Jamie", email: "jamie@example.com", location: "Austin, TX" }));
-    await userEvent.click(screen.getByRole("button", { name: "Next" }));
-    await userEvent.click(screen.getByRole("button", { name: "No, don’t save" }));
+    await userEvent.click(screen.getByRole("button", { name: "Save & Next" }));
     expect(screen.getByRole("heading", { name: "Summary", level: 2 })).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "Skip" }));
     expect(screen.getByRole("heading", { name: "Photo" })).toBeInTheDocument();
     expect(screen.getByText("No photo")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Save & Next" })).toBeDisabled();
 
     await userEvent.click(screen.getByRole("button", { name: "Skip" }));
     expect(useBuilderStore.getState().sectionStatus.photo).toBe("skipped");
@@ -228,9 +219,7 @@ describe("BuilderShell", () => {
     await userEvent.click(nav().getByText("Template & export"));
 
     expect(screen.getByRole("heading", { name: "Template & export" })).toBeInTheDocument();
-    expect(
-      screen.queryByText("Save this resume on this device so you can pick it up again later?"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(container.querySelectorAll("aside")).toHaveLength(1);
     expect(container.querySelector("main")!.className).toContain("print-unclip");
     expect(container.querySelector("main")!.className).toContain("overflow-y-auto");
@@ -327,7 +316,7 @@ describe("BuilderShell", () => {
     const { container } = render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
 
-    const next = screen.getByRole("button", { name: "Next" });
+    const next = screen.getByRole("button", { name: "Save & Next" });
     const footer = next.closest(".no-print");
     expect(footer?.className).toContain("fixed");
     expect(footer?.className).toContain("md:static");
@@ -358,8 +347,7 @@ describe("BuilderShell", () => {
     expect(screen.queryByRole("button", { name: "Back" })).not.toBeInTheDocument();
 
     act(() => useBuilderStore.getState().updateBasicInfo({ name: "Jamie", email: "jamie@example.com", location: "Austin, TX" }));
-    await userEvent.click(screen.getByRole("button", { name: "Next" }));
-    await userEvent.click(screen.getByRole("button", { name: "No, don’t save" }));
+    await userEvent.click(screen.getByRole("button", { name: "Save & Next" }));
     expect(screen.getByRole("heading", { name: "Summary", level: 2 })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Back" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Clear" })).toBeDisabled();
@@ -428,59 +416,35 @@ describe("BuilderShell", () => {
     expect(useBuilderStore.getState().templateId).toBe("jakes-resume");
   });
 
-  it("asks to save on this device after Basic info Next, and writes a copy when accepted", async () => {
+  it("writes a draft on Basic info Next without asking to save", async () => {
     render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
     act(() =>
       useBuilderStore.getState().updateBasicInfo({ name: "Jamie", email: "jamie@example.com", location: "Austin, TX" }),
     );
 
-    await userEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(
-      screen.getByRole("dialog", {
-        name: "Save this resume on this device so you can pick it up again later?",
-      }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Stored only in this browser. Nothing is uploaded anywhere.")).toBeInTheDocument();
-
-    await userEvent.click(screen.getByRole("button", { name: "Yes, save it" }));
+    await userEvent.click(screen.getByRole("button", { name: "Save & Next" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Summary", level: 2 })).toBeInTheDocument();
     expect(JSON.parse(localStorage.getItem("resumeData")!).basicInfo.name).toBe("Jamie");
     expect(useBuilderStore.getState().hasSavedCopy).toBe(true);
-    expect(useBuilderStore.getState().saveConsent).toBe("yes");
   });
 
-  it("does not write a copy when declining the save prompt, and does not ask again", async () => {
+  it("updates the saved draft on later Next clicks", async () => {
     render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
     act(() =>
       useBuilderStore.getState().updateBasicInfo({ name: "Jamie", email: "jamie@example.com", location: "Austin, TX" }),
     );
+    await userEvent.click(screen.getByRole("button", { name: "Save & Next" }));
+    act(() => useBuilderStore.getState().setSummary("Backend engineer."));
+    await userEvent.click(screen.getByRole("button", { name: "Save & Next" }));
 
-    await userEvent.click(screen.getByRole("button", { name: "Next" }));
-    await userEvent.click(screen.getByRole("button", { name: "No, don’t save" }));
-    expect(localStorage.getItem("resumeData")).toBeNull();
-    expect(useBuilderStore.getState().saveConsent).toBe("no");
-    expect(screen.getByRole("heading", { name: "Summary", level: 2 })).toBeInTheDocument();
-
-    await userEvent.click(screen.getByRole("button", { name: "Back" }));
-    await userEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Summary", level: 2 })).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem("resumeData")!).sections.summary).toBe("Backend engineer.");
+    expect(screen.getByRole("heading", { name: "Photo" })).toBeInTheDocument();
   });
 
-  it("skips the save prompt when a saved copy already exists", async () => {
-    saveResumeData(makeFullResumeData());
-    render(<BuilderShell />);
-    await screen.findByRole("heading", { name: "Basic info" });
-
-    await userEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Summary", level: 2 })).toBeInTheDocument();
-  });
-
-  it("toasts when accepting save consent fails to write", async () => {
+  it("toasts when Next cannot write to this device, then still advances", async () => {
     const spy = jest.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
       throw new DOMException("quota", "QuotaExceededError");
     });
@@ -490,8 +454,7 @@ describe("BuilderShell", () => {
       useBuilderStore.getState().updateBasicInfo({ name: "Jamie", email: "jamie@example.com", location: "Austin, TX" }),
     );
 
-    await userEvent.click(screen.getByRole("button", { name: "Next" }));
-    await userEvent.click(screen.getByRole("button", { name: "Yes, save it" }));
+    await userEvent.click(screen.getByRole("button", { name: "Save & Next" }));
     expect(screen.getByRole("alert")).toHaveTextContent(/Storage may be full/);
     expect(screen.getByRole("heading", { name: "Summary", level: 2 })).toBeInTheDocument();
     spy.mockRestore();
@@ -511,41 +474,19 @@ describe("BuilderShell", () => {
     expect(window.print).not.toHaveBeenCalled();
   });
 
-  it("asks for save consent on download if Basic info Next was skipped", async () => {
+  it("saves a copy on download without asking, even if Next was skipped", async () => {
     (window.print as jest.Mock).mockClear();
     render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
     act(() =>
       useBuilderStore.getState().updateBasicInfo({ name: "Jamie", email: "jamie@example.com", location: "Austin, TX" }),
     );
-    await userEvent.click(nav().getByText("Template & export"));
-    await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
-
-    expect(
-      screen.getByRole("dialog", {
-        name: "Save this resume on this device so you can pick it up again later?",
-      }),
-    ).toBeInTheDocument();
-    expect(window.print).not.toHaveBeenCalled();
-
-    await userEvent.click(screen.getByRole("button", { name: "No, don’t save" }));
-    expect(useBuilderStore.getState().saveConsent).toBe("no");
-    expect(window.print).toHaveBeenCalledTimes(1);
-  });
-
-  it("does not re-ask save consent on download after the Basic info prompt", async () => {
-    (window.print as jest.Mock).mockClear();
-    render(<BuilderShell />);
-    await screen.findByRole("heading", { name: "Basic info" });
-    act(() =>
-      useBuilderStore.getState().updateBasicInfo({ name: "Jamie", email: "jamie@example.com", location: "Austin, TX" }),
-    );
-    await userEvent.click(screen.getByRole("button", { name: "Next" }));
-    await userEvent.click(screen.getByRole("button", { name: "No, don’t save" }));
     await userEvent.click(nav().getByText("Template & export"));
     await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem("resumeData")!).basicInfo.name).toBe("Jamie");
+    expect(useBuilderStore.getState().hasSavedCopy).toBe(true);
     expect(window.print).toHaveBeenCalledTimes(1);
   });
 });

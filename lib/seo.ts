@@ -61,7 +61,7 @@ export const FEATURES = [
   },
   {
     title: "Private by default",
-    body: "Work stays in your browser. Nothing is saved on this device until you choose to save. Ads (if enabled), the optional ATS rewrite, and importing a resume (the extracted text) are the only network exceptions — details on the private resume builder page.",
+    body: "Work stays in your browser. Clicking Save & Next or Skip writes a draft to this device’s local storage — nothing is uploaded as a hosted resume. Ads (if enabled), the optional ATS rewrite, and importing a resume (the extracted text) are the only network exceptions — details on the private resume builder page.",
     href: "/private" as const,
     linkLabel: "How private this is",
   },
@@ -75,7 +75,7 @@ export const FEATURE_LIST = [
   "Suggestions for roles and skills across software, data, IT, pharmacy, architecture, and construction",
   "Thirty-one resume templates with a live preview",
   "Download a PDF of the same preview",
-  "No account — data stays in your browser until you save or opt in",
+  "No account — drafts stay in this browser’s local storage, not on a resume hosting account",
 ] as const;
 
 export interface FaqItem {
@@ -102,7 +102,7 @@ export const HOME_FAQS: FaqItem[] = [
   {
     question: "Is it safe? Do you store my resume?",
     answer:
-      "Drafts live in your browser. Nothing is written to this device until you explicitly save, and there is no resume hosting account. If ads are on, Google AdSense loads. If you click “Make ATS-friendly,” those experience bullets are sent to a rewrite API. If you import a resume file, the extracted text is sent so we can fill matching sections. The private page explains those exceptions.",
+      "Drafts live in your browser. Clicking Save & Next or Skip writes a copy to this device’s local storage, and there is no resume hosting account. If ads are on, Google AdSense loads. If you click “Make ATS-friendly,” those experience bullets are sent to a rewrite API. If you import a resume file, the extracted text is sent so we can fill matching sections. The private page explains those exceptions.",
   },
   {
     question: "Do I need an account or email?",

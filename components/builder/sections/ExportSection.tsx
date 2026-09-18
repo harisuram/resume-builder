@@ -3,11 +3,10 @@
 import { useRef, useState } from "react";
 import { AdSlot } from "@/components/ads/AdSlot";
 import { Button } from "@/components/ui/Button";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { FieldGroup, TextInput } from "@/components/ui/Field";
 import { PreviewPane } from "@/components/builder/PreviewPane";
 import { ADSENSE_SLOTS } from "@/lib/ads";
-import { saveResumeData } from "@/lib/storage";
+import { persistCurrentResume } from "@/lib/persistResume";
 import { hasAnyResumeValue, isBasicInfoComplete, useBuilderStore } from "@/lib/store";
 import { showToast } from "@/lib/toast";
 import type { BasicInfo } from "@/lib/types";
@@ -47,10 +46,6 @@ function downloadBlockedReason(basicInfo: BasicInfo): string | undefined {
 
 export function ExportSection() {
   const getResumeData = useBuilderStore((s) => s.getResumeData);
-  const hasSavedCopy = useBuilderStore((s) => s.hasSavedCopy);
-  const setHasSavedCopy = useBuilderStore((s) => s.setHasSavedCopy);
-  const saveConsent = useBuilderStore((s) => s.saveConsent);
-  const setSaveConsent = useBuilderStore((s) => s.setSaveConsent);
   const basicInfo = useBuilderStore((s) => s.basicInfo);
   const canDownload = useBuilderStore((s) =>
     hasAnyResumeValue({ basicInfo: s.basicInfo, photo: s.photo, sections: s.sections }),
@@ -59,20 +54,10 @@ export function ExportSection() {
   // as-is for every download in this session — it doesn't keep resetting
   // itself to match the name field if that changes later.
   const [fileBaseName, setFileBaseName] = useState(() => slugifyName(getResumeData().basicInfo.name));
-  const [saveConsentOpen, setSaveConsentOpen] = useState(false);
   const originalTitle = useRef<string | null>(null);
 
-  function persistSavedCopy() {
-    if (!hasSavedCopy) return;
-    try {
-      saveResumeData(getResumeData());
-    } catch {
-      showToast("Couldn't save this resume on this device. Storage may be full.");
-    }
-  }
-
   function runDownloadPdf() {
-    persistSavedCopy();
+    persistCurrentResume();
     // Chrome (and most Chromium browsers) suggest document.title as the
     // filename in the print-to-PDF save dialog — this is the only lever a
     // page has over that filename, since the dialog itself is native chrome.
@@ -93,30 +78,6 @@ export function ExportSection() {
       showToast(blocked);
       return;
     }
-    // Same gate as Basic info Next: if they jumped here via the nav they
-    // still have to pick Yes or No before a file leaves the page.
-    if (!hasSavedCopy && saveConsent === null) {
-      setSaveConsentOpen(true);
-      return;
-    }
-    runDownloadPdf();
-  }
-
-  function acceptSaveConsent() {
-    try {
-      saveResumeData(getResumeData());
-      setHasSavedCopy(true);
-      setSaveConsent("yes");
-    } catch {
-      showToast("Couldn't save this resume on this device. Storage may be full.");
-    }
-    setSaveConsentOpen(false);
-    runDownloadPdf();
-  }
-
-  function declineSaveConsent() {
-    setSaveConsent("no");
-    setSaveConsentOpen(false);
     runDownloadPdf();
   }
 
@@ -161,17 +122,6 @@ export function ExportSection() {
       />
 
       <PreviewPane printable />
-
-      <ConfirmDialog
-        open={saveConsentOpen}
-        title="Save this resume on this device so you can pick it up again later?"
-        description="Stored only in this browser. Nothing is uploaded anywhere."
-        confirmLabel="Yes, save it"
-        cancelLabel="No, don’t save"
-        confirmVariant="primary"
-        onConfirm={acceptSaveConsent}
-        onCancel={declineSaveConsent}
-      />
     </div>
   );
 }

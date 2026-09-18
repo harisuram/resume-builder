@@ -14,8 +14,8 @@ import { importResumeFromFile, ResumeFileError, type ImportProgress } from "@/li
 import { ACCEPT_RESUME_FILES } from "@/lib/resumeImport/extractText";
 import { resolvedHeadingLabel } from "@/lib/resumeImport/synonyms";
 import type { ImportedResume } from "@/lib/resumeImport/normalize";
+import { persistCurrentResume } from "@/lib/persistResume";
 import { hasAnyResumeValue, useBuilderStore } from "@/lib/store";
-import { saveResumeData } from "@/lib/storage";
 import { showToast } from "@/lib/toast";
 
 const PROGRESS_COPY: Record<ImportProgress, string> = {
@@ -56,7 +56,6 @@ export function ResumeImportProvider({
   const dragDepth = useRef(0);
   const pendingFile = useRef<File | null>(null);
   const applyImportedResume = useBuilderStore((s) => s.applyImportedResume);
-  const hasSavedCopy = useBuilderStore((s) => s.hasSavedCopy);
   const getResumeData = useBuilderStore((s) => s.getResumeData);
 
   const [dragging, setDragging] = useState(false);
@@ -79,13 +78,7 @@ export function ResumeImportProvider({
       try {
         const imported = await importResumeFromFile(file, setProgress);
         applyImportedResume(imported);
-        if (hasSavedCopy) {
-          try {
-            saveResumeData(useBuilderStore.getState().getResumeData());
-          } catch {
-            showToast("Imported, but couldn't update the copy saved on this device.");
-          }
-        }
+        persistCurrentResume("Imported, but couldn't update the copy saved on this device.");
         setResult(imported);
         onImportedRef.current?.();
       } catch (err) {
@@ -99,7 +92,7 @@ export function ResumeImportProvider({
         pendingFile.current = null;
       }
     },
-    [applyImportedResume, hasSavedCopy],
+    [applyImportedResume],
   );
 
   const queueFile = useCallback(

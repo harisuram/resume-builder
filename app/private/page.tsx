@@ -11,17 +11,17 @@ export default function PrivatePage() {
       <Article>
         <PageTitle>A private resume builder that doesn’t require an account</PageTitle>
         <Lead>
-          This is a safe, private resume builder and resume creator: no sign-up, no resume hosting, and nothing is
-          written to this device until you choose to save. If you were searching for a secure resume maker, here’s
-          what that actually means here.
+          This is a safe, private resume builder and resume creator: no sign-up, no resume hosting. Clicking Save &amp;
+          Next or Skip stores a draft in this browser. If you were searching for a secure resume maker, here’s what that
+          actually means here.
         </Lead>
 
         <SectionHeading>What stays in your browser</SectionHeading>
         <Body>
           Editing happens on this page in your browser. There is no account, so there is no cloud copy of your resume
-          waiting on a server we run. If you save, the copy is stored in this browser’s local storage on this device —
-          not uploaded as a hosted file. Closing the tab without saving leaves nothing behind on disk beyond whatever
-          the browser already held in memory.
+          waiting on a server we run. Clicking Save &amp; Next or Skip writes a copy to this browser’s local storage on
+          this device — not uploaded as a hosted file. Importing a resume or downloading a PDF updates that same copy.
+          Use Start new resume, or clear site data in the browser, to remove it.
         </Body>
 
         <SectionHeading>What does leave the device</SectionHeading>

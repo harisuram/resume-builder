@@ -101,8 +101,13 @@ export function SectionFooterNav({
             </Button>
           )}
           {canGoNext && (
-            <Button variant="primary" onClick={onNext} disabled={!nextEnabled} className="max-md:min-h-11 max-md:flex-1">
-              Next
+            <Button
+              variant="primary"
+              onClick={onNext}
+              disabled={!nextEnabled}
+              className="max-md:min-h-11 max-md:flex-1 max-md:px-3 whitespace-nowrap"
+            >
+              Save &amp; Next
             </Button>
           )}
         </div>
