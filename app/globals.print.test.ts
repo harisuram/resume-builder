@@ -65,6 +65,16 @@ describe("print stylesheet", () => {
     expect(printBlock).toContain('[data-resume-column="rail"] [data-force-break="true"]');
   });
 
+  it("keeps preview-simulated page-separator gaps in the PDF", () => {
+    const printBlock = css.slice(css.indexOf("@media print"));
+    // Wiping every section's margin-top dropped forced breaks: break-before:page
+    // is ignored inside the absolutely positioned print root, and sibling
+    // !important gap rules would squash the leftover inline margin.
+    expect(printBlock).not.toMatch(/\[data-section-key\],\s*\[data-item-key\]\s*\{[^}]*margin-top:\s*0 !important/);
+    expect(printBlock).not.toMatch(/\[data-section-key\]\[data-force-break="true"\][^{]*\{[^}]*break-before:\s*page/);
+    expect(printBlock).toContain("#resume-print-root .break-inside-avoid");
+  });
+
   it("prints single-column bodies as blocks so they fragment like the preview", () => {
     const printBlock = css.slice(css.indexOf("@media print"));
     expect(printBlock).toMatch(/\.resume-page-body\s*\{[^}]*display:\s*block !important/);

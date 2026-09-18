@@ -34,6 +34,7 @@ import { AdditionalForm } from "./sections/AdditionalForm";
 import { SummaryForm } from "./sections/SummaryForm";
 import { Navbar } from "./Navbar";
 import { BuilderTour } from "./BuilderTour";
+import { ResumeImportProvider } from "./ResumeImport";
 import { adjacentUnskippedStep, getWizardOrder, type NavKey } from "./nav";
 import { MobilePreviewSheet } from "./MobilePreviewSheet";
 import { PreviewPane } from "./PreviewPane";
@@ -336,6 +337,16 @@ export function BuilderShell() {
   }
 
   return (
+    <ResumeImportProvider
+      onImported={() => {
+        if (tourOpen) {
+          dismissBuilderTour();
+          setTourOpen(false);
+        }
+        selectSection("basicInfo");
+      }}
+      onReviewSection={(key) => selectSection(key)}
+    >
     <div className="print-unclip flex h-[100dvh] flex-col overflow-hidden">
       <div
         className="print-unclip flex min-h-0 flex-1 flex-col overflow-hidden"
@@ -439,5 +450,6 @@ export function BuilderShell() {
         }}
       />
     </div>
+    </ResumeImportProvider>
   );
 }

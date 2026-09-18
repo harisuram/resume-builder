@@ -1,6 +1,30 @@
 import { render } from "@testing-library/react";
-import { getTheme } from "@/components/templates/shared/theme";
+import { getTheme, TEMPLATES, type TemplateTheme } from "@/components/templates/shared/theme";
 import { TemplateSkeleton } from "./TemplateSkeleton";
+
+function skeletonSnap(theme: TemplateTheme) {
+  const { container, unmount } = render(<TemplateSkeleton theme={theme} />);
+  const root = container.querySelector("[data-template-skeleton]");
+  const header = container.querySelector(".resume-dark-header") as HTMLElement | null;
+  const rail = container.querySelector("[data-resume-column='rail']") as HTMLElement | null;
+  const snap = {
+    id: root?.getAttribute("data-template-skeleton"),
+    layout: root?.getAttribute("data-layout"),
+    darkHeaderBg: header?.style.background || null,
+    railBg: rail?.style.background || null,
+    railOnRight: Boolean(rail?.parentElement?.className.includes("flex-row-reverse")),
+    avatarSizes: Array.from(container.querySelectorAll(".skeleton-bone.shrink-0.rounded-full")).map(
+      (el) => (el as HTMLElement).style.width,
+    ),
+    headings: Array.from(container.querySelectorAll("h3")).map((heading) => ({
+      text: heading.textContent,
+      italic: heading.className.includes("italic"),
+      color: (heading as HTMLElement).style.color,
+    })),
+  };
+  unmount();
+  return snap;
+}
 
 describe("TemplateSkeleton", () => {
   it("keeps section titles and omits resume copy", () => {
@@ -37,4 +61,11 @@ describe("TemplateSkeleton", () => {
     expect(container.querySelector("[data-preview-section='additional']")?.textContent).toContain("Publications");
     expect(container.querySelector("[data-preview-section='experience']")).toBeNull();
   });
+
+  it.each(TEMPLATES.map((theme) => [theme.id, theme.name] as const))(
+    "matches the layout snap for %s (%s)",
+    (id) => {
+      expect(skeletonSnap(getTheme(id))).toMatchSnapshot();
+    },
+  );
 });

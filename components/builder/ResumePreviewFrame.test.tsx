@@ -202,7 +202,7 @@ describe("ResumePreviewFrame", () => {
       expect(screen.queryByRole("button")).not.toBeInTheDocument();
     });
 
-    it("tags a forced section with data-force-break for the print stylesheet to act on", () => {
+    it("tags a forced section with data-force-break so the preview can push it to a page start", () => {
       const data = makeFullResumeData({ templateId: "jakes-resume", pageBreakSections: ["skills"] });
       const { container } = render(<ResumePreviewFrame data={data} />);
       expect(container.querySelector('[data-section-key="skills"]')).toHaveAttribute("data-force-break", "true");
@@ -241,6 +241,7 @@ describe("ResumePreviewFrame", () => {
       setBox(container.querySelector(".resume-scale-stage")!, { top: 0, height: 1400 });
       rerender(<ResumePreviewFrame data={threeProjects()} />);
       expect(item.style.marginTop).toBe("40px");
+      expect(item.style.getPropertyPriority("margin-top")).toBe("important");
     });
 
     it("does not clear that nudge when only the preview column's height changes", () => {
@@ -338,7 +339,7 @@ describe("ResumePreviewFrame", () => {
       expect(onToggleItemBreak).toHaveBeenCalledWith("projects", 2);
     });
 
-    it("tags only the forced entry with data-force-break for the print stylesheet", () => {
+    it("tags only the forced entry with data-force-break so the preview can push it", () => {
       const { container } = render(<ResumePreviewFrame data={threeProjects({ pageBreakItems: ["projects:1"] })} />);
       expect(container.querySelector('[data-item-key="projects:1"]')).toHaveAttribute("data-force-break", "true");
       expect(container.querySelector('[data-item-key="projects:0"]')).not.toHaveAttribute("data-force-break");

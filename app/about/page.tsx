@@ -19,9 +19,10 @@ export default function AboutPage() {
         <SectionHeading>What it is</SectionHeading>
         <Body>
           A browser tool with a live preview. Roles, skills, degrees, and certifications offer suggestions that are not
-          software-only; you can still type anything. Twenty-one templates share one preview, and that preview is what
+          software-only; you can still type anything. Thirty-one templates share one preview, and that preview is what
           you print. Phone numbers include a country code. Required fields are checked before you move on. Skip
-          internships, patents, a photo, or anything else — skipped sections don’t leave empty headings.
+          internships, patents, a photo, or anything else — skipped sections don’t leave empty headings. You can also
+          drop an existing resume and we’ll fill every section we can read.
         </Body>
 
         <SectionHeading>What it isn’t</SectionHeading>

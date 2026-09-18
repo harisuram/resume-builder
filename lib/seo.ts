@@ -38,6 +38,10 @@ export const SITE_KEYWORDS = [
 
 export const FEATURES = [
   {
+    title: "Drop a resume to start",
+    body: "PDF, Word, or text. Headings like Work History, Technical Skills, or Academic Background fill the matching sections — then you edit in the same builder.",
+  },
+  {
     title: "You choose the sections",
     body: "Experience, internships, projects, education, skills, certifications, patents, languages, hobbies, soft skills, plus a custom additional section — they're all in the flow. Turn off anything that doesn't belong. A skipped section never leaves an empty heading on the page.",
   },
@@ -46,7 +50,7 @@ export const FEATURES = [
     body: "Roles, skills, degrees, certifications, and more are not software-only. The lists include pharmacy, architecture, construction, IT, networking, data, and databases — or type anything that isn’t there.",
   },
   {
-    title: "Twenty-one templates, one live preview",
+    title: "Thirty-one templates, one live preview",
     body: "Switch designs anytime and watch the page update instantly. What you see is the same view you'll download. The gallery lists every resume template and curriculum vitae layout.",
     href: "/templates" as const,
     linkLabel: "Browse templates",
@@ -57,7 +61,7 @@ export const FEATURES = [
   },
   {
     title: "Private by default",
-    body: "Work stays in your browser. Nothing is saved on this device until you choose to save. Ads (if enabled) and the optional ATS rewrite are the only network exceptions — details on the private resume builder page.",
+    body: "Work stays in your browser. Nothing is saved on this device until you choose to save. Ads (if enabled), the optional ATS rewrite, and importing a resume (the extracted text) are the only network exceptions — details on the private resume builder page.",
     href: "/private" as const,
     linkLabel: "How private this is",
   },
@@ -65,10 +69,11 @@ export const FEATURES = [
 
 export const FEATURE_LIST = [
   "Free and unlimited — no account, no download cap",
+  "Drop an existing resume to fill matching sections",
   "Optional AI-powered ATS rewrite for experience bullets",
   "Choose only the resume sections you need",
   "Suggestions for roles and skills across software, data, IT, pharmacy, architecture, and construction",
-  "Twenty-one resume templates with a live preview",
+  "Thirty-one resume templates with a live preview",
   "Download a PDF of the same preview",
   "No account — data stays in your browser until you save or opt in",
 ] as const;
@@ -87,7 +92,7 @@ export const HOME_FAQS: FaqItem[] = [
   {
     question: "How do I make a resume here?",
     answer:
-      "Open the builder, add your name and contact details (including a country code on the phone), fill only the sections that belong on this resume, skip the rest, pick a template, and download a PDF. A short walkthrough lives on the how-to page if you want the steps spelled out.",
+      "Open the builder, drop a resume or add your name and contact details (including a country code on the phone), fill only the sections that belong on this resume, skip the rest, pick a template, and download a PDF. A short walkthrough lives on the how-to page if you want the steps spelled out.",
   },
   {
     question: "Can I make a resume for fields besides software?",
@@ -97,7 +102,7 @@ export const HOME_FAQS: FaqItem[] = [
   {
     question: "Is it safe? Do you store my resume?",
     answer:
-      "Drafts live in your browser. Nothing is written to this device until you explicitly save, and there is no resume hosting account. If ads are on, Google AdSense loads. If you click “Make ATS-friendly,” those experience bullets are sent to a rewrite API. The private page explains both exceptions.",
+      "Drafts live in your browser. Nothing is written to this device until you explicitly save, and there is no resume hosting account. If ads are on, Google AdSense loads. If you click “Make ATS-friendly,” those experience bullets are sent to a rewrite API. If you import a resume file, the extracted text is sent so we can fill matching sections. The private page explains those exceptions.",
   },
   {
     question: "Do I need an account or email?",
@@ -128,8 +133,8 @@ export interface HowToStep {
 
 export const HOW_TO_STEPS: HowToStep[] = [
   {
-    name: "Add your name and contact details",
-    text: "Start with name, email, location, and an optional phone number with a country code. Links are optional. Required fields have to be valid before you can continue.",
+    name: "Add your name and contact details — or drop a resume",
+    text: "Start with name, email, location, and an optional phone number with a country code. Links are optional. Or drop a PDF, Word, or text resume and we'll fill every section we can read, including synonym headings like Work History. Required fields have to be valid before you can continue.",
   },
   {
     name: "Write a short summary — or skip it",
@@ -180,12 +185,12 @@ export const PAGE_META: Record<
   "/private": {
     title: "Safe, Private Resume Builder",
     description:
-      "A private, free, unlimited resume builder with no account. Drafts stay in your browser. Honest notes on ads and the optional AI-powered ATS rewrite.",
+      "A private, free, unlimited resume builder with no account. Drafts stay in your browser. Honest notes on ads, resume import, and the optional AI-powered ATS rewrite.",
   },
   "/templates": {
     title: "Free Resume Templates",
     description:
-      "Twenty-one free, unlimited resume templates. Preview the best AI-powered layouts, switch designs live, and download a PDF — no account.",
+      "Thirty-one free, unlimited resume templates. Preview the best AI-powered layouts, switch designs live, and download a PDF — no account.",
   },
   "/ats": {
     title: "ATS-Friendly Resume Builder",
@@ -195,7 +200,7 @@ export const PAGE_META: Record<
   "/privacy": {
     title: "Privacy",
     description:
-      "How this free, unlimited AI-powered resume builder handles data: browser storage, no account, optional ads, and the optional ATS rewrite.",
+      "How this free, unlimited AI-powered resume builder handles data: browser storage, no account, optional ads, resume import, and the optional ATS rewrite.",
   },
   "/about": {
     title: "About",

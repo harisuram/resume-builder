@@ -1142,27 +1142,24 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
     break-after: auto;
   }
 
-  /* ResumePreviewFrame simulates "move to next page" on screen by nudging a
-     forced section (or a single list entry within one) down with an inline
-     margin-top, since break-before:page (below) has no visible effect
-     outside paginated media. Real pagination needs none of that extra
-     space, so it's cancelled here — otherwise a forced element would get
-     pushed twice: once by this leftover margin, once by the genuine page
-     break. */
+  /* Page separators are simulated in ResumePreviewFrame as an inline
+     margin-top that fills the rest of the current A4 page. Keep those gaps:
+     `#resume-print-root` is `position: absolute` (so hidden chrome does not
+     leave a blank first page), and `break-before: page` inside that box is
+     ignored — zeroing the margin made "move to next page" a preview-only
+     effect. Tailwind `break-inside: avoid` is already simulated the same
+     way; leaving it on would double-push if a browser honored it. */
   [data-section-key],
   [data-item-key] {
-    margin-top: 0 !important;
     break-before: auto;
   }
 
-  [data-section-key][data-force-break="true"],
-  [data-item-key][data-force-break="true"] {
-    break-before: page;
+  #resume-print-root .break-inside-avoid {
+    break-inside: auto;
   }
 
   /* Rail sections live in the continuous sidebar, not the paginated main
-     column. Honoring break-before:page there punches a hole in the colored
-     strip and can split the table row independently of the resume body. */
+     column. A CSS page break there punches a hole in the colored strip. */
   [data-resume-column="rail"] [data-force-break="true"] {
     break-before: auto !important;
   }

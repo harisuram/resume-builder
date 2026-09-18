@@ -15,6 +15,11 @@ function sectionKeys(root: Element | null): string[] {
   return Array.from(root.querySelectorAll("[data-section-key]")).map((el) => el.getAttribute("data-section-key")!);
 }
 
+function cssRgb(hex: string) {
+  const n = hex.replace("#", "");
+  return `rgb(${parseInt(n.slice(0, 2), 16)}, ${parseInt(n.slice(2, 4), 16)}, ${parseInt(n.slice(4, 6), 16)})`;
+}
+
 describe("template layouts share the same section split", () => {
   it("treats languages, hobbies, and soft skills as compact, patents and additional as wide", () => {
     for (const key of NARROW) expect(NARROW_SECTION_KEYS.has(key)).toBe(true);
@@ -59,5 +64,32 @@ describe("template layouts share the same section split", () => {
     expect(sectionKeys(wide)).toEqual(["summary", ...WIDE]);
     expect(container.querySelector(".resume-split-page")).not.toBeNull();
     expect(container.querySelector("thead.resume-split-page-pad")).not.toBeNull();
+  });
+
+  it("Copper and Inkwell keep the accent header band out of the flowing columns", () => {
+    const data = makeFullResumeData();
+    for (const id of ["copper", "inkwell"] as const) {
+      const { container, unmount } = render(
+        id === "copper" ? (
+          <SingleColumnLayout data={data} theme={getTheme(id)} />
+        ) : (
+          <SidebarLayout data={data} theme={getTheme(id)} />
+        ),
+      );
+      const header = container.querySelector(".resume-dark-header") as HTMLElement | null;
+      expect(header).not.toBeNull();
+      expect(header!.style.background).toBe(cssRgb(getTheme(id).accent));
+      expect(header!.querySelector("[data-section-key]")).toBeNull();
+      unmount();
+    }
+  });
+
+  it("Atelier and Sable put the details rail on the right", () => {
+    const data = makeFullResumeData();
+    for (const id of ["atelier", "sable"] as const) {
+      const { container, unmount } = render(<SidebarLayout data={data} theme={getTheme(id)} />);
+      expect(container.querySelector(".resume-sidebar-columns--right")).not.toBeNull();
+      unmount();
+    }
   });
 });

@@ -491,6 +491,34 @@ describe("loadFromData / resetStore", () => {
     expect(useBuilderStore.getState().sectionOrder).toBeNull();
   });
 
+  it("applyImportedResume fills matching sections and skips the rest", () => {
+    useBuilderStore.getState().setTemplateId("bre-cool");
+    useBuilderStore.getState().applyImportedResume({
+      basicInfo: { name: "Jamie", email: "jamie@example.com", phone: "", location: "Austin, TX", links: {} },
+      sections: { skills: ["TypeScript"], summary: "Backend engineer." },
+      filled: ["basicInfo", "summary", "skills"],
+    });
+    const state = useBuilderStore.getState();
+    expect(state.basicInfo.name).toBe("Jamie");
+    expect(state.sections.skills).toEqual(["TypeScript"]);
+    expect(state.sectionStatus.skills).toBe("complete");
+    expect(state.sectionStatus.summary).toBe("complete");
+    expect(state.sectionStatus.experience).toBe("skipped");
+    expect(state.sectionStatus.photo).toBe("skipped");
+    expect(state.templateId).toBe("bre-cool");
+  });
+
+  it("applyImportedResume keeps an existing photo", () => {
+    useBuilderStore.getState().setPhoto("data:image/jpeg;base64,abc123");
+    useBuilderStore.getState().applyImportedResume({
+      basicInfo: { name: "Jamie", email: "jamie@example.com", phone: "", location: "Austin, TX", links: {} },
+      sections: {},
+      filled: ["basicInfo"],
+    });
+    expect(useBuilderStore.getState().photo).toBe("data:image/jpeg;base64,abc123");
+    expect(useBuilderStore.getState().sectionStatus.photo).toBe("complete");
+  });
+
   it("resetStore returns to the initial empty state", () => {
     useBuilderStore.getState().setSkills(["TypeScript"]);
     useBuilderStore.getState().setPhoto("data:image/jpeg;base64,abc123");

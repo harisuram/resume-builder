@@ -6,8 +6,9 @@
     "node": ">=20"
   },
   "scripts": {
-    "dev": "next dev",
-    "build": "node scripts/build.mjs",
+    "dev": "node scripts/copy-pdf-worker.mjs && next dev",
+    "build": "node scripts/copy-pdf-worker.mjs && node scripts/build.mjs",
+    "postinstall": "node scripts/copy-pdf-worker.mjs",
     "start": "npx serve@latest out",
     "lint": "eslint",
     "deploy": "npm run build && wrangler deploy",
@@ -18,7 +19,9 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "fflate": "^0.8.3",
     "next": "16.3.5",
+    "pdfjs-dist": "^4.10.38",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "zustand": "^5.0.15"

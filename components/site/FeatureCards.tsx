@@ -9,6 +9,16 @@ function IconBox({ children }: { children: React.ReactNode }) {
   );
 }
 
+function DropIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.7} aria-hidden="true">
+      <path d="M12 3.5v10" strokeLinecap="round" />
+      <path d="m8.5 10 3.5 3.5L15.5 10" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5 16.5v2A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5v-2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function SectionsIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.7} aria-hidden="true">
@@ -55,7 +65,7 @@ function PrivateIcon() {
   );
 }
 
-const ICONS = [SectionsIcon, SuggestIcon, TemplatesIcon, PdfIcon, PrivateIcon];
+const ICONS = [DropIcon, SectionsIcon, SuggestIcon, TemplatesIcon, PdfIcon, PrivateIcon];
 
 export function FeatureCards() {
   return (

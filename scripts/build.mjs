@@ -2,9 +2,9 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, renameSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
 
-/** `output: "export"` cannot emit a POST /api/optimize route. That file is
- * only for `next dev`. Stash it for the production static build; Cloudflare
- * serves the same path from workers/index.ts (or functions/api/optimize.ts
+/** `output: "export"` cannot emit POST `/api/*` routes. Those files are
+ * only for `next dev`. Stash them for the production static build; Cloudflare
+ * serves the same paths from workers/index.ts (or functions/api/*.ts
  * on a Pages project). */
 const apiDir = resolve("app/api");
 const stashDir = resolve(".next-export-stash/api");

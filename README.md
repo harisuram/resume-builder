@@ -24,8 +24,8 @@ key stays on the server (`GROQ_API_KEY`, never `NEXT_PUBLIC_`).
 3. Restart `npm run dev`.
 
 Production: set `GROQ_API_KEY` as a **secret** (`npx wrangler secret put GROQ_API_KEY`).
-The static export does not include the Next.js route; the Worker at
-`workers/index.ts` serves `/api/optimize` instead.
+The static export does not include the Next.js routes; the Worker at
+`workers/index.ts` serves `/api/optimize` and `/api/import` instead.
 
 ## Testing
 
@@ -36,7 +36,7 @@ npm run test:coverage # with a coverage report
 ```
 
 Jest + React Testing Library, colocated as `*.test.ts(x)` next to the code
-they cover: every `lib/` module, every form and store action, all 21
+they cover: every `lib/` module, every form and store action, all 31
 templates (rendered with both a fully populated and an empty resume), the
 builder shell → export flow end to end, and the AdSense slot's
 enabled/disabled/no-fill states.
@@ -44,16 +44,16 @@ enabled/disabled/no-fill states.
 ## Architecture notes
 
 - **Static export.** `next build` sets `output: "export"` (via `scripts/build.mjs`).
-  The app ships as static HTML/CSS/JS on Cloudflare Workers assets. The one
-  exception is `/api/optimize` (Groq ATS rewrite): a Worker in production
-  (`run_worker_first`: `/api/*` only, so page views stay on the free CDN),
-  and a Next.js POST route under `next dev` only.
+  The app ships as static HTML/CSS/JS on Cloudflare Workers assets. The
+  exceptions are `/api/optimize` (Groq ATS rewrite) and `/api/import` (resume
+  parse): a Worker in production (`run_worker_first`: `/api/*` only, so page
+  views stay on the free CDN), and Next.js POST routes under `next dev` only.
 - **State** lives in a single Zustand store (`lib/store.ts`) shared by every
   form and the live preview, so edits reflect instantly with no prop drilling.
 - **Templates** (`components/templates/`) are config-driven: three layout
   shells (single column, sidebar, asymmetric two-column) plus a per-template
   `TemplateTheme` object (accent color, heading style, density, font
-  pairing...) cover all 21 templates. Adding a 22nd is a new theme entry, not
+  pairing...) cover all 31 templates. Adding a 32nd is a new theme entry, not
   new layout code.
 - **Preview = export.** `ResumePreviewFrame` is the one component that renders
   a resume; it's used for the live preview and, tagged with an id, as the
@@ -100,7 +100,8 @@ actually serves — this wiring is necessary but not sufficient for that.
 
 ## Deploying to Cloudflare (free plan)
 
-This app is a **static export** plus one tiny Worker for `/api/optimize`. That
+This app is a **static export** plus one tiny Worker for `/api/optimize` and
+`/api/import`. That
 split is what makes the free plan fit: HTML/CSS/JS is served from the CDN
 (unlimited) and only the Groq ATS-rewrite calls count as Worker requests
 (100,000/day on the free plan).
@@ -155,7 +156,7 @@ components/builder/    The wizard: section nav, forms, preview, export
 components/templates/  Template registry, layout shells, shared render atoms
 components/ui/         Small shared UI primitives (Button, Field, Switch, ...)
 lib/                   Data model, Zustand store, section config, localStorage/ads config
-workers/               Cloudflare Worker for POST /api/optimize (free-plan CDN for the rest)
+workers/               Cloudflare Worker for POST /api/optimize and /api/import (free-plan CDN for the rest)
 functions/             Pages Function adapter if the site is still on Pages
 test-utils/            Shared fixtures for tests (not part of the app bundle)
 ```

@@ -7,7 +7,7 @@ import { getTheme } from "./shared/theme";
 
 /** JSON Resume Vitae's one distinguishing feature per spec: a built-in
  * light/dark toggle scoped to the resume surface only. The only template
- * with any client-side state — kept in its own file so the other nineteen
+ * with any client-side state — kept in its own file so the other thirty
  * (and the layouts/atoms they share) don't carry a "use client" boundary
  * they don't need. */
 export function VitaeTemplate({ data }: { data: ResumeData }) {

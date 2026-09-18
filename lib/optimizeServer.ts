@@ -61,7 +61,7 @@ export function parseSummary(content: string | undefined): string | null {
   }
 }
 
-function extractJsonObject(content: string): string | null {
+export function extractJsonObject(content: string): string | null {
   const trimmed = content.trim();
   const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
   const candidate = (fenced ? fenced[1] : trimmed).trim();
@@ -92,15 +92,24 @@ export function parseSummaryBody(body: unknown): { summary: string } | { error: 
   return { summary: summary.trim() };
 }
 
-async function groqChat(
+export interface GroqChatOptions {
+  temperature?: number;
+  maxCompletionTokens?: number;
+  missingKeyError?: string;
+}
+
+export async function callGroqChat(
   env: OptimizeEnv,
   system: string,
   user: string,
+  options: GroqChatOptions = {},
 ): Promise<{ content: string } | { error: string; status: number }> {
   if (!env.GROQ_API_KEY) {
     return {
       status: 503,
-      error: "AI optimization isn't configured. Add GROQ_API_KEY to .env.local (local) or as a Cloudflare Worker secret (production).",
+      error:
+        options.missingKeyError ??
+        "AI optimization isn't configured. Add GROQ_API_KEY to .env.local (local) or as a Cloudflare Worker secret (production).",
     };
   }
 
@@ -116,8 +125,8 @@ async function groqChat(
           { role: "user", content: user },
         ],
         response_format: { type: "json_object" },
-        temperature: 0.4,
-        max_completion_tokens: 400,
+        temperature: options.temperature ?? 0.4,
+        max_completion_tokens: options.maxCompletionTokens ?? 400,
       }),
     });
   } catch {
@@ -144,7 +153,7 @@ export async function rewriteBulletsWithGroq(
   const userPrompt = `Role: ${input.role || "Unknown role"}\nCompany: ${input.company || "Unknown company"}\nBullets:\n${input.bullets
     .map((b, i) => `${i + 1}. ${b}`)
     .join("\n")}`;
-  const result = await groqChat(env, BULLETS_SYSTEM_PROMPT, userPrompt);
+  const result = await callGroqChat(env, BULLETS_SYSTEM_PROMPT, userPrompt);
   if ("error" in result) return result;
   const parsedBullets = parseBullets(result.content);
   if (!parsedBullets) return { status: 502, error: "AI response was malformed. Try again." };
@@ -155,7 +164,7 @@ export async function rewriteSummaryWithGroq(
   env: OptimizeEnv,
   input: { summary: string },
 ): Promise<{ summary: string } | { error: string; status: number }> {
-  const result = await groqChat(env, SUMMARY_SYSTEM_PROMPT, `Summary:\n${input.summary}`);
+  const result = await callGroqChat(env, SUMMARY_SYSTEM_PROMPT, `Summary:\n${input.summary}`);
   if ("error" in result) return result;
   const parsed = parseSummary(result.content);
   if (!parsed) return { status: 502, error: "AI response was malformed. Try again." };

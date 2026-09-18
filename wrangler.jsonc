@@ -2,7 +2,7 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   // Static HTML/CSS/JS is served from the CDN without invoking this Worker, so
   // page views do not count against the free plan's 100k Worker requests/day.
-  // Only `/api/*` runs Worker code (Groq ATS rewrite).
+  // Only `/api/*` runs Worker code (Groq ATS rewrite and resume import).
   "name": "resume-builder",
   "main": "workers/index.ts",
   "compatibility_date": "2026-09-16",

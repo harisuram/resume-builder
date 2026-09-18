@@ -1,8 +1,8 @@
 import { getTheme, isTemplateId, layoutLabel, requestedTemplateId, TEMPLATES, tint } from "./theme";
 
 describe("TEMPLATES", () => {
-  it("has 21 templates", () => {
-    expect(TEMPLATES).toHaveLength(21);
+  it("has 31 templates", () => {
+    expect(TEMPLATES).toHaveLength(31);
   });
 
   it("has a unique id for every template", () => {
@@ -19,6 +19,32 @@ describe("TEMPLATES", () => {
       expect(theme.description.length).toBeLessThanOrEqual(28);
       expect(theme.source.length).toBeGreaterThan(0);
     }
+  });
+
+  it("gives every template a unique accent", () => {
+    const accents = TEMPLATES.map((t) => t.accent.toLowerCase());
+    expect(new Set(accents).size).toBe(accents.length);
+  });
+
+  it("matches a catalog snapshot for every template", () => {
+    expect(
+      TEMPLATES.map((theme) => ({
+        id: theme.id,
+        name: theme.name,
+        description: theme.description,
+        layout: theme.layout,
+        accent: theme.accent,
+        headingStyle: theme.headingStyle,
+        density: theme.density,
+        fontDisplay: theme.fontDisplay,
+        darkHeader: theme.darkHeader ?? false,
+        showAvatar: theme.showAvatar ?? false,
+        italicHeadings: theme.italicHeadings ?? false,
+        supportsDarkToggle: theme.supportsDarkToggle ?? false,
+        sidebarSide: theme.sidebarSide ?? null,
+        sidebarStyle: theme.sidebarStyle ?? null,
+      })),
+    ).toMatchSnapshot();
   });
 
   it("only uses sidebarSide/sidebarStyle on sidebar-layout templates", () => {

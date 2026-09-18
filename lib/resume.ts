@@ -62,8 +62,8 @@ export function hasForcedPageBreak(data: ResumeData, key: SectionKey): boolean {
   return Boolean(data.pageBreakSections?.includes(key));
 }
 
-/** DOM attrs every layout stamps on a section wrapper so the preview guides
- * and the print stylesheet can force that section onto a fresh page. */
+/** DOM attrs every layout stamps on a section wrapper so the preview can
+ * simulate a page start (kept in the PDF as the same gap). */
 export function sectionBreakProps(data: ResumeData, key: SectionKey) {
   return {
     "data-section-key": key,

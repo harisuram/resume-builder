@@ -13,6 +13,8 @@ describe("BasicInfoForm", () => {
   it("has no skip control — basic info is required", () => {
     render(<BasicInfoForm />);
     expect(screen.queryByRole("switch")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Choose file" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/drop a resume/i)).not.toBeInTheDocument();
   });
 
   it("updates the store as fields are typed", async () => {

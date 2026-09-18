@@ -29,9 +29,9 @@ export function itemBreaks(data: ResumeData, section: SectionKey): ItemBreaks {
 }
 
 /** Per-entry hooks for the two things that act on a single list entry: the
- * print stylesheet's `break-before: page` and the preview's page-break
- * guides, which read the label back out of the DOM so the offer to move an
- * entry can name it. */
+ * preview's page-break simulation (kept in the PDF as an inline gap) and
+ * the guides, which read the label back out of the DOM so the offer to
+ * move an entry can name it. */
 function itemAttrs(breaks: ItemBreaks, index: number, label: string) {
   return {
     "data-item-key": itemBreakKey(breaks.section, index),

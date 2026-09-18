@@ -26,7 +26,7 @@ export default function PrivatePage() {
 
         <SectionHeading>What does leave the device</SectionHeading>
         <Body>
-          Two optional exceptions, and only those:
+          A few optional exceptions, and only those:
         </Body>
         <Body>
           If ads are enabled on this deployment, Google AdSense loads on some screens. That is Google’s ad script, not
@@ -35,6 +35,10 @@ export default function PrivatePage() {
         <Body>
           If you click “Make ATS-friendly” on an experience entry, those bullets are sent to a rewrite API so they can
           come back as plain, action-led lines. If you never click it, that request never happens.
+        </Body>
+        <Body>
+          If you drop or choose a resume file, the file is read in the browser and the extracted text is sent so we can
+          fill matching sections (including synonym headings). If you never import a file, that request never happens.
         </Body>
 
         <SectionHeading>PDF download</SectionHeading>

@@ -42,6 +42,9 @@ yarn-error.log*
 .wrangler/
 worker-configuration.d.ts
 
+# Copied from pdfjs-dist on install so resume import can parse PDFs
+/public/pdf.worker.min.mjs
+
 # vercel
 .vercel
 

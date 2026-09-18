@@ -26,7 +26,7 @@ export function TemplatePreviewStrip() {
     <div className="mt-16 w-full min-w-0 max-w-4xl">
       <div className="mb-4 flex items-end justify-between gap-3">
         <p className="text-[12px] font-medium uppercase tracking-[0.18em] text-[var(--color-ink-faint)]">
-          Twenty-one templates
+          Thirty-one templates
         </p>
         <Link href="/templates" className="text-[13px] font-medium text-[var(--color-accent)] hover:underline">
           See all templates

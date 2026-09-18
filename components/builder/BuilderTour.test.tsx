@@ -19,11 +19,15 @@ beforeEach(() => {
 });
 
 describe("BuilderTour", () => {
-  it("walks through switches, page order, and the page separator", async () => {
+  it("walks through import, switches, page order, and the page separator", async () => {
     const onDismiss = jest.fn();
     render(<BuilderTour open onDismiss={onDismiss} />);
 
-    expect(screen.getByRole("dialog", { name: /skip what this resume/i })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: /drop a resume to fill the form/i })).toBeInTheDocument();
+    expect(screen.getByText(/work history, technical skills/i)).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.getByRole("heading", { name: /skip what this resume/i })).toBeInTheDocument();
     expect(screen.getByText(/every section has a switch/i)).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
@@ -57,7 +61,7 @@ describe("BuilderTour", () => {
 describe("BuilderShell first-run tour", () => {
   it("shows the tour when local storage has no section values", async () => {
     render(<BuilderShell />);
-    expect(await screen.findByRole("dialog", { name: /skip what this resume/i })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: /drop a resume to fill the form/i })).toBeInTheDocument();
   });
 
   it("does not show the tour on a mobile viewport", async () => {
@@ -69,7 +73,7 @@ describe("BuilderShell first-run tour", () => {
     }));
     render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
-    expect(screen.queryByRole("dialog", { name: /skip what this resume/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Skip tour" })).not.toBeInTheDocument();
   });
 
   it("closes the tour when the viewport shrinks below md", async () => {
@@ -84,26 +88,26 @@ describe("BuilderShell first-run tour", () => {
     };
     window.matchMedia = jest.fn().mockReturnValue(media);
     render(<BuilderShell />);
-    expect(await screen.findByRole("dialog", { name: /skip what this resume/i })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: /drop a resume to fill the form/i })).toBeInTheDocument();
     media.matches = false;
     act(() => {
       listeners.forEach((cb) => cb({ matches: false } as MediaQueryListEvent));
     });
-    expect(screen.queryByRole("dialog", { name: /skip what this resume/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Skip tour" })).not.toBeInTheDocument();
   });
 
   it("does not show the tour when a saved section already has a value", async () => {
     saveResumeData(makeFullResumeData());
     render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
-    expect(screen.queryByRole("dialog", { name: /skip what this resume/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Skip tour" })).not.toBeInTheDocument();
   });
 
   it("records a skip so an empty draft does not replay the tour", async () => {
     render(<BuilderShell />);
     expect(await screen.findByRole("button", { name: "Skip tour" })).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Skip tour" }));
-    expect(screen.queryByRole("dialog", { name: /skip what this resume/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Skip tour" })).not.toBeInTheDocument();
     expect(localStorage.getItem(TOUR_DISMISSED_KEY)).toBe("1");
   });
 });

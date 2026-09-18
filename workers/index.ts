@@ -1,3 +1,4 @@
+import { handleImportPost } from "../lib/importServer";
 import { handleOptimizePost, jsonResponse } from "../lib/optimizeServer";
 import { isThrottled } from "../lib/optimizeThrottle";
 
@@ -6,7 +7,8 @@ import { isThrottled } from "../lib/optimizeThrottle";
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
-    if (url.pathname !== "/api/optimize") {
+    const handler = url.pathname === "/api/optimize" ? handleOptimizePost : url.pathname === "/api/import" ? handleImportPost : null;
+    if (!handler) {
       return jsonResponse({ error: "Not found." }, 404);
     }
     if (request.method !== "POST") {
@@ -21,9 +23,9 @@ export default {
       return jsonResponse({ error: "Too many requests. Wait a moment and try again." }, 429);
     }
 
-    return handleOptimizePost(request, {
+    return handler(request, {
       GROQ_API_KEY: env.GROQ_API_KEY,
       GROQ_MODEL: env.GROQ_MODEL,
     });
   },
-}
+};

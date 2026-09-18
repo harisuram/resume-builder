@@ -88,7 +88,17 @@ function markersEqual(a: LineMarker[], b: LineMarker[]): boolean {
 }
 
 function writeMarginTop(el: HTMLElement, value: string) {
-  if (el.style.marginTop !== value) el.style.marginTop = value;
+  // `important` so print's sibling gap rules (`> * + * { margin-top: 1rem
+  // !important }`) cannot squash a simulated page start. Print keeps these
+  // gaps: `break-before: page` is ignored inside the absolutely positioned
+  // `#resume-print-root`, which is why wiping them made the PDF ignore the
+  // page-separator control.
+  if (!value) {
+    if (el.style.marginTop) el.style.removeProperty("margin-top");
+    return;
+  }
+  if (el.style.marginTop === value && el.style.getPropertyPriority("margin-top") === "important") return;
+  el.style.setProperty("margin-top", value, "important");
 }
 
 /** Page-break pills. Padding/type is larger below `md` so a thumb can hit
@@ -163,11 +173,11 @@ export function ResumePreviewFrame({
       // whatever margin was last applied to it.
       for (const el of breakEls) writeMarginTop(el, "");
 
-      // Simulate on screen what `break-before: page` (applied in the print
-      // stylesheet to the same [data-force-break] elements) will really do
-      // at print time: push a forced section down to the top of its next
-      // page. Processed in document order so an earlier push correctly
-      // shifts the measured position of everything below it.
+      // Push a forced section down to the top of the next A4 page. The same
+      // inline gap is what the PDF uses — print slices `#resume-print-root`
+      // at PAGE_HEIGHT, and `break-before: page` does not fire inside that
+      // absolutely positioned box. Processed in document order so an earlier
+      // push correctly shifts everything below it.
       for (const el of breakEls) {
         if (el.getAttribute("data-force-break") !== "true") continue;
         if (inRailColumn(el)) continue;

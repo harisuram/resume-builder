@@ -44,6 +44,14 @@ export default function PrivacyPage() {
           fields are not sent by that control.
         </Body>
 
+        <SectionHeading>Optional resume import</SectionHeading>
+        <Body>
+          If you drop or choose a resume file, the file is read in your browser. The extracted text is then sent to an
+          import API so matching sections can be filled. Don’t import a file if you don’t want that text to leave the
+          device. A local fallback still tries to map headings like Work History or Technical Skills if the API is
+          unavailable.
+        </Body>
+
         <SectionHeading>PDF files</SectionHeading>
         <Body>
           Download uses the browser’s print-to-PDF flow on your machine. We don’t receive the file.

@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { create } from "zustand";
+import { type ImportedResume } from "./resumeImport/normalize";
 import { placeSectionAt, resolveSectionOrder, SECTION_ORDER } from "./persona";
 import { itemBreakKey, parseItemBreakKey } from "./resume";
 import { isBasicInfoValid, isSectionValid } from "./validation";
@@ -185,6 +186,9 @@ interface BuilderState {
   reorderSection: (key: SectionKey, toIndex: number) => void;
 
   loadFromData: (data: ResumeData) => void;
+  /** Replaces draft content with a parsed resume. Empty sections are skipped
+   * so Next can walk past them; a photo already in the store is kept. */
+  applyImportedResume: (imported: ImportedResume) => void;
   resetStore: () => void;
   getResumeData: () => ResumeData;
 }
@@ -431,6 +435,25 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       pageBreakSections: data.pageBreakSections ?? [],
       pageBreakItems: data.pageBreakItems ?? [],
       sectionOrder: data.sectionOrder ?? null,
+    }),
+
+  applyImportedResume: (imported) =>
+    set((state) => {
+      const sectionStatus: Record<string, SectionStatus> = {
+        photo: state.photo ? (state.sectionStatus.photo === "skipped" ? "skipped" : "complete") : "skipped",
+      };
+      for (const key of CONTENT_KEYS) {
+        sectionStatus[key] = hasSectionContent(key, imported.sections)
+          ? deriveStatus(key, imported.sections)
+          : "skipped";
+      }
+      return {
+        basicInfo: imported.basicInfo,
+        sections: imported.sections,
+        sectionStatus,
+        pageBreakSections: [],
+        pageBreakItems: [],
+      };
     }),
 
   resetStore: () =>

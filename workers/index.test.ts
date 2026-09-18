@@ -26,8 +26,14 @@ describe("optimize Worker", () => {
     expect(res.headers.get("allow")).toBe("POST");
   });
 
-  it("returns 503 when the Groq secret is not configured", async () => {
-    const res = await post("/api/optimize", { role: "Eng", company: "Acme", bullets: ["Shipped a thing"] });
+  it("rejects non-POST on /api/import", async () => {
+    const res = await worker.fetch(new Request("https://example.com/api/import"), env);
+    expect(res.status).toBe(405);
+    expect(res.headers.get("allow")).toBe("POST");
+  });
+
+  it("returns 503 on /api/import when the Groq secret is not configured", async () => {
+    const res = await post("/api/import", { text: "Jordan Lee\nSoftware Engineer\nWork History\nAcme Corp" });
     expect(res.status).toBe(503);
   });
 });
