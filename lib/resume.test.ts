@@ -25,6 +25,22 @@ describe("hasAddedSection", () => {
     expect(hasAddedSection(makeData({ sections: { skills: [] } }))).toBe(false);
   });
 
+  it("is true once a basic-info field is typed", () => {
+    expect(hasAddedSection(makeData({ basicInfo: { name: "Jamie", email: "", phone: "", location: "", links: {} } }))).toBe(
+      true,
+    );
+  });
+
+  it("is true once a photo is added", () => {
+    expect(hasAddedSection(makeData({ photo: "data:image/jpeg;base64,abc" }))).toBe(true);
+  });
+
+  it("is false when the only photo is skipped", () => {
+    expect(
+      hasAddedSection(makeData({ photo: "data:image/jpeg;base64,abc", sectionStatus: { photo: "skipped" } })),
+    ).toBe(false);
+  });
+
   it("is true once any content section has something to render", () => {
     expect(hasAddedSection(makeData({ sections: { skills: ["TypeScript"] } }))).toBe(true);
   });

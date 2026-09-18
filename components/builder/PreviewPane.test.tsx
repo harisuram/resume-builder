@@ -43,6 +43,21 @@ describe("PreviewPane empty template preview", () => {
     expect(screen.getByText("Your Name")).toBeInTheDocument();
   });
 
+  it("replaces the placeholder as soon as a name is typed", () => {
+    useBuilderStore.getState().updateBasicInfo({ name: "Jamie Rivera" });
+    render(<PreviewPane />);
+    expect(screen.queryByRole("region", { name: /template preview/i })).not.toBeInTheDocument();
+    expect(screen.getByText("Jamie Rivera")).toBeInTheDocument();
+  });
+
+  it("replaces the placeholder as soon as a photo is added", () => {
+    useBuilderStore.getState().setPhoto("data:image/jpeg;base64,abc");
+    render(<PreviewPane />);
+    expect(screen.queryByRole("region", { name: /template preview/i })).not.toBeInTheDocument();
+    expect(document.querySelector("[data-template-skeleton]")).toBeNull();
+    expect(document.querySelector("img")).not.toBeNull();
+  });
+
   it("keeps a print root when the export preview is still a placeholder", () => {
     const { container } = render(<PreviewPane printable />);
     expect(container.querySelector("[data-template-skeleton]")).not.toBeNull();

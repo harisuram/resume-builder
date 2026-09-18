@@ -21,13 +21,28 @@ export function getRenderableSections(data: ResumeData): SectionKey[] {
   return resolveSectionOrder(data.sectionOrder).filter((key) => hasSectionContent(data, key));
 }
 
-/** True once the user has filled in at least one content section (not
- * skipped, with something to render). Basic info and photo don't count —
- * photo is skippable on its own, but it isn't a content block. Drives
- * whether the export step offers to save a copy on this device, and whether
- * the live preview still shows a template placeholder instead of the page. */
+function hasTypedBasicInfo(data: ResumeData): boolean {
+  const info = data.basicInfo;
+  return Boolean(
+    info.name ||
+      info.email ||
+      info.phone ||
+      info.location ||
+      info.links.linkedin ||
+      info.links.github ||
+      info.links.portfolio,
+  );
+}
+
+function hasVisiblePhoto(data: ResumeData): boolean {
+  return Boolean(data.photo) && data.sectionStatus.photo !== "skipped";
+}
+
+/** True once the live preview should replace the template placeholder —
+ * any typed basic-info field, a photo that isn't skipped, or a content
+ * section with something to render. */
 export function hasAddedSection(data: ResumeData): boolean {
-  return hasSummary(data) || getRenderableSections(data).length > 0;
+  return hasTypedBasicInfo(data) || hasVisiblePhoto(data) || hasSummary(data) || getRenderableSections(data).length > 0;
 }
 
 /** Headings the empty-preview skeleton should draw: every content section
