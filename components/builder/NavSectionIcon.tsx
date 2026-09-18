@@ -173,13 +173,18 @@ function AdditionalIcon({ filled }: IconProps) {
   );
 }
 
-function ExportIcon({ filled }: IconProps) {
+function ExportIcon(_props: IconProps) {
+  // Always stroke-only — a filled tray/arrow reads as a blob on the active
+  // accent-tint row, and the shared `.nav-icon-arrow` active rule would paint
+  // the arrow in accent-tint (invisible on that same background).
   return (
-    <Svg filled={filled}>
-      <path d="M7 3.6h7l4 4v12.8a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.6a1 1 0 0 1 1-1Z" />
-      <path d="M14 3.6v4h4" />
-      <path d="M12 10.8v6" className="nav-icon-arrow" />
-      <path d="m9.6 14.4 2.4 2.4 2.4-2.4" className="nav-icon-arrow" />
+    <Svg filled={false}>
+      <path d="M12 3.5v11" className="nav-icon-arrow" />
+      <path d="m8 10.5 4 4 4-4" className="nav-icon-arrow" />
+      <path
+        d="M5.5 15.5v3a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5v-3"
+        className="nav-icon-tray"
+      />
     </Svg>
   );
 }

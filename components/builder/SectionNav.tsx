@@ -355,7 +355,7 @@ export function SectionNav({ active, onSelect }: { active: NavKey; onSelect: (ke
         <NavRow
           navKey="export"
           iconDelay={120 + contentKeys.length * 40}
-          label="Template & export"
+          label="Preview & download"
           active={active === "export"}
           onClick={() => onSelect("export")}
         />

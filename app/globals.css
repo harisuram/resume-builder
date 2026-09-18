@@ -603,6 +603,14 @@ input[type="month"]::-webkit-calendar-picker-indicator {
   stroke: var(--color-accent-tint);
 }
 
+/* Download icon is stroke-only; keep it in the row's accent color when
+   selected (accent-tint stroke would vanish on the accent-tint pill). */
+.nav-section-icon[data-nav-icon="export"][data-active="true"] .nav-icon-arrow,
+.nav-section-icon[data-nav-icon="export"][data-active="true"] .nav-icon-tray {
+  fill: none;
+  stroke: currentColor;
+}
+
 @media (min-width: 768px) {
   .nav-section-icon {
     width: 1.05rem;

@@ -209,16 +209,16 @@ describe("BuilderShell", () => {
     await screen.findByRole("heading", { name: "Basic info" });
     await userEvent.click(nav().getByText("Additional"));
     await userEvent.click(screen.getByRole("button", { name: "Skip" }));
-    expect(screen.getByRole("heading", { name: "Template & export" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Preview & download" })).toBeInTheDocument();
   });
 
   it("renders the export step full-width with only the section nav aside (no separate preview aside)", async () => {
     const { container } = render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
     act(() => useBuilderStore.getState().setSkills(["TypeScript"]));
-    await userEvent.click(nav().getByText("Template & export"));
+    await userEvent.click(nav().getByText("Preview & download"));
 
-    expect(screen.getByRole("heading", { name: "Template & export" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Preview & download" })).toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(container.querySelectorAll("aside")).toHaveLength(1);
     expect(container.querySelector("main")!.className).toContain("print-unclip");
@@ -275,7 +275,7 @@ describe("BuilderShell", () => {
     await userEvent.click(button, { pointerEventsCheck: 0 });
 
     expect(screen.getByRole("dialog", { name: "Resume preview" })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Template & export" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Preview & download" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Basic info", hidden: true })).toBeInTheDocument();
     expect(main.scrollTop).toBe(480);
     expect(screen.queryByRole("button", { name: "Preview resume" })).not.toBeInTheDocument();
@@ -301,14 +301,14 @@ describe("BuilderShell", () => {
     await userEvent.click(screen.getByRole("button", { name: "Close preview" }));
     await waitFor(() => expect(screen.queryByRole("dialog", { name: "Resume preview" })).not.toBeInTheDocument());
     expect(screen.getByRole("heading", { name: "Skills", level: 2 })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Template & export" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Preview & download" })).not.toBeInTheDocument();
   });
 
   it("still drops the pinned preview button on the export step", async () => {
     render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
-    await userEvent.click(nav().getByText("Template & export"));
-    expect(screen.getByRole("heading", { name: "Template & export" })).toBeInTheDocument();
+    await userEvent.click(nav().getByText("Preview & download"));
+    expect(screen.getByRole("heading", { name: "Preview & download" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Preview resume" })).not.toBeInTheDocument();
   });
 
@@ -465,7 +465,7 @@ describe("BuilderShell", () => {
     render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
     act(() => useBuilderStore.getState().setSkills(["TypeScript"]));
-    await userEvent.click(nav().getByText("Template & export"));
+    await userEvent.click(nav().getByText("Preview & download"));
     await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
 
     expect(screen.getByRole("alert")).toHaveTextContent(
@@ -481,7 +481,7 @@ describe("BuilderShell", () => {
     act(() =>
       useBuilderStore.getState().updateBasicInfo({ name: "Jamie", email: "jamie@example.com", location: "Austin, TX" }),
     );
-    await userEvent.click(nav().getByText("Template & export"));
+    await userEvent.click(nav().getByText("Preview & download"));
     await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();

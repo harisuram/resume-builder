@@ -44,7 +44,7 @@ import { SectionNav } from "./SectionNav";
 function stepLabel(key: NavKey): string {
   if (key === "basicInfo") return "Basic info";
   if (key === "photo") return "Photo";
-  if (key === "export") return "Export";
+  if (key === "export") return "Preview & download";
   return getSectionMeta(key).label;
 }
 

@@ -43,7 +43,7 @@ describe("BuilderShell section-footer ads", () => {
     expect(screen.getByText("Builder preview top")).toBeInTheDocument();
     expect(screen.getAllByText("Builder preview").length).toBeGreaterThan(0);
 
-    await userEvent.click(within(screen.getByRole("navigation", { name: "Resume sections" })).getByText("Template & export"));
+    await userEvent.click(within(screen.getByRole("navigation", { name: "Resume sections" })).getByText("Preview & download"));
     expect(screen.queryByText("Builder preview top")).not.toBeInTheDocument();
     expect(screen.getByText("Builder preview")).toBeInTheDocument();
   });

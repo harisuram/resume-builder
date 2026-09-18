@@ -77,14 +77,14 @@ space — unfilled or blocked requests never leave a blank box.
 Six slots:
 - **Landing page** — between the feature grid and the footer, well below the
   primary "Build my resume" CTA.
-- **Builder nav** — bottom of the left section sidebar, below "Template &
-  export", desktop only.
+- **Builder nav** — bottom of the left section sidebar, below "Preview &
+  download", desktop only.
 - **Builder preview top** — top of the right preview column, above the live
   résumé, desktop only, hidden on the export step.
 - **Builder preview** — under the live preview, desktop only, hidden on the
   export step (the export step has its own slot instead — see below).
 - **Export page** — between the save/download card and the preview, on the
-  Template & export step only.
+  Preview & download step only.
 - **Section footer** — below the Back/Next/Skip row, on Photo, Summary,
   Key achievements, Skills, Certifications, Patents, Languages, Hobbies, Soft skills, and
   Additional (one shared slot id — only ever one of these is on screen at

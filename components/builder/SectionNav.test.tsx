@@ -18,7 +18,7 @@ function expectBadgesHiddenUntilMd(badges: string[]) {
 }
 
 describe("SectionNav", () => {
-  it("lists Basic info, Summary, Photo, the content sections, then Template & export", () => {
+  it("lists Basic info, Summary, Photo, the content sections, then Preview & download", () => {
     render(<SectionNav active="basicInfo" onSelect={() => {}} />);
 
     const buttons = screen.getAllByRole("button").map((b) => b.textContent ?? "");
@@ -27,13 +27,13 @@ describe("SectionNav", () => {
     const photo = buttons.findIndex((t) => t.includes("Photo"));
     const keyAchievements = buttons.findIndex((t) => t.includes("Key achievements"));
     const additional = buttons.findIndex((t) => t.includes("Additional"));
-    const exportIdx = buttons.findIndex((t) => t.includes("Template & export"));
+    const exportIdx = buttons.findIndex((t) => t.includes("Preview & download"));
     expect(summary).toBeGreaterThan(0);
     expect(photo).toBeGreaterThan(summary);
     expect(keyAchievements).toBeGreaterThan(photo);
     expect(additional).toBeGreaterThan(keyAchievements);
     expect(exportIdx).toBeGreaterThan(additional);
-    expect(buttons[buttons.length - 1]).toContain("Template & export");
+    expect(buttons[buttons.length - 1]).toContain("Preview & download");
   });
 
   it("places a meaningful icon before every section label", () => {
@@ -56,7 +56,7 @@ describe("SectionNav", () => {
       ["Hobbies", "hobbies"],
       ["Soft skills", "softSkills"],
       ["Additional", "additional"],
-      ["Template & export", "export"],
+      ["Preview & download", "export"],
     ];
 
     for (const [label, key] of expected) {
