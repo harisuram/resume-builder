@@ -383,10 +383,10 @@ export function BuilderShell() {
               </main>
               {/* Side-by-side preview is a desktop affordance only — on mobile
                   the eye button opens the same pane in a bottom sheet. Width
-                  grows with the viewport (up to the 760px design + chrome) so
-                  the CSS-scaled résumé stays readable on laptops and large
-                  monitors instead of sitting in a fixed ~420px column. */}
-              <aside className="flex min-h-0 w-0 overflow-hidden border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-ink)_3.5%,var(--color-paper))] p-0 md:w-[min(760px,max(380px,50%))] md:shrink-0 md:flex-col md:overflow-hidden md:border-l md:px-3 md:py-5 lg:px-4 lg:py-6 xl:px-5">
+                  grows with the viewport (capped below the 760px design width)
+                  so the CSS-scaled résumé stays readable without crowding the
+                  form. */}
+              <aside className="flex min-h-0 w-0 overflow-hidden border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-ink)_3.5%,var(--color-paper))] p-0 md:w-[min(650px,max(325px,42.75%))] md:shrink-0 md:flex-col md:overflow-hidden md:border-l md:px-3 md:py-5 lg:px-4 lg:py-6 xl:px-5">
                 <AdSlot
                   slot={ADSENSE_SLOTS.builderPreviewTop}
                   name="Builder preview top"
