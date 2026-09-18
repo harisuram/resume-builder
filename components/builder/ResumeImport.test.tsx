@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ImportResumeButton, ResumeImportProvider } from "./ResumeImport";
 import { importResumeFromFile } from "../../lib/resumeImport/fromFile";
+import type { ImportTarget } from "../../lib/resumeImport/synonyms";
 import { useBuilderStore } from "@/lib/store";
 import { useToastStore } from "@/lib/toast";
 
@@ -27,7 +28,7 @@ function fileInput() {
   return document.querySelector('input[type="file"]') as HTMLInputElement;
 }
 
-function renderImport(onReviewSection?: (key: "basicInfo" | "skills") => void) {
+function renderImport(onReviewSection?: (key: ImportTarget) => void) {
   return render(
     <ResumeImportProvider onReviewSection={onReviewSection}>
       <ImportResumeButton />
