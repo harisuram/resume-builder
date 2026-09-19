@@ -1,9 +1,10 @@
-import type {
-  InputHTMLAttributes,
-  LabelHTMLAttributes,
-  ReactNode,
-  SelectHTMLAttributes,
-  TextareaHTMLAttributes,
+import {
+  forwardRef,
+  type InputHTMLAttributes,
+  type LabelHTMLAttributes,
+  type ReactNode,
+  type SelectHTMLAttributes,
+  type TextareaHTMLAttributes,
 } from "react";
 
 const CONTROL_BASE =
@@ -37,19 +38,19 @@ export function TextInput({
   return <input className={controlClassName(className, invalid)} aria-invalid={invalid || undefined} {...props} />;
 }
 
-export function TextArea({
-  className = "",
-  invalid,
-  ...props
-}: TextareaHTMLAttributes<HTMLTextAreaElement> & InvalidProp) {
+export const TextArea = forwardRef<
+  HTMLTextAreaElement,
+  TextareaHTMLAttributes<HTMLTextAreaElement> & InvalidProp
+>(function TextArea({ className = "", invalid, ...props }, ref) {
   return (
     <textarea
+      ref={ref}
       className={`${controlClassName(className, invalid)} resize-y`}
       aria-invalid={invalid || undefined}
       {...props}
     />
   );
-}
+});
 
 export function Select({
   className = "",

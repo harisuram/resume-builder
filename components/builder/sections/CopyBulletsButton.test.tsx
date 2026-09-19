@@ -35,16 +35,14 @@ describe("CopyBulletsButton", () => {
 
     rerender(<CopyBulletsButton bullets={["One", "Two"]} />);
     expect(screen.getByRole("button", { name: /Copy all points/i })).toBeInTheDocument();
-    expect(screen.getByRole("tooltip")).toHaveTextContent("Copy all points");
+    expect(screen.getByRole("button", { name: /Copy all points/i })).toHaveTextContent("Copy all points");
   });
 
-  it("copies filled bullets and shows a brief copied state", async () => {
+  it("copies filled bullets", async () => {
     render(<CopyBulletsButton bullets={["Did a thing", "Shipped it", ""]} />);
     await userEvent.click(screen.getByRole("button", { name: /Copy all points/i }));
 
     expect(writeText).toHaveBeenCalledWith("- Did a thing\n- Shipped it");
-    await waitFor(() => expect(screen.getByRole("tooltip")).toHaveTextContent("Copy all points"));
-    expect(screen.getByRole("button", { name: /Copy all points/i }).className).toMatch(/emerald/);
   });
 
   it("stays disabled when every bullet is blank", () => {

@@ -19,6 +19,27 @@
     0 12px 24px -10px color-mix(in srgb, var(--color-accent) 50%, transparent);
 }
 
+/* Thin, low-contrast scrollbars for long bullet fields (and similar panes). */
+.soft-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-ink-faint) 65%, transparent) transparent;
+}
+.soft-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.soft-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  margin-block: 4px;
+}
+.soft-scrollbar::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-ink-faint) 55%, transparent);
+  border-radius: 999px;
+}
+.soft-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--color-ink-soft) 75%, transparent);
+}
+
 :root[data-theme="dark"] {
   --color-paper: #090c14;
   --color-surface: #121826;

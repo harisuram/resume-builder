@@ -48,7 +48,7 @@ function CheckIcon({ className }: { className?: string }) {
 }
 
 /** Shown once an entry has 2+ bullet rows so the user can paste them into
- * another AI. Only non-empty lines are copied. */
+ * another AI. Only non-empty lines are copied. Sits beside the bullets label. */
 export function CopyBulletsButton({ bullets }: { bullets: string[] }) {
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<number | null>(null);
@@ -75,29 +75,19 @@ export function CopyBulletsButton({ bullets }: { bullets: string[] }) {
     }
   }
 
-  const label = "Copy all points";
-
   return (
-    <span className="group relative inline-flex">
-      <button
-        type="button"
-        onClick={handleCopy}
-        disabled={filled.length === 0}
-        aria-label={label}
-        className={`inline-flex h-9 w-9 items-center justify-center rounded-md transition-colors md:h-8 md:w-8 ${
-          copied
-            ? "text-emerald-600"
-            : "text-[var(--color-ink-soft)] hover:bg-[var(--color-accent-tint)] hover:text-[var(--color-accent)] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-[var(--color-ink-soft)]"
-        }`}
-      >
-        {copied ? <CheckIcon className="h-4 w-4" /> : <CopyIcon className="h-4 w-4" />}
-      </button>
-      <span
-        role="tooltip"
-        className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-md bg-[var(--color-ink)] px-2 py-1 text-[11px] font-medium text-[var(--color-paper)] opacity-0 shadow-card transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
-      >
-        {label}
-      </span>
-    </span>
+    <button
+      type="button"
+      onClick={handleCopy}
+      disabled={filled.length === 0}
+      className={`inline-flex min-h-9 shrink-0 items-center gap-1 rounded-md px-1.5 text-[11.5px] font-medium transition-colors md:min-h-0 ${
+        copied
+          ? "text-emerald-600"
+          : "text-[var(--color-accent)] hover:bg-[var(--color-accent-tint)] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+      }`}
+    >
+      {copied ? <CheckIcon className="h-3.5 w-3.5" /> : <CopyIcon className="h-3.5 w-3.5" />}
+      Copy all points
+    </button>
   );
 }

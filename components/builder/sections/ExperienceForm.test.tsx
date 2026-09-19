@@ -91,6 +91,7 @@ describe.each([
     await userEvent.click(screen.getByText("+ Add bullet"));
     expect(useBuilderStore.getState().sections[sectionKey]![0].bullets).toEqual(["Did a thing", ""]);
     expect(screen.getByRole("button", { name: /Copy all points/i })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Bullet 2" })).toHaveFocus();
 
     const removeBulletButtons = screen.getAllByRole("button", { name: "Remove bullet" });
     await userEvent.click(removeBulletButtons[removeBulletButtons.length - 1]);

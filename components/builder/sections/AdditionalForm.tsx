@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { DeleteIconButton } from "@/components/ui/DeleteIconButton";
 import { FieldGroup, TextInput } from "@/components/ui/Field";
@@ -12,8 +13,9 @@ import {
   MAX_BULLET_LENGTH,
   MAX_FIELD_LENGTH,
 } from "@/lib/validation";
-import { ItemCard, useFocusNewIndex } from "./ItemCard";
+import { BulletTextArea } from "./BulletTextArea";
 import { CopyBulletsButton } from "./CopyBulletsButton";
+import { ItemCard, useFocusNewIndex } from "./ItemCard";
 import { SectionFormHeader } from "./SectionFormHeader";
 import { SkippedNotice } from "./SkippedNotice";
 
@@ -30,6 +32,7 @@ export function AdditionalForm() {
   const heading = additional?.heading ?? "";
   const skipped = status === "skipped";
   const { focusIndex, focusNew } = useFocusNewIndex();
+  const [focusBullet, setFocusBullet] = useState<{ entry: number; bullet: number } | null>(null);
   const { touch, errorFor } = useTouchedFields();
 
   function setBullets(index: number, bullets: string[]) {
@@ -110,20 +113,23 @@ export function AdditionalForm() {
                   </FieldGroup>
                 </div>
                 <div className="border-t border-[var(--color-border)] pt-3">
-                  <p className="mb-2 text-[12px] font-medium tracking-wide text-[var(--color-ink-soft)]">
-                    Details (one line per bullet)
-                  </p>
+                  <div className="mb-2 flex min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1">
+                    <p className="text-[12px] font-medium tracking-wide text-[var(--color-ink-soft)]">
+                      Details (one bullet each)
+                    </p>
+                    <CopyBulletsButton bullets={item.bullets} />
+                  </div>
                   <div className="flex flex-col gap-2">
                     {item.bullets.map((bullet, bi) => {
                       const bulletError = errorFor(`${i}.bullet.${bi}`, errors.bullets[bi]);
                       return (
                       <div key={bi}>
-                        <div className="flex items-center gap-2">
-                          <TextInput
+                        <div className="flex items-start gap-2">
+                          <BulletTextArea
                             value={bullet}
-                            onChange={(e) => {
+                            onChange={(nextValue) => {
                               const next = [...item.bullets];
-                              next[bi] = e.target.value;
+                              next[bi] = nextValue;
                               setBullets(i, next);
                             }}
                             onBlur={touch(`${i}.bullet.${bi}`)}
@@ -131,11 +137,12 @@ export function AdditionalForm() {
                             maxLength={MAX_BULLET_LENGTH}
                             invalid={Boolean(bulletError)}
                             aria-label={`Detail ${bi + 1}`}
+                            autoFocus={focusBullet?.entry === i && focusBullet.bullet === bi}
                           />
                           <DeleteIconButton
                             onClick={() => setBullets(i, item.bullets.filter((_, idx) => idx !== bi))}
                             aria-label="Remove bullet"
-                            className="h-9 w-9 md:h-8 md:w-8"
+                            className="mt-0.5 h-9 w-9 shrink-0 md:h-8 md:w-8"
                           />
                         </div>
                         {bulletError ? (
@@ -147,16 +154,16 @@ export function AdditionalForm() {
                       );
                     })}
                   </div>
-                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
-                    <button
-                      type="button"
-                      onClick={() => setBullets(i, [...item.bullets, ""])}
-                      className="text-[12px] font-medium text-[var(--color-accent)] transition-opacity hover:opacity-80"
-                    >
-                      + Add bullet
-                    </button>
-                    <CopyBulletsButton bullets={item.bullets} />
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFocusBullet({ entry: i, bullet: item.bullets.length });
+                      setBullets(i, [...item.bullets, ""]);
+                    }}
+                    className="mt-2 text-[12px] font-medium text-[var(--color-accent)] transition-opacity hover:opacity-80"
+                  >
+                    + Add bullet
+                  </button>
                 </div>
               </ItemCard>
               );

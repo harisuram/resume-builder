@@ -2,10 +2,10 @@
 
 import { Button } from "@/components/ui/Button";
 import { DeleteIconButton } from "@/components/ui/DeleteIconButton";
-import { TextInput } from "@/components/ui/Field";
 import { useBuilderStore } from "@/lib/store";
 import { useTouchedFields } from "@/lib/useTouchedFields";
 import { MAX_BULLET_LENGTH, validateAchievement } from "@/lib/validation";
+import { BulletTextArea } from "./BulletTextArea";
 import { useFocusNewIndex } from "./ItemCard";
 import { SectionFormHeader } from "./SectionFormHeader";
 import { SkippedNotice } from "./SkippedNotice";
@@ -39,10 +39,10 @@ export function KeyAchievementsForm() {
               const error = errorFor(`${i}`, validateAchievement(item).message);
               return (
               <div key={i}>
-                <div className="flex items-center gap-2">
-                  <TextInput
+                <div className="flex items-start gap-2">
+                  <BulletTextArea
                     value={item}
-                    onChange={(e) => updateAt(i, e.target.value)}
+                    onChange={(next) => updateAt(i, next)}
                     onBlur={touch(`${i}`)}
                     placeholder="Grew the customer base by 40% in under a year"
                     autoFocus={i === focusIndex}
@@ -53,7 +53,7 @@ export function KeyAchievementsForm() {
                   <DeleteIconButton
                     onClick={() => setKeyAchievements(items.filter((_, idx) => idx !== i))}
                     aria-label="Remove achievement"
-                    className="h-9 w-9 md:h-8 md:w-8"
+                    className="mt-0.5 h-9 w-9 shrink-0 md:h-8 md:w-8"
                   />
                 </div>
                 {error ? (
