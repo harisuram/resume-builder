@@ -383,6 +383,63 @@ function AsymmetricSkeleton({
   );
 }
 
+function LabeledSkeleton({
+  theme,
+  sections,
+  compact,
+  animate,
+  fullPage,
+  showAvatar,
+  additionalTitle,
+}: SkeletonBodyProps) {
+  const fontClass = theme.fontDisplay === "serif" ? "font-serif" : "font-sans";
+  const gap = compact ? "gap-3.5" : theme.density === "compact" ? "gap-4" : "gap-5";
+  const rowClass = "grid grid-cols-[minmax(7.5rem,22%)_minmax(0,1fr)] gap-x-6";
+  const ruleClass = "border-t border-[var(--r-ink-faint)] pt-4";
+
+  return (
+    <div
+      className={`resume-surface px-8 pb-8 pt-8 ${fontClass}`}
+      style={fullPage ? { minHeight: PAGE_HEIGHT_PX } : undefined}
+    >
+      <div className="flex flex-col items-center gap-3 text-center">
+        {showAvatar && <AvatarSlot accent={theme.accent} size={72} />}
+        <NameBone theme={theme} sizeClass="text-[26px]" />
+      </div>
+      <div className={`mt-6 flex flex-col ${gap}`}>
+        <section data-preview-section="contact" className={rowClass}>
+          <h3 className="text-[13px] font-semibold leading-snug text-[var(--r-ink)]">Personal Information</h3>
+          <ContactBones />
+        </section>
+        {sections.map((key, index) => {
+          const title =
+            key === "summary"
+              ? "Profile"
+              : key === "experience"
+                ? "Work experience"
+                : key === "additional" && additionalTitle?.trim()
+                  ? additionalTitle.trim()
+                  : resumeSectionTitle(key);
+          return (
+            <section
+              key={key}
+              data-preview-section={key}
+              data-labeled-ruled=""
+              className={`${rowClass} ${animate ? "skeleton-section" : ""}`}
+              style={animate ? { animationDelay: `${Math.min(index, 14) * 45}ms` } : undefined}
+            >
+              <h3 className="text-[13px] font-semibold leading-snug text-[var(--r-ink)]">{title}</h3>
+              <div className={ruleClass}>
+                <SectionBody section={key} compact={compact} />
+              </div>
+            </section>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function TemplateSkeleton({
   theme,
   sections,
@@ -424,6 +481,8 @@ export function TemplateSkeleton({
       <SidebarSkeleton {...bodyProps} />
     ) : theme.layout === "asymmetric" ? (
       <AsymmetricSkeleton {...bodyProps} />
+    ) : theme.layout === "labeled" ? (
+      <LabeledSkeleton {...bodyProps} />
     ) : (
       <SingleColumnSkeleton {...bodyProps} />
     );

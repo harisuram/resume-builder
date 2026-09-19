@@ -19,6 +19,7 @@ const FILTERS: { id: LayoutFilter; label: string; short: string }[] = [
   { id: "single", label: "Single column", short: "Single" },
   { id: "sidebar", label: "Sidebar", short: "Sidebar" },
   { id: "asymmetric", label: "Two column", short: "Two-col" },
+  { id: "labeled", label: "Labeled", short: "Labeled" },
 ];
 
 function builderHref(id: string) {

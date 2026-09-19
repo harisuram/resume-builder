@@ -27,6 +27,7 @@ export function ResumeSection({
   theme,
   light = false,
   preferInline = false,
+  hideHeading = false,
 }: {
   section: SectionKey;
   data: ResumeData;
@@ -36,9 +37,13 @@ export function ResumeSection({
    * inline line — used in the asymmetric layout's narrow column, where
    * wrapping chips overflow the 32% width. */
   preferInline?: boolean;
+  /** When the layout draws the section title itself (e.g. labeled rail). */
+  hideHeading?: boolean;
 }) {
   const title = resumeSectionTitle(section, data);
-  const heading = <SectionHeading theme={theme} section={section} title={title} light={light} />;
+  const heading = hideHeading ? null : (
+    <SectionHeading theme={theme} section={section} title={title} light={light} />
+  );
   const compact = preferInline || theme.density === "compact";
   const breaks = itemBreaks(data, section);
 

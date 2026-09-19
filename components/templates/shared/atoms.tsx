@@ -103,6 +103,17 @@ function formatPhone(info: BasicInfo): string {
   return `${info.phoneCountryCode || DEFAULT_DIAL_CODE} ${info.phone}`;
 }
 
+function contactItems(info: BasicInfo) {
+  return [
+    info.location && { icon: PinIcon, text: info.location },
+    info.email && { icon: MailIcon, text: info.email },
+    info.phone && { icon: PhoneIcon, text: formatPhone(info) },
+    info.links.linkedin && { icon: LinkedInIcon, text: info.links.linkedin },
+    info.links.github && { icon: GithubIcon, text: info.links.github },
+    info.links.portfolio && { icon: GlobeIcon, text: info.links.portfolio },
+  ].filter(Boolean) as { icon: (p: { className?: string }) => React.ReactElement; text: string }[];
+}
+
 export function ContactLine({
   info,
   light = false,
@@ -112,14 +123,7 @@ export function ContactLine({
   light?: boolean;
   stacked?: boolean;
 }) {
-  const items = [
-    info.location && { icon: PinIcon, text: info.location },
-    info.email && { icon: MailIcon, text: info.email },
-    info.phone && { icon: PhoneIcon, text: formatPhone(info) },
-    info.links.linkedin && { icon: LinkedInIcon, text: info.links.linkedin },
-    info.links.github && { icon: GithubIcon, text: info.links.github },
-    info.links.portfolio && { icon: GlobeIcon, text: info.links.portfolio },
-  ].filter(Boolean) as { icon: (p: { className?: string }) => React.ReactElement; text: string }[];
+  const items = contactItems(info);
 
   if (items.length === 0) return null;
 
@@ -130,6 +134,24 @@ export function ContactLine({
       {items.map((item, i) => (
         <span key={i} className={`flex items-start gap-1 ${stacked ? "w-full" : ""}`}>
           <item.icon className="mt-0.5 h-3 w-3 shrink-0 opacity-80" />
+          <span className="min-w-0 break-words">{item.text}</span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/** Two-column icon grid used by the labeled (European CV) layout's
+ * Personal Information row. */
+export function ContactGrid({ info }: { info: BasicInfo }) {
+  const items = contactItems(info);
+  if (items.length === 0) return null;
+
+  return (
+    <div className="grid grid-cols-1 gap-x-6 gap-y-1.5 text-[12px] text-[var(--r-ink-soft)] sm:grid-cols-2">
+      {items.map((item, i) => (
+        <span key={i} className="flex min-w-0 items-start gap-1.5">
+          <item.icon className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-80" />
           <span className="min-w-0 break-words">{item.text}</span>
         </span>
       ))}

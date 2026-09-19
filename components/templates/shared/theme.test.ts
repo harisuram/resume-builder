@@ -1,8 +1,8 @@
 import { getTheme, isTemplateId, layoutLabel, requestedTemplateId, TEMPLATES, tint } from "./theme";
 
 describe("TEMPLATES", () => {
-  it("has 31 templates", () => {
-    expect(TEMPLATES).toHaveLength(31);
+  it("has 32 templates", () => {
+    expect(TEMPLATES).toHaveLength(32);
   });
 
   it("has a unique id for every template", () => {
@@ -84,10 +84,11 @@ describe("isTemplateId", () => {
 });
 
 describe("layoutLabel", () => {
-  it("names the three layout families", () => {
+  it("names the four layout families", () => {
     expect(layoutLabel("single")).toBe("Single column");
     expect(layoutLabel("sidebar")).toBe("Sidebar");
     expect(layoutLabel("asymmetric")).toBe("Two column");
+    expect(layoutLabel("labeled")).toBe("Labeled");
   });
 });
 

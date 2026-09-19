@@ -4,6 +4,7 @@ import { makeFullResumeData } from "@/test-utils/fixtures";
 import { NARROW_SECTION_KEYS } from "../shared/ResumeSection";
 import { getTheme } from "../shared/theme";
 import { AsymmetricLayout } from "./AsymmetricLayout";
+import { LabeledLayout } from "./LabeledLayout";
 import { SidebarLayout } from "./SidebarLayout";
 import { SingleColumnLayout } from "./SingleColumnLayout";
 
@@ -64,6 +65,38 @@ describe("template layouts share the same section split", () => {
     expect(sectionKeys(wide)).toEqual(["summary", ...WIDE]);
     expect(container.querySelector(".resume-split-page")).not.toBeNull();
     expect(container.querySelector("thead.resume-split-page-pad")).not.toBeNull();
+  });
+
+  it("LabeledLayout keeps section titles in a left rail and contact under Personal Information", () => {
+    const data = makeFullResumeData();
+    const { container } = render(<LabeledLayout data={data} theme={getTheme("dossier")} />);
+    expect(container.querySelector('[data-layout="labeled"]')).not.toBeNull();
+    expect(container.textContent).toContain("Personal Information");
+    expect(container.textContent).toContain("Profile");
+    expect(container.textContent).toContain("Work experience");
+    expect(sectionKeys(container)).toEqual(["summary", ...getRenderableSections(data)]);
+    // Name is centered; contact is not under the name heading.
+    const name = container.querySelector("h1");
+    expect(name?.parentElement?.className).toContain("items-center");
+    expect(name?.parentElement?.textContent).not.toContain(data.basicInfo.email);
+  });
+
+  it("LabeledLayout puts content-column rules on every section after the first", () => {
+    const data = makeFullResumeData();
+    const { container } = render(<LabeledLayout data={data} theme={getTheme("dossier")} />);
+    const bodySections = Array.from(container.querySelectorAll(".resume-page-body > section"));
+    expect(bodySections.length).toBeGreaterThan(2);
+    expect(bodySections[0].getAttribute("data-labeled-ruled")).toBeNull();
+    for (const section of bodySections.slice(1)) {
+      expect(section.getAttribute("data-labeled-ruled")).toBe("true");
+      const content = section.children[1] as HTMLElement;
+      expect(content.className).toMatch(/border-t/);
+    }
+    // Divider lives inside the section so a page-gap spacer inserted before
+    // [data-section-key] keeps the rule with its label and body.
+    const experience = container.querySelector('[data-section-key="experience"]')!;
+    expect(experience.getAttribute("data-labeled-ruled")).toBe("true");
+    expect(experience.querySelector(".border-t")).not.toBeNull();
   });
 
   it("Copper and Inkwell keep the accent header band out of the flowing columns", () => {

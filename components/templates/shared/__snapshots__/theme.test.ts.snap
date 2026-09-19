@@ -498,5 +498,21 @@ exports[`TEMPLATES matches a catalog snapshot for every template 1`] = `
     "sidebarStyle": null,
     "supportsDarkToggle": false,
   },
+  {
+    "accent": "#8B6F47",
+    "darkHeader": false,
+    "density": "relaxed",
+    "description": "Label-rail European CV",
+    "fontDisplay": "sans",
+    "headingStyle": "rule-full",
+    "id": "dossier",
+    "italicHeadings": false,
+    "layout": "labeled",
+    "name": "Dossier",
+    "showAvatar": false,
+    "sidebarSide": null,
+    "sidebarStyle": null,
+    "supportsDarkToggle": false,
+  },
 ]
 `;

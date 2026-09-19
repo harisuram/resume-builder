@@ -1,4 +1,4 @@
-export type LayoutKind = "single" | "sidebar" | "asymmetric";
+export type LayoutKind = "single" | "sidebar" | "asymmetric" | "labeled";
 export type HeadingStyle = "plain" | "icon" | "rule-partial" | "rule-full" | "boxed" | "tracked";
 
 export interface TemplateTheme {
@@ -394,6 +394,17 @@ export const TEMPLATES: TemplateTheme[] = [
     fontDisplay: "sans",
     showAvatar: true,
   },
+  {
+    id: "dossier",
+    name: "Dossier",
+    source: "Original layout",
+    description: "Label-rail European CV",
+    layout: "labeled",
+    accent: "#8B6F47",
+    headingStyle: "rule-full",
+    density: "relaxed",
+    fontDisplay: "sans",
+  },
 ];
 
 export function getTheme(id: string): TemplateTheme {
@@ -407,6 +418,7 @@ export function isTemplateId(id: string): boolean {
 export function layoutLabel(layout: LayoutKind): string {
   if (layout === "sidebar") return "Sidebar";
   if (layout === "asymmetric") return "Two column";
+  if (layout === "labeled") return "Labeled";
   return "Single column";
 }
 

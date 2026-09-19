@@ -460,6 +460,49 @@ exports[`TemplateSkeleton matches the layout snap for deedy-reversed (Twin) 1`] 
 }
 `;
 
+exports[`TemplateSkeleton matches the layout snap for dossier (Dossier) 1`] = `
+{
+  "avatarSizes": [],
+  "darkHeaderBg": null,
+  "headings": [
+    {
+      "color": "",
+      "italic": false,
+      "text": "Personal Information",
+    },
+    {
+      "color": "",
+      "italic": false,
+      "text": "Profile",
+    },
+    {
+      "color": "",
+      "italic": false,
+      "text": "Work experience",
+    },
+    {
+      "color": "",
+      "italic": false,
+      "text": "Projects",
+    },
+    {
+      "color": "",
+      "italic": false,
+      "text": "Education",
+    },
+    {
+      "color": "",
+      "italic": false,
+      "text": "Skills",
+    },
+  ],
+  "id": "dossier",
+  "layout": "labeled",
+  "railBg": null,
+  "railOnRight": false,
+}
+`;
+
 exports[`TemplateSkeleton matches the layout snap for inkwell (Inkwell) 1`] = `
 {
   "avatarSizes": [],

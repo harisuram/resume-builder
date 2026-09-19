@@ -513,7 +513,11 @@ describe("ResumePreviewFrame", () => {
       },
     );
 
-    it.each(TEMPLATE_LIST.filter((t) => t.layout !== "single").map((t) => [t.id, t.name, t.layout] as const))(
+    it.each(
+      TEMPLATE_LIST.filter((t) => t.layout === "sidebar" || t.layout === "asymmetric").map(
+        (t) => [t.id, t.name, t.layout] as const,
+      ),
+    )(
       "%s (%s, %s) insets a rail section that starts on page 2",
       (id) => {
         const data = makeFullResumeData({ templateId: id });
