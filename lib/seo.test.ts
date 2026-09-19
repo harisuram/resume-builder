@@ -27,7 +27,10 @@ describe("pageMetadata", () => {
     expect(privacy.title).toBe("Privacy");
     expect(privacy.alternates).toEqual({ canonical: "/privacy" });
     expect(privacy.openGraph?.images).toEqual([
-      expect.objectContaining({ url: "/opengraph-image", width: 1200, height: 630 }),
+      expect.objectContaining({ url: "/og.png", width: 1200, height: 630 }),
+    ]);
+    expect(home.openGraph?.images).toEqual([
+      expect.objectContaining({ url: "/og.png", width: 1200, height: 630 }),
     ]);
   });
 });

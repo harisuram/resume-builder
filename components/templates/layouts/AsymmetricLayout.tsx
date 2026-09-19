@@ -15,7 +15,7 @@ export function AsymmetricLayout({ data, theme }: { data: ResumeData; theme: Tem
   const wide = sections.filter((k) => !NARROW_SECTION_KEYS.has(k));
 
   return (
-    <div className="resume-surface resume-split-page min-h-full px-8 py-7">
+    <div className="resume-surface resume-split-page min-h-full px-8 py-7" data-layout={theme.layout}>
       <div className="flex items-center gap-5 border-b-2 pb-3" style={{ borderColor: theme.accent }}>
         <div className="min-w-0 flex-1">
           <h1 className="text-[25px] font-semibold tracking-tight" style={{ color: theme.accent }}>

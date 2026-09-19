@@ -42,11 +42,13 @@ export const metadata: Metadata = {
     url: SITE_URL,
     siteName: SITE_NAME,
     type: "website",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: HOME_TITLE }],
   },
   twitter: {
     card: "summary_large_image",
     title: HOME_TITLE,
     description: HOME_DESCRIPTION,
+    images: ["/og.png"],
   },
   // Google's site-connection meta — crawlers look for this in <head> even
   // when the adsbygoogle script is still loading. Only emitted when a real

@@ -1,10 +1,10 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState } from "react";
-import { TemplateSkeleton } from "@/components/site/TemplateSkeleton";
+import { getTemplateComponent } from "@/components/templates/registry";
 import { getTheme } from "@/components/templates/shared/theme";
 import { PAGE_WIDTH_PX } from "@/lib/page";
-import { getPlaceholderSections } from "@/lib/resume";
+import { sampleResumeForPreview } from "@/lib/sampleResume";
 import type { ResumeData } from "@/lib/types";
 
 function SwapIcon() {
@@ -30,7 +30,8 @@ export function EmptyResumePreview({
   onChangeTemplate?: () => void;
 }) {
   const theme = getTheme(data.templateId);
-  const sections = getPlaceholderSections(data);
+  const sample = sampleResumeForPreview(data);
+  const Template = getTemplateComponent(theme.id);
   const viewportRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
@@ -67,19 +68,10 @@ export function EmptyResumePreview({
           ref={stageRef}
           className="resume-scale-stage pointer-events-none relative origin-top-left overflow-hidden rounded-sm border border-[var(--color-border)] shadow-card"
           aria-hidden="true"
+          data-sample-resume={theme.id}
           style={{ width: PAGE_WIDTH_PX, transform: `scale(${scale})` }}
         >
-          <TemplateSkeleton
-            key={theme.id}
-            theme={theme}
-            sections={sections}
-            additionalTitle={data.sections.additional?.heading}
-            showAvatar={Boolean(theme.showAvatar) && data.sectionStatus.photo !== "skipped"}
-            framed={false}
-            animate
-            compact
-            fullPage
-          />
+          <Template data={sample} />
         </div>
       </div>
 
@@ -90,7 +82,7 @@ export function EmptyResumePreview({
               Preview of {theme.name}
             </p>
             <p className="mt-0.5 text-[11px] leading-snug text-[var(--color-ink-soft)]">
-              Sneak peek — add a section and it comes alive.
+              Sample text — add your details and this becomes your resume.
             </p>
           </div>
           {onChangeTemplate && (

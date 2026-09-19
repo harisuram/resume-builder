@@ -214,10 +214,10 @@ export function pageMetadata(path: IndexablePath): Metadata {
   const description = path === "/" ? HOME_DESCRIPTION : PAGE_META[path].description;
   const url = absoluteUrl(path);
   const branded = path === "/" ? title : `${title} — ${SITE_NAME}`;
-  // Child routes that set `openGraph` replace the parent object (they do not
-  // inherit the file-based opengraph-image). Homepage keeps the file convention.
+  // Prefer `/og.png` (published by scripts/build.mjs). Extensionless
+  // `/opengraph-image` is rejected by WhatsApp and similar scrapers.
   const image = {
-    url: "/opengraph-image",
+    url: "/og.png",
     width: 1200,
     height: 630,
     alt: HOME_TITLE,
@@ -234,13 +234,13 @@ export function pageMetadata(path: IndexablePath): Metadata {
       url,
       siteName: SITE_NAME,
       type: "website",
-      ...(path === "/" ? {} : { images: [image] }),
+      images: [image],
     },
     twitter: {
       card: "summary_large_image",
       title: branded,
       description,
-      ...(path === "/" ? {} : { images: ["/opengraph-image"] }),
+      images: ["/og.png"],
     },
   };
 }
@@ -252,7 +252,7 @@ export function webApplicationJsonLd() {
     name: SITE_NAME,
     alternateName: [...ALTERNATE_NAMES],
     url: SITE_URL,
-    image: absoluteUrl("/opengraph-image"),
+    image: absoluteUrl("/og.png"),
     applicationCategory: "BusinessApplication",
     operatingSystem: "Any",
     description: HOME_DESCRIPTION,

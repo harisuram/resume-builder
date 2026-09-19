@@ -11,7 +11,8 @@ describe("templates gallery", () => {
       expect(screen.getByRole("heading", { name: template.name })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: `Select ${template.name} template` })).toBeInTheDocument();
     }
-    expect(document.querySelector('[data-template-skeleton="jakes-resume"]')).not.toBeNull();
+    expect(document.querySelector('[data-sample-resume="jakes-resume"]')).not.toBeNull();
+    expect(document.querySelector('[data-template-skeleton]')).toBeNull();
     expect(document.querySelector('[data-layout="single"]')).not.toBeNull();
     expect(screen.getByText(/select a template to continue building/i)).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /continue with/i })).not.toBeInTheDocument();
@@ -28,18 +29,18 @@ describe("templates gallery", () => {
     );
   });
 
-  it("opens a skeleton preview of the layout and sends that template to the builder", async () => {
+  it("opens a sample-text preview of the layout and sends that template to the builder", async () => {
     render(<TemplatesPage />);
     await userEvent.click(screen.getByRole("button", { name: "Preview Atlas layout" }));
 
     const dialog = screen.getByRole("dialog", { name: "Atlas" });
     expect(dialog).toBeInTheDocument();
     expect(within(dialog).getByText("Classic engineering column")).toBeInTheDocument();
+    expect(within(dialog).getByText("Alexandra Montgomery-Whitfield")).toBeInTheDocument();
     expect(within(dialog).getByText("Summary")).toBeInTheDocument();
     expect(within(dialog).getByText("Experience")).toBeInTheDocument();
     expect(within(dialog).getByText("Education")).toBeInTheDocument();
     expect(within(dialog).getByText("Skills")).toBeInTheDocument();
-    expect(within(dialog).queryByText("Alexandra")).not.toBeInTheDocument();
     expect(within(dialog).getByRole("link", { name: "Use this template" })).toHaveAttribute(
       "href",
       "/builder?template=jakes-resume",

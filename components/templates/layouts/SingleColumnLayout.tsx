@@ -56,7 +56,7 @@ export function SingleColumnLayout({
   );
 
   return (
-    <div className="resume-surface min-h-full" data-resume-theme={resumeTheme}>
+    <div className="resume-surface min-h-full" data-layout={theme.layout} data-resume-theme={resumeTheme}>
       {header}
       <div className={`resume-page-body relative flex flex-col px-8 ${theme.darkHeader ? "pt-6" : "pt-5"} pb-8 ${theme.density === "compact" ? "gap-4" : "gap-5"}`}>
         {hasSummary(data) && (

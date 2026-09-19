@@ -1,24 +1,26 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { getTemplateComponent } from "@/components/templates/registry";
 import type { TemplateTheme } from "@/components/templates/shared/theme";
-import { TemplateSkeleton } from "./TemplateSkeleton";
+import { PAGE_WIDTH_PX } from "@/lib/page";
+import { sampleResumeForTemplate } from "@/lib/sampleResume";
 
-/** Layout width the skeleton is drawn at before it is scaled down. Narrow
- * phones otherwise squash the sidebar until headings like EDUCATION clip. */
-export const PREVIEW_PAPER_WIDTH = 520;
+/** Layout width the sample resume is drawn at before it is scaled down. */
+export const PREVIEW_PAPER_WIDTH = PAGE_WIDTH_PX;
 
 export function ScaledTemplatePreview({
   theme,
   paperWidth = PREVIEW_PAPER_WIDTH,
-  compact = false,
-  animate = false,
-  fullPage = false,
+  compact: _compact = false,
+  animate: _animate = false,
+  fullPage: _fullPage = false,
   framed = true,
   fillParent = false,
 }: {
   theme: TemplateTheme;
   paperWidth?: number;
+  /** Kept for call-site compatibility; live sample text ignores bone layout knobs. */
   compact?: boolean;
   animate?: boolean;
   fullPage?: boolean;
@@ -27,6 +29,8 @@ export function ScaledTemplatePreview({
    * the scaled page height so a modal can scroll the full sheet. */
   fillParent?: boolean;
 }) {
+  const sample = useMemo(() => sampleResumeForTemplate(theme.id), [theme.id]);
+  const Template = getTemplateComponent(theme.id);
   const viewportRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(fillParent ? 0 : 1);
@@ -62,14 +66,13 @@ export function ScaledTemplatePreview({
       : { width: "100%" };
 
   const page = (
-    <div ref={pageRef} className="origin-top-left" style={pageStyle}>
-      <TemplateSkeleton
-        theme={theme}
-        compact={compact}
-        animate={animate}
-        fullPage={fullPage}
-        framed={framed}
-      />
+    <div
+      ref={pageRef}
+      className={`origin-top-left ${framed ? "overflow-hidden rounded-sm border border-[var(--color-border)] shadow-card" : ""}`}
+      data-sample-resume={theme.id}
+      style={pageStyle}
+    >
+      <Template data={sample} />
     </div>
   );
 

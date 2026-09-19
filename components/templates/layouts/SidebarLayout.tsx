@@ -90,7 +90,7 @@ export function SidebarLayout({ data, theme }: { data: ResumeData; theme: Templa
 
   if (theme.darkHeader) {
     return (
-      <div className="resume-surface resume-sidebar-page flex min-h-full flex-col" style={pageStyle}>
+      <div className="resume-surface resume-sidebar-page flex min-h-full flex-col" data-layout={theme.layout} style={pageStyle}>
         <div className="resume-dark-header flex items-center gap-6 px-8 py-6 text-white" style={{ background: theme.accent }}>
           <div className="min-w-0 flex-1">
             <h1 className={`${fontClass} text-[24px] font-semibold`}>{data.basicInfo.name || "Your Name"}</h1>
@@ -108,7 +108,7 @@ export function SidebarLayout({ data, theme }: { data: ResumeData; theme: Templa
   }
 
   return (
-    <div className="resume-surface resume-sidebar-page flex min-h-full" style={pageStyle}>
+    <div className="resume-surface resume-sidebar-page flex min-h-full" data-layout={theme.layout} style={pageStyle}>
       {columns}
     </div>
   );
