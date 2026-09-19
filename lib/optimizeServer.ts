@@ -8,6 +8,8 @@ export const DEFAULT_MODEL = "openai/gpt-oss-120b";
 export const MAX_BULLETS = 12;
 export const MAX_BULLET_LEN = 300;
 export const MAX_SUMMARY_LEN = 800;
+/** Matches `MAX_DESCRIPTION_LENGTH` in validation.ts. */
+export const MAX_PROJECT_DESCRIPTION_LEN = 600;
 
 export interface OptimizeEnv {
   GROQ_API_KEY?: string;
@@ -27,6 +29,14 @@ const SUMMARY_SYSTEM_PROMPT =
   "Keep any numbers already present; never invent employers, titles, skills, " +
   "metrics, or outcomes that aren't implied by the input. Stay under 800 " +
   'characters. Return strict JSON: {"summary": "..."}.';
+
+const PROJECT_SYSTEM_PROMPT =
+  "You rewrite a resume project description to be ATS-friendly: 1–3 concise " +
+  "sentences, plain text, no markdown, no first-person pronouns (no I/me/my). " +
+  "Lead with what was built and the impact; weave in technologies already " +
+  "listed when they fit naturally. Keep any numbers already present; never " +
+  "invent features, metrics, or outcomes that aren't implied by the input. " +
+  "Stay under 600 characters. Return strict JSON: {\"description\": \"...\"}.";
 
 export function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
@@ -61,6 +71,21 @@ export function parseSummary(content: string | undefined): string | null {
   }
 }
 
+export function parseProjectDescription(content: string | undefined): string | null {
+  if (!content) return null;
+  const jsonText = extractJsonObject(content);
+  if (!jsonText) return null;
+  try {
+    const parsed = JSON.parse(jsonText) as { description?: unknown };
+    if (typeof parsed.description !== "string") return null;
+    const text = parsed.description.trim();
+    if (!text) return null;
+    return text.length > MAX_PROJECT_DESCRIPTION_LEN ? text.slice(0, MAX_PROJECT_DESCRIPTION_LEN) : text;
+  } catch {
+    return null;
+  }
+}
+
 export function extractJsonObject(content: string): string | null {
   const trimmed = content.trim();
   const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
@@ -90,6 +115,28 @@ export function parseSummaryBody(body: unknown): { summary: string } | { error: 
     return { error: "Invalid summary." };
   }
   return { summary: summary.trim() };
+}
+
+export function parseProjectBody(
+  body: unknown,
+): { name: string; description: string; technologies: string[] } | { error: string } {
+  const { name, description, technologies } = (body ?? {}) as {
+    name?: unknown;
+    description?: unknown;
+    technologies?: unknown;
+  };
+  if (
+    typeof name !== "string" ||
+    typeof description !== "string" ||
+    description.trim().length === 0 ||
+    description.length > MAX_PROJECT_DESCRIPTION_LEN
+  ) {
+    return { error: "Invalid project data." };
+  }
+  const techs = Array.isArray(technologies)
+    ? technologies.filter((t): t is string => typeof t === "string" && t.trim().length > 0).map((t) => t.trim())
+    : [];
+  return { name: name.trim(), description: description.trim(), technologies: techs };
 }
 
 export interface GroqChatOptions {
@@ -171,6 +218,22 @@ export async function rewriteSummaryWithGroq(
   return { summary: parsed };
 }
 
+export async function rewriteProjectWithGroq(
+  env: OptimizeEnv,
+  input: { name: string; description: string; technologies: string[] },
+): Promise<{ description: string } | { error: string; status: number }> {
+  const techLine = input.technologies.length > 0 ? input.technologies.join(", ") : "(none listed)";
+  const userPrompt =
+    `Project: ${input.name || "Untitled project"}\n` +
+    `Technologies: ${techLine}\n` +
+    `Description:\n${input.description}`;
+  const result = await callGroqChat(env, PROJECT_SYSTEM_PROMPT, userPrompt);
+  if ("error" in result) return result;
+  const parsed = parseProjectDescription(result.content);
+  if (!parsed) return { status: 502, error: "AI response was malformed. Try again." };
+  return { description: parsed };
+}
+
 export async function handleOptimizePost(request: Request, env: OptimizeEnv): Promise<Response> {
   let body: unknown;
   try {
@@ -186,6 +249,14 @@ export async function handleOptimizePost(request: Request, env: OptimizeEnv): Pr
     const result = await rewriteSummaryWithGroq(env, parsed);
     if ("error" in result) return jsonResponse({ error: result.error }, result.status);
     return jsonResponse({ summary: result.summary }, 200);
+  }
+
+  if (kind === "project") {
+    const parsed = parseProjectBody(body);
+    if ("error" in parsed) return jsonResponse({ error: parsed.error }, 400);
+    const result = await rewriteProjectWithGroq(env, parsed);
+    if ("error" in result) return jsonResponse({ error: result.error }, result.status);
+    return jsonResponse({ description: result.description }, 200);
   }
 
   const parsed = parseExperienceBody(body);

@@ -1,7 +1,16 @@
 /**
  * @jest-environment node
  */
-import { handleOptimizePost, parseBullets, parseExperienceBody, parseSummary, parseSummaryBody, rewriteBulletsWithGroq } from "./optimizeServer";
+import {
+  handleOptimizePost,
+  parseBullets,
+  parseExperienceBody,
+  parseProjectBody,
+  parseProjectDescription,
+  parseSummary,
+  parseSummaryBody,
+  rewriteBulletsWithGroq,
+} from "./optimizeServer";
 
 describe("parseBullets", () => {
   it("reads a raw JSON object", () => {
@@ -39,6 +48,40 @@ describe("parseSummaryBody", () => {
 
   it("rejects an empty summary", () => {
     expect(parseSummaryBody({ kind: "summary", summary: "  " })).toEqual({ error: "Invalid summary." });
+  });
+});
+
+describe("parseProjectDescription", () => {
+  it("reads a raw JSON object", () => {
+    expect(parseProjectDescription('{"description":"Built a resume editor."}')).toBe("Built a resume editor.");
+  });
+
+  it("returns null for missing description", () => {
+    expect(parseProjectDescription('{"summary":"x"}')).toBeNull();
+    expect(parseProjectDescription(undefined)).toBeNull();
+  });
+});
+
+describe("parseProjectBody", () => {
+  it("accepts a name, description, and optional technologies", () => {
+    expect(
+      parseProjectBody({
+        kind: "project",
+        name: " Resume Builder ",
+        description: "  Built a thing. ",
+        technologies: [" React ", "", 1],
+      }),
+    ).toEqual({
+      name: "Resume Builder",
+      description: "Built a thing.",
+      technologies: ["React"],
+    });
+  });
+
+  it("rejects an empty description", () => {
+    expect(parseProjectBody({ kind: "project", name: "P", description: "  " })).toEqual({
+      error: "Invalid project data.",
+    });
   });
 });
 
@@ -111,5 +154,33 @@ describe("handleOptimizePost", () => {
     );
     expect(res.status).toBe(200);
     await expect(res.json()).resolves.toEqual({ summary: "Staff backend engineer." });
+  });
+
+  it("routes kind=project to a project description rewrite", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        choices: [{ message: { content: '{"description":"Built a browser resume editor with live preview."}' } }],
+      }),
+    }) as unknown as typeof fetch;
+
+    const res = await handleOptimizePost(
+      new Request("http://localhost/api/optimize", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          kind: "project",
+          name: "Resume Builder",
+          description: "I made a resume site.",
+          technologies: ["React", "TypeScript"],
+        }),
+      }),
+      { GROQ_API_KEY: "gsk_test" },
+    );
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toEqual({
+      description: "Built a browser resume editor with live preview.",
+    });
   });
 });

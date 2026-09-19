@@ -1,10 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ChipInput } from "@/components/ui/ChipInput";
 import { FieldGroup, TextArea, TextInput } from "@/components/ui/Field";
+import { AI_BACKOFF_MS, AI_LIMITED_UNTIL_KEY, AiLimitError, optimizeProjectDescription } from "@/lib/ai";
 import { SKILL_CATALOG } from "@/lib/catalogs";
 import { useBuilderStore } from "@/lib/store";
+import { showToast } from "@/lib/toast";
 import type { Project } from "@/lib/types";
 import { useTouchedFields } from "@/lib/useTouchedFields";
 import { getProjectErrors, MAX_CHIP_LENGTH, MAX_DESCRIPTION_LENGTH, MAX_FIELD_LENGTH } from "@/lib/validation";
@@ -22,8 +25,38 @@ export function ProjectsForm() {
   const removeListItem = useBuilderStore((s) => s.removeListItem);
   const { focusIndex, focusNew } = useFocusNewIndex();
   const { touch, errorFor } = useTouchedFields();
+  const [aiAvailable, setAiAvailable] = useState(true);
+  const [optimizingIndex, setOptimizingIndex] = useState<number | null>(null);
 
   const skipped = status === "skipped";
+
+  useEffect(() => {
+    const until = Number(localStorage.getItem(AI_LIMITED_UNTIL_KEY) ?? 0);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setAiAvailable(Date.now() >= until);
+  }, []);
+
+  async function handleOptimize(index: number, project: Project) {
+    const description = project.description.trim();
+    if (!description) return;
+    setOptimizingIndex(index);
+    try {
+      const optimized = await optimizeProjectDescription({
+        name: project.name,
+        description,
+        technologies: project.technologies ?? [],
+      });
+      updateListItem("projects", index, { description: optimized });
+    } catch (err) {
+      if (err instanceof AiLimitError) {
+        localStorage.setItem(AI_LIMITED_UNTIL_KEY, String(Date.now() + AI_BACKOFF_MS));
+        setAiAvailable(false);
+      }
+      showToast(err instanceof Error ? err.message : "AI optimization failed. Try again later.");
+    } finally {
+      setOptimizingIndex(null);
+    }
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -76,6 +109,18 @@ export function ProjectsForm() {
                 invalid={Boolean(descriptionError)}
               />
             </FieldGroup>
+            {aiAvailable && (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="self-start"
+                disabled={optimizingIndex === i || !project.description.trim()}
+                onClick={() => handleOptimize(i, project)}
+              >
+                {optimizingIndex === i ? "Optimizing…" : "✨ Make ATS-friendly"}
+              </Button>
+            )}
             <FieldGroup label="Technologies (optional)">
               <ChipInput
                 values={project.technologies ?? []}

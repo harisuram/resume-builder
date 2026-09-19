@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
+import { DeleteIconButton } from "@/components/ui/DeleteIconButton";
 import { TextInput } from "@/components/ui/Field";
 import { useBuilderStore } from "@/lib/store";
 import { useTouchedFields } from "@/lib/useTouchedFields";
@@ -49,14 +50,11 @@ export function KeyAchievementsForm() {
                     invalid={Boolean(error)}
                     aria-label={`Achievement ${i + 1}`}
                   />
-                  <button
-                    type="button"
+                  <DeleteIconButton
                     onClick={() => setKeyAchievements(items.filter((_, idx) => idx !== i))}
                     aria-label="Remove achievement"
-                    className="shrink-0 text-[12px] text-[var(--color-ink-faint)] transition-colors hover:text-[var(--color-accent)]"
-                  >
-                    ×
-                  </button>
+                    className="h-9 w-9 md:h-8 md:w-8"
+                  />
                 </div>
                 {error ? (
                   <p role="alert" className="mt-1 text-[11.5px] text-red-600">

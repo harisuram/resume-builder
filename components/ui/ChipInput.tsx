@@ -2,6 +2,7 @@
 
 import { useId, useMemo, useState } from "react";
 import { filterCatalog } from "@/lib/catalogs";
+import { DeleteIconButton } from "./DeleteIconButton";
 import { SuggestionList } from "./SuggestionList";
 
 export function ChipInput({
@@ -84,14 +85,12 @@ export function ChipInput({
                 className="group flex items-center gap-1 rounded-full bg-[var(--color-accent-tint)] px-2 py-0.5 text-[12px] text-[var(--color-accent)] transition-colors"
               >
                 {value}
-                <button
-                  type="button"
+                <DeleteIconButton
                   onClick={() => onChange(values.filter((_, idx) => idx !== i))}
                   aria-label={`Remove ${value}`}
-                  className="text-[var(--color-ink-faint)] transition-colors hover:text-[var(--color-accent)]"
-                >
-                  ×
-                </button>
+                  className="h-5 w-5 rounded-full"
+                  iconClassName="h-3 w-3"
+                />
               </span>
             ))}
             <input

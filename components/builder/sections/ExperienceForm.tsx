@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { DeleteIconButton } from "@/components/ui/DeleteIconButton";
 import { FieldGroup, TextInput } from "@/components/ui/Field";
 import { SuggestInput } from "@/components/ui/SuggestInput";
 import { AI_BACKOFF_MS, AI_LIMITED_UNTIL_KEY, AiLimitError, optimizeExperienceBullets } from "@/lib/ai";
@@ -202,14 +203,11 @@ export function ExperienceForm({
                         invalid={Boolean(bulletError)}
                         aria-label={`Bullet ${bi + 1}`}
                       />
-                      <button
-                        type="button"
+                      <DeleteIconButton
                         onClick={() => setBullets(i, exp.bullets.filter((_, idx) => idx !== bi))}
                         aria-label="Remove bullet"
-                        className="shrink-0 text-[12px] text-[var(--color-ink-faint)] transition-colors hover:text-[var(--color-accent)]"
-                      >
-                        ×
-                      </button>
+                        className="h-9 w-9 md:h-8 md:w-8"
+                      />
                     </div>
                     {bulletError ? (
                       <p role="alert" className="mt-1 text-[11.5px] text-red-600">

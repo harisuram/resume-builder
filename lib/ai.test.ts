@@ -1,4 +1,4 @@
-import { AiLimitError, optimizeExperienceBullets, optimizeSummary } from "./ai";
+import { AiLimitError, optimizeExperienceBullets, optimizeProjectDescription, optimizeSummary } from "./ai";
 
 function mockFetch(response: Partial<Response> & { json: () => Promise<unknown> }) {
   global.fetch = jest.fn().mockResolvedValue(response) as unknown as typeof fetch;
@@ -48,5 +48,36 @@ describe("optimizeSummary", () => {
   it("throws AiLimitError on 429", async () => {
     mockFetch({ ok: false, status: 429, json: async () => ({}) });
     await expect(optimizeSummary("A summary.")).rejects.toBeInstanceOf(AiLimitError);
+  });
+});
+
+describe("optimizeProjectDescription", () => {
+  const input = {
+    name: "Resume Builder",
+    description: "I made a resume site.",
+    technologies: ["React"],
+  };
+
+  it("returns the rewritten description on success", async () => {
+    mockFetch({
+      ok: true,
+      status: 200,
+      json: async () => ({ description: "Built a browser resume editor with live preview." }),
+    });
+    await expect(optimizeProjectDescription(input)).resolves.toBe(
+      "Built a browser resume editor with live preview.",
+    );
+    expect(global.fetch).toHaveBeenCalledWith(
+      "/api/optimize",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ kind: "project", ...input }),
+      }),
+    );
+  });
+
+  it("throws AiLimitError on 429", async () => {
+    mockFetch({ ok: false, status: 429, json: async () => ({}) });
+    await expect(optimizeProjectDescription(input)).rejects.toBeInstanceOf(AiLimitError);
   });
 });

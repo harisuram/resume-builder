@@ -3,7 +3,7 @@
 export class AiLimitError extends Error {}
 
 /** Once the shared free quota is hit, hide the ATS button for a while.
- * Same key for experience and summary so one 429 backs off both. */
+ * Same key for experience, summary, and projects so one 429 backs off all. */
 export const AI_LIMITED_UNTIL_KEY = "ai-optimize-limited-until";
 export const AI_BACKOFF_MS = 4 * 60 * 60 * 1000;
 
@@ -15,6 +15,12 @@ export interface OptimizeBulletsInput {
   role: string;
   company: string;
   bullets: string[];
+}
+
+export interface OptimizeProjectInput {
+  name: string;
+  description: string;
+  technologies?: string[];
 }
 
 async function postOptimize(body: unknown): Promise<Record<string, unknown>> {
@@ -53,4 +59,17 @@ export async function optimizeSummary(summary: string): Promise<string> {
     throw new Error("AI optimization failed. Try again later.");
   }
   return body.summary;
+}
+
+/** Rewrites one project's description the same way as the summary. */
+export async function optimizeProjectDescription({
+  name,
+  description,
+  technologies = [],
+}: OptimizeProjectInput): Promise<string> {
+  const body = await postOptimize({ kind: "project", name, description, technologies });
+  if (typeof body.description !== "string" || !body.description.trim()) {
+    throw new Error("AI optimization failed. Try again later.");
+  }
+  return body.description;
 }

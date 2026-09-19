@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
+import { DeleteIconButton } from "@/components/ui/DeleteIconButton";
 import { FieldGroup, TextInput } from "@/components/ui/Field";
 import { useBuilderStore } from "@/lib/store";
 import type { AdditionalItem } from "@/lib/types";
@@ -130,14 +131,11 @@ export function AdditionalForm() {
                             invalid={Boolean(bulletError)}
                             aria-label={`Detail ${bi + 1}`}
                           />
-                          <button
-                            type="button"
+                          <DeleteIconButton
                             onClick={() => setBullets(i, item.bullets.filter((_, idx) => idx !== bi))}
                             aria-label="Remove bullet"
-                            className="shrink-0 text-[12px] text-[var(--color-ink-faint)] transition-colors hover:text-[var(--color-accent)]"
-                          >
-                            ×
-                          </button>
+                            className="h-9 w-9 md:h-8 md:w-8"
+                          />
                         </div>
                         {bulletError ? (
                           <p role="alert" className="mt-1 text-[11.5px] text-red-600">

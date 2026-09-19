@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { DeleteIconButton } from "@/components/ui/DeleteIconButton";
 import { useBuilderStore } from "@/lib/store";
 import { showToast } from "@/lib/toast";
 import { PhotoCropModal } from "./PhotoCropModal";
@@ -73,9 +74,11 @@ export function PhotoForm() {
                 </Button>
               )}
               {photo && (
-                <Button variant="ghost" size="sm" onClick={() => setPhoto(null)}>
-                  Remove
-                </Button>
+                <DeleteIconButton
+                  onClick={() => setPhoto(null)}
+                  aria-label="Remove"
+                  className="h-9 w-9 md:h-8 md:w-8"
+                />
               )}
             </div>
             {error ? (
