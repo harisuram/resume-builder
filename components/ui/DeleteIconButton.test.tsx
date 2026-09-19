@@ -30,4 +30,11 @@ describe("DeleteIconButton", () => {
     render(<DeleteIconButton icon="entry" aria-label="Remove" onClick={() => {}} />);
     expect(screen.getByRole("button", { name: "Remove" }).querySelector("circle")).toBeInTheDocument();
   });
+
+  it("uses a plain X for chip dismiss", () => {
+    render(<DeleteIconButton icon="close" aria-label="Remove TypeScript" onClick={() => {}} />);
+    const button = screen.getByRole("button", { name: "Remove TypeScript" });
+    expect(button.querySelector("circle")).not.toBeInTheDocument();
+    expect(button.querySelectorAll("path")).toHaveLength(2);
+  });
 });

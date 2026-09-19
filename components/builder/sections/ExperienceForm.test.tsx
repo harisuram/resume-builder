@@ -86,9 +86,11 @@ describe.each([
 
     await userEvent.type(screen.getByPlaceholderText("Shipped a feature that increased signups by 12%"), "Did a thing");
     expect(useBuilderStore.getState().sections[sectionKey]![0].bullets).toEqual(["Did a thing"]);
+    expect(screen.queryByRole("button", { name: /Copy all points/i })).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByText("+ Add bullet"));
     expect(useBuilderStore.getState().sections[sectionKey]![0].bullets).toEqual(["Did a thing", ""]);
+    expect(screen.getByRole("button", { name: /Copy all points/i })).toBeInTheDocument();
 
     const removeBulletButtons = screen.getAllByRole("button", { name: "Remove bullet" });
     await userEvent.click(removeBulletButtons[removeBulletButtons.length - 1]);

@@ -14,6 +14,7 @@ import type { Experience } from "@/lib/types";
 import { useTouchedFields } from "@/lib/useTouchedFields";
 import { getExperienceErrors, MAX_BULLET_LENGTH, MAX_FIELD_LENGTH } from "@/lib/validation";
 import { ItemCard, useFocusNewIndex } from "./ItemCard";
+import { CopyBulletsButton } from "./CopyBulletsButton";
 import { SectionFormHeader } from "./SectionFormHeader";
 import { SkippedNotice } from "./SkippedNotice";
 
@@ -226,6 +227,7 @@ export function ExperienceForm({
                 >
                   + Add bullet
                 </button>
+                <CopyBulletsButton bullets={exp.bullets} />
                 {aiAvailable && (
                   <Button
                     type="button"

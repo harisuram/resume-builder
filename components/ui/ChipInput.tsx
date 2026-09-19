@@ -86,9 +86,10 @@ export function ChipInput({
               >
                 {value}
                 <DeleteIconButton
+                  icon="close"
                   onClick={() => onChange(values.filter((_, idx) => idx !== i))}
                   aria-label={`Remove ${value}`}
-                  className="h-5 w-5 rounded-full"
+                  className="h-5 w-5 rounded-full text-[var(--color-accent)] hover:bg-[var(--color-accent)]/15 hover:text-[var(--color-accent)]"
                   iconClassName="h-3 w-3"
                 />
               </span>

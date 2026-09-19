@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes } from "react";
 
-/** Lucide-style trash can — bullets, chips, photo, and other line items. */
+/** Lucide-style trash can — bullets, photo, and other line items. */
 export function TrashIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -42,7 +42,26 @@ export function RemoveEntryIcon({ className }: { className?: string }) {
   );
 }
 
-type DeleteIcon = "trash" | "entry";
+/** Plain X — dismiss a chip (skills, technologies, …). */
+export function CloseIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M6 6 18 18" />
+      <path d="M18 6 6 18" />
+    </svg>
+  );
+}
+
+type DeleteIcon = "trash" | "entry" | "close";
 
 /** Icon-only remove control. Keep `aria-label` specific ("Remove bullet", etc.). */
 export function DeleteIconButton({
@@ -53,10 +72,10 @@ export function DeleteIconButton({
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
   iconClassName?: string;
-  /** `entry` = card corner (circle-X); `trash` = line-item discard. */
+  /** `entry` = card corner (circle-X); `trash` = line discard; `close` = chip X. */
   icon?: DeleteIcon;
 }) {
-  const Icon = icon === "entry" ? RemoveEntryIcon : TrashIcon;
+  const Icon = icon === "entry" ? RemoveEntryIcon : icon === "close" ? CloseIcon : TrashIcon;
   return (
     <button
       type="button"

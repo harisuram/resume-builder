@@ -13,6 +13,7 @@ import {
   MAX_FIELD_LENGTH,
 } from "@/lib/validation";
 import { ItemCard, useFocusNewIndex } from "./ItemCard";
+import { CopyBulletsButton } from "./CopyBulletsButton";
 import { SectionFormHeader } from "./SectionFormHeader";
 import { SkippedNotice } from "./SkippedNotice";
 
@@ -146,13 +147,16 @@ export function AdditionalForm() {
                       );
                     })}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setBullets(i, [...item.bullets, ""])}
-                    className="mt-2 text-[12px] font-medium text-[var(--color-accent)] transition-opacity hover:opacity-80"
-                  >
-                    + Add bullet
-                  </button>
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
+                    <button
+                      type="button"
+                      onClick={() => setBullets(i, [...item.bullets, ""])}
+                      className="text-[12px] font-medium text-[var(--color-accent)] transition-opacity hover:opacity-80"
+                    >
+                      + Add bullet
+                    </button>
+                    <CopyBulletsButton bullets={item.bullets} />
+                  </div>
                 </div>
               </ItemCard>
               );
