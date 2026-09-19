@@ -4,29 +4,20 @@ import TemplatesPage from "./page";
 import { TEMPLATES } from "@/components/templates/shared/theme";
 
 describe("templates gallery", () => {
-  it("lists every template name as a selectable layout preview", () => {
+  it("lists every template as a link into the builder with that layout", () => {
     render(<TemplatesPage />);
     expect(screen.getByRole("heading", { level: 1, name: /free resume templates/i })).toBeInTheDocument();
     for (const template of TEMPLATES) {
       expect(screen.getByRole("heading", { name: template.name })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: `Select ${template.name} template` })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: `Use ${template.name} template` })).toHaveAttribute(
+        "href",
+        `/builder?template=${encodeURIComponent(template.id)}`,
+      );
     }
     expect(document.querySelector('[data-sample-resume="jakes-resume"]')).not.toBeNull();
     expect(document.querySelector('[data-template-skeleton]')).toBeNull();
     expect(document.querySelector('[data-layout="single"]')).not.toBeNull();
-    expect(screen.getByText(/select a template to continue building/i)).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /continue with/i })).not.toBeInTheDocument();
-  });
-
-  it("selects a template and continues into the builder with that layout", async () => {
-    render(<TemplatesPage />);
-    await userEvent.click(screen.getByRole("button", { name: "Select Atlas template" }));
-
-    expect(screen.getByRole("button", { name: "Select Atlas template" })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByRole("link", { name: /continue with atlas/i })).toHaveAttribute(
-      "href",
-      "/builder?template=jakes-resume",
-    );
+    expect(screen.getByText(/click a template to open it in the builder/i)).toBeInTheDocument();
   });
 
   it("opens a sample-text preview of the layout and sends that template to the builder", async () => {

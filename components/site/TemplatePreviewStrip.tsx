@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import { TEMPLATES, type TemplateTheme } from "@/components/templates/shared/theme";
+import { ScaledTemplatePreview } from "./ScaledTemplatePreview";
 import { TemplatePreviewModal } from "./TemplatePreviewModal";
 
 const PREVIEW = TEMPLATES.slice(0, 6);
@@ -26,7 +27,7 @@ export function TemplatePreviewStrip() {
     <div className="mt-16 w-full min-w-0 max-w-4xl">
       <div className="mb-4 flex items-end justify-between gap-3">
         <p className="text-[12px] font-medium uppercase tracking-[0.18em] text-[var(--color-ink-faint)]">
-          Thirty-one templates
+          {TEMPLATES.length} templates
         </p>
         <Link href="/templates" className="text-[13px] font-medium text-[var(--color-accent)] hover:underline">
           See all templates
@@ -40,22 +41,17 @@ export function TemplatePreviewStrip() {
             aria-haspopup="dialog"
             aria-label={`Preview ${template.name} layout`}
             onClick={(event) => openPreview(template, event.currentTarget)}
-            className="group min-w-0 cursor-pointer overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-left shadow-card transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[var(--color-accent)]/35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]"
+            className="group min-w-0 cursor-pointer overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-left shadow-card transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[var(--color-accent)]/35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]"
           >
-            <div
-              className="rounded-lg px-2 pt-2.5 pb-3"
-              style={{
-                background: `linear-gradient(180deg, color-mix(in srgb, ${template.accent} 22%, white), #fff)`,
-              }}
-            >
-              <div className="mx-auto h-1 w-8 rounded-full" style={{ background: template.accent }} />
-              <div className="mt-2 space-y-1">
-                <div className="h-1 rounded-full bg-[var(--color-border)]" />
-                <div className="h-1 w-4/5 rounded-full bg-[var(--color-border)]" />
-                <div className="h-1 w-3/5 rounded-full bg-[var(--color-border)]" />
+            <div className="relative aspect-[210/297] w-full overflow-hidden bg-white">
+              <div
+                className="absolute inset-0 origin-top transition-transform duration-500 ease-out group-hover:scale-[1.035]"
+                aria-hidden="true"
+              >
+                <ScaledTemplatePreview theme={template} compact fullPage framed={false} fillParent />
               </div>
             </div>
-            <p className="mt-2 truncate text-center text-[11px] font-medium text-[var(--color-ink-soft)] group-hover:text-[var(--color-ink)]">
+            <p className="truncate border-t border-[var(--color-border)] px-2 py-2 text-center text-[11px] font-medium text-[var(--color-ink-soft)] group-hover:text-[var(--color-ink)]">
               {template.name}
             </p>
           </button>
