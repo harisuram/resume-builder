@@ -62,3 +62,24 @@ export function adsTxtBody(clientId = ADSENSE_CLIENT_ID): string {
   if (!clientId) return "";
   return `google.com, ${adsensePublisherId(clientId)}, DIRECT, f08c47fec0942fa0\n`;
 }
+
+/**
+ * Funding Choices — Google's certified CMP. Required by Google's EU User
+ * Consent Policy before ads can serve to EEA/UK visitors, and covers the
+ * US-states (CCPA/CPRA) opt-out too. Keyed off the same publisher id as
+ * AdSense; which regions get a message (and its content) is configured in
+ * AdSense > Privacy & messaging, not in code — this just loads the CMP.
+ */
+export function fundingChoicesScriptSrc(clientId = ADSENSE_CLIENT_ID): string {
+  const pub = adsensePublisherId(clientId);
+  if (!pub) return "";
+  return `https://fundingchoicesmessages.google.com/i/${pub}?ers=1`;
+}
+
+/**
+ * Google's own snippet: signals to the CMP iframe that the page integrated
+ * Funding Choices, by creating a hidden iframe named "googlefcPresent" once
+ * <body> exists. Verbatim from Google's docs — don't reformat, some review
+ * tooling matches on the exact source.
+ */
+export const FUNDING_CHOICES_PRESENT_SNIPPET = `(function() {function signalGooglefcPresent() {if (!window.frames['googlefcPresent']) {if (document.body) {const iframe = document.createElement('iframe'); iframe.style = 'width: 0; height: 0; border: none; z-index: -1000; left: -1000px; top: -1000px;'; iframe.style.display = 'none'; iframe.name = 'googlefcPresent'; document.body.appendChild(iframe);} else {setTimeout(signalGooglefcPresent, 0);}}}signalGooglefcPresent();})();`;

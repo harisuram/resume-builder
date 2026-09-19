@@ -35,7 +35,9 @@ export default function PrivacyPage() {
         <Body>
           Some deployments load Google AdSense. If that script is present, Google may set cookies or collect device
           data according to Google’s own policies. AdSense is not a copy of your resume. If ads are not configured,
-          the script is not loaded.
+          the script is not loaded. Visitors in the EEA, UK, and certain US states are shown a consent choice via
+          Google’s Funding Choices before any ad-related cookies are set; visitors elsewhere are not shown this
+          prompt.
         </Body>
 
         <SectionHeading>Optional ATS rewrite</SectionHeading>

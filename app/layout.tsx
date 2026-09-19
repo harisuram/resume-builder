@@ -1,7 +1,14 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Inter, Source_Serif_4 } from "next/font/google";
 import Script from "next/script";
-import { ADSENSE_CLIENT_ID, adsenseClientAttr, adsenseScriptSrc, isAdsenseConfigured } from "@/lib/ads";
+import {
+  ADSENSE_CLIENT_ID,
+  adsenseClientAttr,
+  adsenseScriptSrc,
+  FUNDING_CHOICES_PRESENT_SNIPPET,
+  fundingChoicesScriptSrc,
+  isAdsenseConfigured,
+} from "@/lib/ads";
 import { BRAND } from "@/lib/brand";
 import { HOME_DESCRIPTION, HOME_TITLE, SITE_KEYWORDS, SITE_NAME } from "@/lib/seo";
 import { THEME_BOOTSTRAP_SCRIPT } from "@/lib/theme";
@@ -74,7 +81,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           code”. Kept in <head> to match the snippet they issued. */}
       <head>
         {isAdsenseConfigured() && (
-          <script async src={adsenseScriptSrc()} crossOrigin="anonymous" />
+          <>
+            {/* Funding Choices (Google-certified CMP) must load before
+                adsbygoogle so EEA/UK/US-states visitors see a consent
+                message before any ad request goes out. */}
+            <script async src={fundingChoicesScriptSrc()} />
+            <script dangerouslySetInnerHTML={{ __html: FUNDING_CHOICES_PRESENT_SNIPPET }} />
+            <script async src={adsenseScriptSrc()} crossOrigin="anonymous" />
+          </>
         )}
       </head>
       {/* Extensions (ColorZilla's cz-shortcut-listen, Grammarly, etc.) stamp
