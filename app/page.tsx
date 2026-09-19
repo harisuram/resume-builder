@@ -9,6 +9,7 @@ import { ctaGhost } from "@/components/ui/cta";
 import { ADSENSE_SLOTS } from "@/lib/ads";
 import {
   HOME_FAQS,
+  SITE_NAME,
   faqJsonLd,
   pageMetadata,
   webApplicationJsonLd,
@@ -23,28 +24,53 @@ const STEPS = [
   { n: "03", title: "Download a PDF", body: "Print the same view you already checked. No account." },
 ] as const;
 
+function NibMark() {
+  return (
+    <span
+      className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-[var(--color-accent)] text-[var(--color-accent-ink)] shadow-cta sm:h-12 sm:w-12"
+      aria-hidden="true"
+    >
+      <svg viewBox="0 0 24 24" className="h-5 w-5 sm:h-6 sm:w-6">
+        <path
+          d="M12 2 4 15.5c-.6 1 .5 2.1 1.5 1.5L12 13l6.5 4c1 .6 2.1-.5 1.5-1.5L12 2Z"
+          fill="currentColor"
+        />
+        <path d="M12 13 9 21.5c-.2.6.5 1.1 1 .7L12 20l2 2.2c.5.4 1.2-.1 1-.7L12 13Z" fill="currentColor" />
+        <circle cx="12" cy="10.5" r="1.3" fill="var(--color-accent)" />
+      </svg>
+    </span>
+  );
+}
+
 export default function Home() {
   return (
     <MarketingPage home jsonLd={[webApplicationJsonLd(), webSiteJsonLd(), faqJsonLd(HOME_FAQS)]}>
       <div className="flex w-full min-w-0 flex-col items-center">
-        <p className="animate-fade-up inline-flex max-w-full items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3.5 py-1.5 text-[12px] font-medium text-[var(--color-ink-soft)] shadow-card">
-          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-focus)]" aria-hidden="true" />
-          Free resume maker · No account · Private
-        </p>
-        <h1 className="animate-fade-up-delay mt-6 w-full min-w-0 max-w-[20.5rem] text-pretty text-center font-display text-[28px] font-semibold tracking-tight leading-[1.15] text-[var(--color-ink)] sm:max-w-2xl sm:text-[40px] lg:text-[48px]">
-          Make a resume from only the sections you need.
-        </h1>
-        <p className="mt-5 w-full min-w-0 max-w-xl text-center text-[15px] leading-relaxed text-[var(--color-ink-soft)]">
-          A free resume builder for software, data, IT, pharmacy, architecture, construction, and more. Skip anything
-          that doesn’t belong, pick a template, and download a PDF. No sign-up.
-        </p>
-        <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
-          <BuilderCta>Build my resume</BuilderCta>
-          <Link href="/templates" className={ctaGhost}>
-            See all templates
-          </Link>
-        </div>
-        <p className="mt-4 text-[12.5px] text-[var(--color-ink-faint)]">Takes about five minutes.</p>
+        <section className="flex w-full min-w-0 max-w-3xl flex-col items-center text-center">
+          <div className="animate-fade-up flex flex-col items-center gap-3.5 sm:gap-4">
+            <NibMark />
+            <p className="font-display text-[28px] font-semibold tracking-tight text-[var(--color-ink)] sm:text-[36px] lg:text-[40px]">
+              {SITE_NAME}
+            </p>
+          </div>
+
+          <h1 className="animate-fade-up-delay mt-4 w-full min-w-0 text-pretty font-display text-[22px] font-semibold tracking-tight leading-[1.25] text-[var(--color-ink-soft)] sm:mt-5 sm:text-[28px] lg:text-[32px]">
+            Build the resume.
+            <span className="text-[var(--color-ink)]"> Skip what doesn’t belong.</span>
+          </h1>
+
+          <p className="mt-4 w-full min-w-0 max-w-md text-[15px] leading-relaxed text-[var(--color-ink-soft)] sm:mt-5">
+            Empty sections never print. Switch templates in a live preview, then download that same PDF — no
+            account.
+          </p>
+
+          <div className="mt-8 flex w-full min-w-0 flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center">
+            <BuilderCta>Build my resume</BuilderCta>
+            <Link href="/templates" className={ctaGhost}>
+              See all templates
+            </Link>
+          </div>
+        </section>
 
         <TemplatePreviewStrip />
 
