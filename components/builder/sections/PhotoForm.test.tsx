@@ -57,6 +57,18 @@ describe("PhotoForm", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
+  it("rejects an image over 2 MB with a toast that includes the file size", async () => {
+    renderPhoto();
+    const big = new File([new Uint8Array(2 * 1024 * 1024 + 1)], "huge.jpg", { type: "image/jpeg" });
+    fireEvent.change(fileInput(), { target: { files: [big] } });
+
+    const alerts = await screen.findAllByRole("alert");
+    expect(alerts.some((el) => /2\.0 MB/.test(el.textContent ?? "") && /under 2 MB/.test(el.textContent ?? ""))).toBe(
+      true,
+    );
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
   it("shows Edit and Remove once a photo is set, and Remove clears it", async () => {
     act(() => useBuilderStore.getState().setPhoto("data:image/jpeg;base64,abc123"));
     renderPhoto();

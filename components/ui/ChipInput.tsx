@@ -69,7 +69,7 @@ export function ChipInput({
 
   return (
     <div>
-      <div className="relative">
+      <div className={`relative ${showList ? "z-50" : ""}`}>
         <div
           data-field-control=""
           className={`rounded-lg border bg-[var(--color-surface)] p-2 transition duration-150 ease-out focus-within:ring-2 ${

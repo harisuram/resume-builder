@@ -8,7 +8,13 @@ import { showToast } from "@/lib/toast";
 import { PhotoCropModal } from "./PhotoCropModal";
 import { SkippedNotice } from "./SkippedNotice";
 
-const MAX_FILE_BYTES = 8 * 1024 * 1024;
+const MAX_FILE_BYTES = 2 * 1024 * 1024;
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 export function PhotoForm() {
   const photo = useBuilderStore((s) => s.photo);
@@ -25,7 +31,9 @@ export function PhotoForm() {
       return;
     }
     if (file.size > MAX_FILE_BYTES) {
-      setError("That image is too large — try one under 8MB.");
+      const message = `That image is ${formatFileSize(file.size)} — use one under 2 MB.`;
+      setError(message);
+      showToast(message);
       return;
     }
     setError(undefined);

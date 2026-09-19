@@ -64,7 +64,7 @@ export function SectionFooterNav({
   const helper = !nextEnabled && nextBlockedReason ? nextBlockedReason : undefined;
 
   return (
-    <div className="no-print fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-border)] bg-[var(--color-surface)]/95 px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-xl md:static md:z-auto md:mt-8 md:bg-transparent md:px-0 md:py-0 md:pt-5 md:backdrop-blur-none">
+    <div className="no-print fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-border)] bg-[var(--color-surface)]/95 px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-xl md:static md:z-0 md:mt-8 md:bg-transparent md:px-0 md:py-0 md:pt-5 md:backdrop-blur-none">
       <div className="mx-auto flex max-w-2xl flex-col gap-3 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-2">
         <div className="flex items-center gap-2 max-md:w-full">
           {canGoBack && (

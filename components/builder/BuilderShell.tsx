@@ -347,9 +347,13 @@ export function BuilderShell() {
                   over the viewport, so the last field has to scroll above it. */}
               <main ref={formPaneRef} className="block min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-clip overscroll-contain px-5 py-6 pb-[calc(11rem+env(safe-area-inset-bottom))] sm:px-8 md:pb-6">
                 <div className="mx-auto w-full max-w-2xl">
-                  <StepEnter key={activeKey} direction={stepDir} enabled={animateStep}>
-                    <ActivePanel activeKey={activeKey} />
-                  </StepEnter>
+                  {/* Above the step footer so absolute suggestion lists aren't
+                      painted under Clear / Save & Next (later DOM sibling). */}
+                  <div className="relative z-10 min-w-0">
+                    <StepEnter key={activeKey} direction={stepDir} enabled={animateStep}>
+                      <ActivePanel activeKey={activeKey} />
+                    </StepEnter>
+                  </div>
                   <SectionFooterNav
                     canGoBack={canGoBack}
                     canGoNext={hasNextStep}

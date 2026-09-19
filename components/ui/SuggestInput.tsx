@@ -42,7 +42,7 @@ export function SuggestInput({
   }
 
   return (
-    <div className="relative">
+    <div className={`relative ${showList ? "z-50" : ""}`}>
       <input
         {...props}
         value={value}
