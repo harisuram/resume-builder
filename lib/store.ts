@@ -393,6 +393,19 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
   pageBreakItems: [],
   toggleItemPageBreak: (key, index) =>
     set((state) => {
+      // First list entry must move with its section title — never leave the
+      // heading stranded on the previous page.
+      if (index === 0) {
+        const itemId = itemBreakKey(key, 0);
+        const pageBreakItems = state.pageBreakItems.filter((id) => id !== itemId);
+        const on = state.pageBreakSections.includes(key);
+        return {
+          pageBreakItems,
+          pageBreakSections: on
+            ? state.pageBreakSections.filter((k) => k !== key)
+            : [...state.pageBreakSections, key],
+        };
+      }
       const id = itemBreakKey(key, index);
       return {
         pageBreakItems: state.pageBreakItems.includes(id)
@@ -426,8 +439,9 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       sections: data.sections,
       sectionStatus: data.sectionStatus,
       templateId: data.templateId,
-      pageBreakSections: data.pageBreakSections ?? [],
-      pageBreakItems: data.pageBreakItems ?? [],
+      // Forced Move/Undo partitions removed — ignore any saved break lists.
+      pageBreakSections: [],
+      pageBreakItems: [],
       sectionOrder: data.sectionOrder ?? null,
     }),
 

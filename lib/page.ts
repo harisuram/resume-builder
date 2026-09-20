@@ -3,16 +3,29 @@
  * so wrapping and columns can't drift between the two. */
 export const PAGE_WIDTH_PX = 760;
 
-/** Height of one A4 page at 96dpi with `@page { margin: 0 }` — the PDF
- * print box. Preview guides use the same number so a "page 2" in the
- * preview is page 2 in the download.
- * 297mm × 96px/in ÷ 25.4mm/in. */
+/** Height of one printed A4 page, in the CSS pixels the print root is laid
+ * out in. Chrome does not scale the 760px-wide root up to A4 width — it
+ * lays it out 1:1 against the page box — so a sheet holds 297mm at 96dpi,
+ * not `width × (297/210)`.
+ *
+ * Measured rather than assumed: position markers every 5px down a real
+ * print root, print it, and read which marker lands on which PDF page.
+ * Sheets came out 1122.5px apart, against the 1075 this used to assume —
+ * a ~48px error per page that compounds, so the preview broke earlier
+ * than the PDF and the two disagreed on both cuts and page count. (The
+ * earlier 1075 was tuned for the Move/Undo break spacers, which no longer
+ * exist; the drift it was compensating for went with them.) */
 export const PAGE_HEIGHT_PX = Math.round((297 / 25.4) * 96);
 
+/** Sidebar content side inset — 2% of page width. */
+export const PAGE_PAD_X_PX = Math.round(PAGE_WIDTH_PX * 0.02);
+
+/** Sidebar content bottom inset — 4% of page height. */
+export const PAGE_PAD_Y_PX = Math.round(PAGE_HEIGHT_PX * 0.04);
+
 /** Top inset on page 2+ so a heading isn't flush with the paper edge.
- * Matches `p-8` on the main column. Page 1 already has the template's
- * own padding; later sheets get this from ResumePreviewFrame instead. */
-export const PAGE_INSET_PX = 32;
+ * Page 1 is flush; later sheets get this from `--page-inset` / sheet chrome. */
+export const PAGE_INSET_PX = Math.round(PAGE_HEIGHT_PX * 0.05);
 
 /** Y of the first line of content on a 0-based sheet. */
 export function pageContentY(pageIndex: number, pageHeight = PAGE_HEIGHT_PX, inset = PAGE_INSET_PX): number {
@@ -53,7 +66,23 @@ export function pageStartMarginCss(skipPx: number, inset = PAGE_INSET_PX): strin
  * band on the last sheet instead of stopping at the last line of text. */
 export function heightToPageMultiple(contentPx: number, pageHeight = PAGE_HEIGHT_PX): number {
   if (contentPx <= 0) return pageHeight;
+  // Absorb trailing column padding and sub-pixel noise so we don't invent
+  // a blank trailing sheet when content visually fits.
+  const remainder = contentPx % pageHeight;
+  if (remainder > 0 && remainder <= PAGE_PAD_Y_PX + 16) contentPx -= remainder;
+  if (contentPx <= 0) return pageHeight;
   return Math.max(1, Math.ceil(contentPx / pageHeight)) * pageHeight;
+}
+
+/** Height for the printable surface: fit content, never round up into an
+ * empty next sheet. Print CSS paints the rail on each fragment; forcing a
+ * whole-page snap here is what put a blank page at the end of the PDF
+ * while the live preview looked fine. */
+export function heightForPrintSurface(contentPx: number, pageHeight = PAGE_HEIGHT_PX): number {
+  if (contentPx <= 0) return pageHeight;
+  const remainder = contentPx % pageHeight;
+  if (remainder > 0 && remainder <= PAGE_PAD_Y_PX + 16) contentPx -= remainder;
+  return Math.max(pageHeight, contentPx);
 }
 
 /** Bottom of real resume content inside `surface` (header / sections / items).
@@ -78,6 +107,6 @@ export function contentHeightPx(surface: HTMLElement): number {
   if (max < 1) {
     return Math.max(surface.scrollHeight, surface.offsetHeight, PAGE_HEIGHT_PX);
   }
-  // Main/rail cells use p-8 / p-6 padding below the last block.
-  return max + 32;
+  // Match sidebar column bottom padding (4% of page height).
+  return max + PAGE_PAD_Y_PX;
 }

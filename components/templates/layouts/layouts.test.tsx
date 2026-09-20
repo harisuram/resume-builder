@@ -53,6 +53,7 @@ describe("template layouts share the same section split", () => {
     expect(sectionKeys(rail)).toEqual([...NARROW]);
     expect(sectionKeys(main)).toEqual(["summary", ...WIDE]);
     expect(container.querySelector(".resume-sidebar-page")).not.toBeNull();
+    expect(container.querySelector(".resume-col-pad")).not.toBeNull();
     expect(container.querySelector("thead.resume-sidebar-page-pad")).not.toBeNull();
   });
 
@@ -117,11 +118,13 @@ describe("template layouts share the same section split", () => {
     }
   });
 
-  it("Atelier and Sable put the details rail on the right", () => {
+  it("Atelier and Sable put the details rail on the right, full-bleed with page-2 pad thead", () => {
     const data = makeFullResumeData();
     for (const id of ["atelier", "sable"] as const) {
       const { container, unmount } = render(<SidebarLayout data={data} theme={getTheme(id)} />);
       expect(container.querySelector(".resume-sidebar-columns--right")).not.toBeNull();
+      expect(container.querySelector(".resume-sidebar-page--right")).not.toBeNull();
+      expect(container.querySelector("thead.resume-sidebar-page-pad")).not.toBeNull();
       unmount();
     }
   });

@@ -225,13 +225,10 @@ describe("hasSummary", () => {
 });
 
 describe("hasForcedPageBreak", () => {
-  it("is false when pageBreakSections is absent", () => {
+  it("is always false (forced partitions removed)", () => {
     expect(hasForcedPageBreak(makeData(), "experience")).toBe(false);
-  });
-
-  it("is true only for a section explicitly listed", () => {
     const data = makeData({ pageBreakSections: ["experience"] });
-    expect(hasForcedPageBreak(data, "experience")).toBe(true);
+    expect(hasForcedPageBreak(data, "experience")).toBe(false);
     expect(hasForcedPageBreak(data, "education")).toBe(false);
   });
 });

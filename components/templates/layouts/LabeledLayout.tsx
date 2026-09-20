@@ -1,15 +1,27 @@
 import { resumeSectionTitle } from "@/lib/persona";
 import { getRenderableSections, hasSummary, sectionBreakProps } from "@/lib/resume";
 import type { ResumeData, SectionKey } from "@/lib/types";
+import type { NameHeadingLevel } from "../registry";
 import { Avatar, ContactGrid, hasAvatar, SummaryText, visiblePhoto } from "../shared/atoms";
 import { ResumeSection } from "../shared/ResumeSection";
 import type { TemplateTheme } from "../shared/theme";
 
 /** European-style CV: centered name, section titles in a left label column,
  * content in a wide right column. Hairline rules sit on the content column
- * at the top of every section after the first — kept inside the section so
- * page-gap spacers move the divider with its label and body. */
-export function LabeledLayout({ data, theme }: { data: ResumeData; theme: TemplateTheme }) {
+ * at the top of every section after the first. */
+export function LabeledLayout({
+  data,
+  theme,
+  headingLevel = "h1",
+}: {
+  data: ResumeData;
+  theme: TemplateTheme;
+  /** "h1" for the real document (builder pane, PDF export); "p" for
+   * decorative marketing-site thumbnails so a page never gets more than
+   * one real `<h1>`. */
+  headingLevel?: NameHeadingLevel;
+}) {
+  const NameHeading = headingLevel;
   const sections = getRenderableSections(data);
   const fontClass = theme.fontDisplay === "serif" ? "font-serif" : "font-sans";
   const gap = theme.density === "compact" ? "gap-4" : "gap-5";
@@ -30,9 +42,9 @@ export function LabeledLayout({ data, theme }: { data: ResumeData; theme: Templa
         {hasAvatar(data, theme) && (
           <Avatar name={data.basicInfo.name || "?"} accent={theme.accent} photo={visiblePhoto(data)} size={72} />
         )}
-        <h1 className="text-[26px] font-semibold tracking-tight" style={{ color: theme.accent }}>
+        <NameHeading className="text-[26px] font-semibold tracking-tight" style={{ color: theme.accent }}>
           {data.basicInfo.name || "Your Name"}
-        </h1>
+        </NameHeading>
       </div>
 
       <div className={`resume-page-body mt-6 flex flex-col ${gap}`}>
@@ -75,22 +87,15 @@ function LabeledRow({
   children,
   ruled,
   "data-section-key": sectionKey,
-  "data-force-break": forceBreak,
 }: {
   title: string;
   children: React.ReactNode;
   /** Content-column top rule for every section after the first. */
   ruled: boolean;
   "data-section-key"?: string;
-  "data-force-break"?: true;
 }) {
   return (
-    <section
-      data-section-key={sectionKey}
-      data-force-break={forceBreak}
-      data-labeled-ruled={ruled || undefined}
-      className={labeledRowClass}
-    >
+    <section data-section-key={sectionKey} data-labeled-ruled={ruled || undefined} className={labeledRowClass}>
       <h3 className={labeledTitleClass}>{title}</h3>
       <div className={`min-w-0 ${ruled ? `${RULE} pt-4` : ""}`}>{children}</div>
     </section>

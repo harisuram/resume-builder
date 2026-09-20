@@ -14,7 +14,7 @@ describe("PreviewPane empty template preview", () => {
     expect(screen.getByRole("region", { name: "Atlas template preview" })).toBeInTheDocument();
     expect(document.querySelector("[data-sample-resume='jakes-resume']")).not.toBeNull();
     expect(document.querySelector("[data-template-skeleton]")).toBeNull();
-    expect(screen.getByText("Alexandra Montgomery-Whitfield")).toBeInTheDocument();
+    expect(screen.getAllByText("Alexandra Montgomery-Whitfield")[0]).toBeInTheDocument();
     expect(document.querySelector("[data-section-key='experience']")).not.toBeNull();
     expect(document.querySelector("[data-section-key='patents']")).not.toBeNull();
     expect(screen.getByRole("button", { name: "Choose a template" })).toHaveTextContent("Change template");
@@ -42,14 +42,14 @@ describe("PreviewPane empty template preview", () => {
     expect(screen.queryByRole("region", { name: /template preview/i })).not.toBeInTheDocument();
     expect(document.querySelector("[data-sample-resume]")).toBeNull();
     expect(screen.getByRole("button", { name: "Choose a template" })).toHaveTextContent(/^Template/);
-    expect(screen.getByText("Your Name")).toBeInTheDocument();
+    expect(screen.getAllByText("Your Name")[0]).toBeInTheDocument();
   });
 
   it("replaces the sample as soon as a name is typed", () => {
     useBuilderStore.getState().updateBasicInfo({ name: "Jamie Rivera" });
     render(<PreviewPane />);
     expect(screen.queryByRole("region", { name: /template preview/i })).not.toBeInTheDocument();
-    expect(screen.getByText("Jamie Rivera")).toBeInTheDocument();
+    expect(screen.getAllByText("Jamie Rivera")[0]).toBeInTheDocument();
   });
 
   it("replaces the sample as soon as a photo is added", () => {
@@ -77,7 +77,7 @@ describe("PreviewPane with content", () => {
   it("renders the live template, not the sample preview chrome", () => {
     useBuilderStore.getState().loadFromData(makeFullResumeData({ templateId: "jakes-resume" }));
     render(<PreviewPane />);
-    expect(screen.getByText("Alexandra Montgomery-Whitfield")).toBeInTheDocument();
+    expect(screen.getAllByText("Alexandra Montgomery-Whitfield")[0]).toBeInTheDocument();
     expect(document.querySelector("[data-sample-resume]")).toBeNull();
     expect(document.querySelector("[data-template-skeleton]")).toBeNull();
   });
@@ -102,8 +102,8 @@ describe("PreviewPane with content", () => {
     expect(printRoot).toBeInTheDocument();
     expect(printRoot!.textContent).toContain("Jamie Rivera");
     expect(printRoot!.textContent).not.toContain("Alexandra Montgomery-Whitfield");
-    // Forced page separators stay on the live printable frame.
-    expect(printRoot!.querySelector('[data-section-key="experience"]')).toHaveAttribute("data-force-break", "true");
+    expect(printRoot!.querySelector('[data-section-key="experience"]')).not.toBeNull();
+    expect(printRoot!.querySelector("[data-force-break]")).toBeNull();
     expect(container.querySelector('[data-tour="page-separator"]')).not.toBeNull();
   });
 });

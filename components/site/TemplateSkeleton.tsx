@@ -1,5 +1,5 @@
 import { resumeSectionTitle, SUMMARY_COPY } from "@/lib/persona";
-import { PAGE_HEIGHT_PX } from "@/lib/page";
+import { PAGE_HEIGHT_PX, PAGE_PAD_X_PX, PAGE_PAD_Y_PX } from "@/lib/page";
 import { NARROW_SECTION_KEYS } from "@/lib/resume";
 import type { SectionKey } from "@/lib/types";
 import { SectionHeading } from "@/components/templates/shared/SectionHeading";
@@ -243,46 +243,56 @@ function SidebarSkeleton({
   const fontClass = theme.fontDisplay === "serif" ? "font-serif" : "font-sans";
   const railBg = solid ? theme.accent : tint(theme.accent, 8);
   const gap = compact ? "gap-4" : "gap-5";
+  const colPad = {
+    paddingTop: PAGE_PAD_Y_PX,
+    paddingRight: PAGE_PAD_X_PX,
+    paddingBottom: PAGE_PAD_Y_PX,
+    paddingLeft: PAGE_PAD_X_PX,
+  } as const;
   const railCol = (
     <div
       data-resume-column="rail"
-      className={`flex w-[34%] shrink-0 flex-col ${gap} self-stretch p-6 ${solid ? "text-white" : ""}`}
-      style={{ background: railBg }}
+      className={`flex w-[34%] shrink-0 flex-col self-stretch ${solid ? "text-white" : ""}`}
+      style={{ background: railBg, padding: 0 }}
     >
-      {!theme.darkHeader && (
-        <div className="flex flex-col items-start gap-3">
-          {showAvatar && <AvatarSlot accent={theme.accent} size={72} light={solid} />}
-          <NameBone theme={theme} light={solid} sizeClass="text-[19px]" />
-          <ContactBones light={solid} stacked />
-        </div>
-      )}
-      {rail.map((key, index) => (
-        <PreviewSection
-          key={key}
-          theme={theme}
-          section={key}
-          light={solid}
-          compact={compact}
-          animate={animate}
-          index={index}
-          additionalTitle={additionalTitle}
-        />
-      ))}
+      <div className={`resume-col-pad flex flex-col ${gap}`} style={{ ...colPad, backgroundColor: railBg }}>
+        {!theme.darkHeader && (
+          <div className="flex flex-col items-start gap-3">
+            {showAvatar && <AvatarSlot accent={theme.accent} size={72} light={solid} />}
+            <NameBone theme={theme} light={solid} sizeClass="text-[19px]" />
+            <ContactBones light={solid} stacked />
+          </div>
+        )}
+        {rail.map((key, index) => (
+          <PreviewSection
+            key={key}
+            theme={theme}
+            section={key}
+            light={solid}
+            compact={compact}
+            animate={animate}
+            index={index}
+            additionalTitle={additionalTitle}
+          />
+        ))}
+      </div>
     </div>
   );
   const mainCol = (
-    <div data-resume-column="main" className={`flex flex-1 flex-col ${gap} p-8`}>
-      {main.map((key, index) => (
-        <PreviewSection
-          key={key}
-          theme={theme}
-          section={key}
-          compact={compact}
-          animate={animate}
-          index={rail.length + index}
-          additionalTitle={additionalTitle}
-        />
-      ))}
+    <div data-resume-column="main" className="flex flex-1 flex-col" style={{ padding: 0 }}>
+      <div className={`resume-col-pad flex flex-col ${gap}`} style={colPad}>
+        {main.map((key, index) => (
+          <PreviewSection
+            key={key}
+            theme={theme}
+            section={key}
+            compact={compact}
+            animate={animate}
+            index={rail.length + index}
+            additionalTitle={additionalTitle}
+          />
+        ))}
+      </div>
     </div>
   );
   const columns = (
@@ -292,16 +302,24 @@ function SidebarSkeleton({
     </div>
   );
   const pageStyle = fullPage
-    ? { minHeight: PAGE_HEIGHT_PX, ["--resume-rail-bg" as string]: railBg }
+    ? {
+        minHeight: PAGE_HEIGHT_PX,
+        ["--resume-rail-bg" as string]: railBg,
+        ["--resume-pad-y" as string]: `${PAGE_PAD_Y_PX}px`,
+        ["--resume-pad-x" as string]: `${PAGE_PAD_X_PX}px`,
+      }
     : undefined;
 
   if (theme.darkHeader) {
     return (
       <div
-        className={`resume-surface flex flex-col ${fontClass} ${fullPage ? "resume-sidebar-page min-h-full" : "min-h-full"}`}
+        className={`resume-surface flex flex-col ${fontClass} ${fullPage ? `resume-sidebar-page min-h-full${right ? " resume-sidebar-page--right" : ""}` : "min-h-full"}`}
         style={pageStyle}
       >
-        <div className="resume-dark-header flex items-center gap-6 px-8 py-6" style={{ background: theme.accent }}>
+        <div
+          className="resume-dark-header flex items-center gap-6"
+          style={{ background: theme.accent, padding: `${PAGE_PAD_Y_PX}px ${PAGE_PAD_X_PX * 2}px` }}
+        >
           <div className="min-w-0 flex-1 space-y-2">
             <NameBone theme={theme} light sizeClass="text-[24px]" />
             <ContactBones light />
@@ -315,7 +333,7 @@ function SidebarSkeleton({
 
   return (
     <div
-      className={`resume-surface flex ${fontClass} ${fullPage ? "resume-sidebar-page min-h-full" : "min-h-full"}`}
+      className={`resume-surface flex ${fontClass} ${fullPage ? `resume-sidebar-page min-h-full${right ? " resume-sidebar-page--right" : ""}` : "min-h-full"}`}
       style={pageStyle}
     >
       {columns}

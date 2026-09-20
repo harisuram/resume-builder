@@ -1064,68 +1064,181 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
   --r-border: #3a352a;
 }
 
-/* Sidebar templates paint a colored rail. `min-h-full` is a no-op in print
-   (html/body are height:auto) and on the preview stage (no parent height),
-   so the rail stopped at the last sidebar section and left a white band
-   down the rest of the A4 page. One full page is the floor; longer
-   resumes grow past it and the rail stretches with them. The page
-   gradient keeps that strip even where the rail's own box ends. */
+/* Sidebar templates: rail is full-bleed via ::before (not a floating patch).
+ * Content inset is 4%/2% on .resume-col-pad only. */
 .resume-sidebar-page {
   position: relative;
+  isolation: isolate;
   width: 760px;
   min-height: 297mm;
-  /* 34% of a 760px background, not 34% of the sheet — a percentage of a
-     wider page (or a second overlay) is what made the leftover fill look
-     like a different-width rail. */
-  background-image: linear-gradient(to right, var(--resume-rail-bg) 34%, var(--r-bg) 34%);
-  background-size: 760px 100%;
-  background-repeat: no-repeat;
+  /* Defeat .resume-surface's `background` shorthand so we control paint. */
+  background-color: #ffffff !important;
+  background-image: none !important;
 }
-.resume-sidebar-page:has(.resume-sidebar-columns--right) {
-  background-image: linear-gradient(to left, var(--resume-rail-bg) 34%, var(--r-bg) 34%);
+.resume-sidebar-page::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 34%;
+  background: var(--resume-rail-bg);
+  z-index: 0;
+  pointer-events: none;
 }
-.resume-sidebar-columns {
-  height: 100%;
-  min-height: 297mm;
+.resume-sidebar-page--right::before,
+.resume-sidebar-page:has(.resume-sidebar-columns--right)::before {
+  left: auto;
+  right: 0;
 }
-.resume-sidebar-rail {
-  align-self: stretch;
-}
-/* Screen: thead is print-only. tbody/tr become flex wrappers so the cells
-   keep the same two-column layout as before this was a <table>, and
-   offsetTop on sections still measures from the scaled preview stage. */
 .resume-sidebar-page-pad {
   display: none;
 }
+/* Print-only rail strip (see @media print). Off-print the rail is painted
+   by ::before on screen and by each preview sheet's own fill, so this must
+   stay out of the way — including in print-layout-sim measurement. */
+.resume-rail-print-fill {
+  display: none;
+}
+.resume-sidebar-columns {
+  position: relative;
+  z-index: 1;
+  display: table;
+  width: 100%;
+  height: 100%;
+  min-height: 297mm;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.resume-sidebar-rail {
+  width: 34%;
+  vertical-align: top !important;
+  background-color: var(--resume-rail-bg) !important;
+  padding: 0 !important;
+}
+.resume-main-column {
+  width: 66%;
+  vertical-align: top !important;
+  background-color: #ffffff !important;
+  padding: 0 !important;
+}
+.resume-col-pad {
+  padding: var(--resume-pad-y, 43px) var(--resume-pad-x, 15px);
+  box-sizing: border-box;
+}
+/* Screen flex fallback when not in print-layout-sim (gallery thumbs). */
 .resume-sidebar-columns tbody,
 .resume-sidebar-columns tr {
   display: flex;
   flex: 1 1 auto;
   width: 100%;
-  min-height: 0;
+  min-height: 100%;
   align-items: stretch;
 }
 .resume-sidebar-columns--right tbody,
 .resume-sidebar-columns--right tr {
   flex-direction: row-reverse;
 }
+/* print-layout-sim forces display:table (flex-row-reverse no longer applies).
+ * Mirror print: rtl keeps a right-side rail on the right.
+ * Page-2 top inset on screen comes from sheet chrome (not thead) so page 1
+ * isn’t pulled up by a negative margin. */
+.resume-scale-stage.print-layout-sim .resume-sidebar-columns {
+  display: table !important;
+}
+.resume-scale-stage.print-layout-sim .resume-sidebar-page-pad {
+  display: none !important;
+}
+.resume-scale-stage.print-layout-sim .resume-sidebar-columns tbody {
+  display: table-row-group !important;
+}
+.resume-scale-stage.print-layout-sim .resume-sidebar-columns tr {
+  display: table-row !important;
+}
+.resume-scale-stage.print-layout-sim .resume-sidebar-rail,
+.resume-scale-stage.print-layout-sim .resume-main-column {
+  display: table-cell !important;
+  vertical-align: top !important;
+}
+.resume-scale-stage.print-layout-sim .resume-sidebar-columns--right {
+  direction: rtl;
+}
+.resume-scale-stage.print-layout-sim .resume-sidebar-columns--right .resume-sidebar-rail,
+.resume-scale-stage.print-layout-sim .resume-sidebar-columns--right .resume-main-column {
+  direction: ltr;
+}
 
 .resume-split-page-pad {
   display: none;
 }
-.resume-split-columns tbody,
-.resume-split-columns tr {
-  display: flex;
+.resume-split-page-pad-foot {
+  display: none;
+}
+/* Keep Twin/asymmetric as a real table on screen (same as print). Flex on
+ * tbody/tr made preview page guides diverge from the PDF — spacers sized
+ * against flex, then break-after:page ran in table cells with different
+ * heights. */
+.resume-split-columns {
+  display: table;
   width: 100%;
-  align-items: stretch;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.resume-split-columns tbody {
+  display: table-row-group;
+}
+.resume-split-columns tr {
+  display: table-row;
+}
+.resume-split-narrow,
+.resume-split-wide {
+  display: table-cell;
+  /* !important: UA td defaults to middle; print-layout-sim also sets
+     display:table-cell !important, and a short rail then sits mid-page. */
+  vertical-align: top !important;
+}
+.resume-sidebar-rail,
+.resume-main-column {
+  vertical-align: top !important;
 }
 .resume-split-narrow {
   width: 32%;
-  vertical-align: top;
 }
 .resume-split-wide {
   width: 68%;
-  vertical-align: top;
+}
+/* Match print's gap→margin so preview pagination math equals the PDF. */
+.resume-split-narrow > div,
+.resume-split-wide > div {
+  display: block;
+}
+.resume-split-narrow > div > * + *,
+.resume-split-wide > div > * + * {
+  margin-top: 1rem;
+}
+
+/* Remesure-as-print: same gap→margin as the print stylesheet so prepare-print
+ * spacers match the PDF (sidebar still uses flex on screen). */
+.resume-scale-stage.print-layout-sim .resume-col-pad > * + *,
+.resume-scale-stage.print-layout-sim .resume-sidebar-rail > .resume-col-pad > * + *,
+.resume-scale-stage.print-layout-sim .resume-main-column > .resume-col-pad > * + * {
+  margin-top: 1.25rem !important;
+}
+.resume-scale-stage.print-layout-sim .resume-split-narrow > div > * + *,
+.resume-scale-stage.print-layout-sim .resume-split-wide > div > * + * {
+  margin-top: 1rem !important;
+}
+/* Zero-height split page-pad rows during sim — otherwise table-header-group
+ * thead would shift Twin break math. */
+.resume-scale-stage.print-layout-sim .resume-split-pad-narrow,
+.resume-scale-stage.print-layout-sim .resume-split-pad-wide {
+  height: 0 !important;
+  padding: 0 !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+  border: none !important;
+  overflow: hidden !important;
 }
 
 /* Matches PAGE_WIDTH_PX in lib/page.ts (and ResumePreviewFrame) — pinning
@@ -1225,6 +1338,16 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
     margin: 0 !important;
   }
 
+  /* Reveal the continuous measure/print source; hide the screen paper stack. */
+  .resume-print-source {
+    position: static !important;
+    opacity: 1 !important;
+    z-index: auto !important;
+    left: auto !important;
+    top: auto !important;
+    pointer-events: auto !important;
+  }
+
   /* In normal flow (not absolute) so forced page breaks on gap spacers are
      honored. Width stays at PAGE_WIDTH (760px). */
   #resume-print-root {
@@ -1242,41 +1365,70 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
 
   .resume-sidebar-page {
     position: relative !important;
+    isolation: isolate;
     display: block !important;
     width: 760px !important;
     max-width: 760px !important;
     min-height: 297mm;
     overflow: visible !important;
+    /* Print fragments clone this gradient onto every A4 sheet. */
+    background-color: #ffffff !important;
     background-image: linear-gradient(to right, var(--resume-rail-bg) 34%, #ffffff 34%) !important;
     background-size: 760px 100% !important;
-    background-repeat: no-repeat !important;
+    background-repeat: repeat-y !important;
     box-decoration-break: clone;
     -webkit-box-decoration-break: clone;
   }
+  .resume-sidebar-page--right,
   .resume-sidebar-page:has(.resume-sidebar-columns--right) {
     background-image: linear-gradient(to left, var(--resume-rail-bg) 34%, #ffffff 34%) !important;
+  }
+  .resume-sidebar-page::before {
+    display: none !important;
+  }
+
+  /* The gradient above only paints as far as the box's own content reaches,
+     so the last sheet ended the rail at the last line of text and left a
+     white band under it. A fixed-position strip is repeated by the print
+     engine on every sheet at full page height, so the rail runs edge to
+     edge on all of them, including the last. Behind the columns (z-index
+     below the table), so text and the white main column paint over it. */
+  .resume-rail-print-fill {
+    display: block !important;
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    /* `width` / `left` come from the element's own inline style, resolved in
+       px off PAGE_WIDTH. A percentage here would resolve against the sheet,
+       which is wider than the 760px print root, and paint a rail wider than
+       the 34% column it sits under. */
+    right: auto !important;
+    z-index: 0 !important;
+    pointer-events: none !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
 
   /* Flex columns fragment independently: page 2 kept overflowing main
      content and dropped the rail. Printing as a table keeps both cells
-     as one row. Page-2 inset is JS (`--page-inset` / pageStartMarginCss),
-     not cloned cell padding — that overshot the snapped height and left
-     a blank gray-rail third sheet. The page is stretched to whole A4
-     sheets in ResumePreviewFrame; leftover space is the same 34%-of-760
-     stripe as the rail cell, not a second overlay. */
+     as one row. */
   .resume-sidebar-columns {
+    position: relative;
+    z-index: 1;
     display: table !important;
     width: 760px !important;
-    /* Do not use height:100% — Inkwell/Sable/etc. put a dark header above
-       this table, so 100% of the snapped page plus the header overflowed by
-       ~header height and Chrome painted a blank third sheet (gray rail stub).
-       The page's own 34% gradient still fills leftover last-page rail. */
     height: auto !important;
     min-height: 0;
-    border-collapse: separate !important;
+    border-collapse: collapse !important;
     border-spacing: 0 !important;
     table-layout: fixed;
     background: none !important;
+    /* Page 1's 4% top inset is real padding on .resume-col-pad below (its
+       own true top edge). The repeating thead renders unconditionally on
+       every page including page 1, so pull it off page 1 here — page 2+
+       keep it as their 4% top band (no real padding lands on an internal
+       page-break's "false" top edge). */
+    margin-top: calc(-1 * var(--resume-page-inset, 43px)) !important;
   }
   .resume-sidebar-columns--right {
     direction: rtl;
@@ -1296,45 +1448,60 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
   .resume-sidebar-pad-rail,
   .resume-sidebar-pad-main {
     display: table-cell;
-    height: 0;
-    padding: 0;
-    font-size: 0;
-    line-height: 0;
-  }
-  .resume-sidebar-rail,
-  .resume-main-column {
-    display: table-cell !important;
-    vertical-align: top;
-    direction: ltr;
-    /* Page-2 inset comes from ResumePreviewFrame margins (PAGE_INSET_PX),
-       not padding-top + box-decoration-break:clone — cloning padding onto
-       every fragment added height past the snapped page stack and left
-       Inkwell/Pacific PDFs with a blank third sheet (gray rail stub only). */
-    padding-top: 0 !important;
-    break-inside: auto;
-  }
-  .resume-sidebar-pad-rail,
-  .resume-sidebar-pad-main {
+    height: var(--resume-page-inset, 43px) !important;
+    padding: 0 !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
     direction: ltr;
   }
-  .resume-sidebar-rail,
   .resume-sidebar-pad-rail {
     width: 34% !important;
     background: var(--resume-rail-bg) !important;
   }
-  .resume-main-column,
   .resume-sidebar-pad-main {
     width: 66% !important;
+    background: #ffffff !important;
   }
-  .resume-sidebar-rail > * + *,
-  .resume-main-column > * + * {
+  .resume-sidebar-rail,
+  .resume-main-column {
+    display: table-cell !important;
+    vertical-align: top !important;
+    direction: ltr;
+    padding: 0 !important;
+    break-inside: auto;
+  }
+  .resume-col-pad {
+    /* Block, not flex. A flex container does not fragment cleanly: Chromium
+       pushes whole flex items to the next sheet rather than splitting the
+       column, which left a sheet only half filled and put cards a page
+       later than the preview did. Single-column and Twin already flatten
+       their wrappers for print for the same reason; the sibling margin
+       below replaces the flex gap, so spacing is unchanged. */
+    display: block !important;
+    /* Real 4% top+bottom padding here only ever paints at the column's true
+       start (page 1) and true end (the last page) — fragmentation doesn't
+       repeat padding at an internal page-break. Page 2+'s top comes from
+       the repeating thead band above instead. */
+    padding: var(--resume-pad-y, 43px) var(--resume-pad-x, 15px) !important;
+    box-sizing: border-box;
+  }
+  .resume-sidebar-rail {
+    width: 34% !important;
+    background: var(--resume-rail-bg) !important;
+  }
+  .resume-main-column {
+    width: 66% !important;
+    background: #ffffff !important;
+  }
+  .resume-col-pad > * + * {
     margin-top: 1.25rem !important;
   }
 
   .resume-split-columns {
     display: table !important;
     width: 100% !important;
-    margin-top: 0 !important;
     border-collapse: separate !important;
     border-spacing: 0 !important;
     table-layout: fixed;
@@ -1342,27 +1509,30 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
   .resume-split-page-pad {
     display: table-header-group !important;
   }
+  .resume-split-page-pad-foot {
+    display: table-footer-group !important;
+  }
   .resume-split-columns tbody {
     display: table-row-group !important;
   }
   .resume-split-columns tr {
     display: table-row !important;
   }
+  .resume-scale-stage.print-layout-sim .resume-split-pad-narrow,
+  .resume-scale-stage.print-layout-sim .resume-split-pad-wide,
   .resume-split-pad-narrow,
   .resume-split-pad-wide {
-    height: 0;
-    padding: 0;
-    font-size: 0;
-    line-height: 0;
-  }
-  .resume-sidebar-rail > * + *,
-  .resume-main-column > * + * {
-    margin-top: 1.25rem !important;
+    height: 0 !important;
+    padding: 0 !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
   }
   .resume-split-narrow,
   .resume-split-wide {
     display: table-cell !important;
-    vertical-align: top;
+    vertical-align: top !important;
     padding-top: 0 !important;
     break-inside: auto;
   }
@@ -1398,68 +1568,50 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
   .resume-page-body.gap-5 > * + * {
     margin-top: 1.25rem !important;
   }
+
+  /* Labeled (dossier) rows are CSS grids. Keep them fragmentable so forced
+   * break spacers between sections create real page cuts like single-column. */
+  .resume-surface[data-layout="labeled"] .resume-page-body > [data-section-key] {
+    break-inside: auto;
+  }
+
   .resume-dark-header {
     break-inside: avoid;
     break-after: auto;
   }
 
-  /* Preview spacers simulate the cut with height. Print turns "break" spacers
-     into real page breaks (preview px heights never matched Chrome's page
-     box inside abspos/table). Inset-only spacers keep the 32px page-2 pad. */
+  /* Chromium's default orphans:2/widows:2 silently keeps 2 lines of a
+     wrapped bullet or summary paragraph together at a page edge — pulling
+     an extra line down (or, if the paragraph doesn't have 2+2 lines to
+     spare, bumping the whole block to the next sheet) whenever the natural
+     cut would strand a single line. The preview's dashed guide only knows
+     PAGE_HEIGHT_PX math, not that reflow, so the PDF's real break can land
+     a line or more away from where the guide pointed. Let every line break
+     exactly at the page edge like the guide assumes. */
+  #resume-print-root,
+  #resume-print-root * {
+    orphans: 1;
+    widows: 1;
+  }
+
+  /* Body text can split; only keep section titles with the content that follows. */
   [data-section-key],
   [data-item-key] {
     break-before: auto;
   }
 
-  [data-force-break="true"] {
-    margin-top: 0 !important;
+  #resume-print-root li,
+  #resume-print-root p {
+    break-inside: auto !important;
+    page-break-inside: auto !important;
   }
 
-  [data-page-gap-spacer="true"] {
-    display: block !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    border: none !important;
-    overflow: hidden !important;
-    pointer-events: none !important;
-    flex-shrink: 0 !important;
-  }
-
-  [data-page-gap-spacer="true"][data-page-gap-kind="break"] {
-    /* Zero height + forced break. Keeping the preview px height here would
-       leave empty space on page 2 and then break again → blank sheet. */
-    height: 0 !important;
-    min-height: 0 !important;
-    max-height: 0 !important;
-    break-after: page !important;
-    page-break-after: always !important;
-  }
-
-  [data-page-gap-spacer="true"][data-page-gap-kind="inset"] {
-    break-after: auto !important;
-    page-break-after: auto !important;
-  }
-
-  /* Page-2 top inset the preview carried in the spacer height. */
-  [data-page-gap-spacer="true"][data-page-gap-kind="break"] + * {
-    padding-top: 32px !important;
-  }
-
-  #resume-print-root .break-inside-avoid {
-    break-inside: auto;
-  }
-
-  /* Rail sections live in the continuous sidebar, not the paginated main
-     column. A CSS page break there punches a hole in the colored strip. */
-  [data-resume-column="rail"] [data-force-break="true"] {
-    break-before: auto !important;
-  }
-  [data-resume-column="rail"] [data-page-gap-spacer="true"] {
-    break-after: auto !important;
-    page-break-after: auto !important;
-    height: 0 !important;
-    min-height: 0 !important;
+  #resume-print-root .break-after-avoid,
+  #resume-print-root [data-section-key] > h3 {
+    break-after: avoid-page !important;
+    break-inside: avoid !important;
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
   }
 
   .no-print {

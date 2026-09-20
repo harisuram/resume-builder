@@ -330,7 +330,17 @@ describe("toggleItemPageBreak", () => {
     toggleItemPageBreak("projects", 2);
     toggleItemPageBreak("projects", 0);
     toggleItemPageBreak("experience", 1);
-    expect(useBuilderStore.getState().pageBreakItems).toEqual(["projects:2", "projects:0", "experience:1"]);
+    // Index 0 promotes to a section break so the title moves with the first entry.
+    expect(useBuilderStore.getState().pageBreakItems).toEqual(["projects:2", "experience:1"]);
+    expect(useBuilderStore.getState().pageBreakSections).toEqual(["projects"]);
+  });
+
+  it("toggles the section break when the first entry is moved, so the title is not left behind", () => {
+    const { toggleItemPageBreak } = useBuilderStore.getState();
+    toggleItemPageBreak("partTime", 0);
+    expect(useBuilderStore.getState().pageBreakSections).toEqual(["partTime"]);
+    expect(useBuilderStore.getState().pageBreakItems).toEqual([]);
+    toggleItemPageBreak("partTime", 0);
     expect(useBuilderStore.getState().pageBreakSections).toEqual([]);
   });
 
@@ -460,7 +470,7 @@ describe("loadFromData / resetStore", () => {
     expect(useBuilderStore.getState().pageBreakSections).toEqual([]);
   });
 
-  it("loadFromData restores previously forced page breaks", () => {
+  it("loadFromData drops previously forced page breaks (partitions removed)", () => {
     useBuilderStore.getState().loadFromData({
       basicInfo: { name: "Loaded", email: "", phone: "", location: "", links: {} },
       sections: {},
@@ -468,7 +478,7 @@ describe("loadFromData / resetStore", () => {
       templateId: "bre-cool",
       pageBreakSections: ["certifications"],
     });
-    expect(useBuilderStore.getState().pageBreakSections).toEqual(["certifications"]);
+    expect(useBuilderStore.getState().pageBreakSections).toEqual([]);
   });
 
   it("loadFromData restores a previously customized section order, defaulting to null when absent", () => {

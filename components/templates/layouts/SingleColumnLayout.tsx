@@ -1,6 +1,7 @@
 import { SUMMARY_COPY } from "@/lib/persona";
 import { getRenderableSections, hasSummary, sectionBreakProps } from "@/lib/resume";
 import type { ResumeData } from "@/lib/types";
+import type { NameHeadingLevel } from "../registry";
 import { Avatar, ContactLine, hasAvatar, SummaryText, visiblePhoto } from "../shared/atoms";
 import { ResumeSection } from "../shared/ResumeSection";
 import { SectionHeading } from "../shared/SectionHeading";
@@ -10,13 +11,19 @@ export function SingleColumnLayout({
   data,
   theme,
   resumeTheme,
+  headingLevel = "h1",
 }: {
   data: ResumeData;
   theme: TemplateTheme;
   /** Overrides the resume's own light/dark surface — used only by templates
    * that expose a dark-mode toggle (e.g. JSON Resume Vitae). */
   resumeTheme?: "light" | "dark";
+  /** "h1" for the real document (builder pane, PDF export); "p" for
+   * decorative marketing-site thumbnails so a page never gets more than
+   * one real `<h1>`. */
+  headingLevel?: NameHeadingLevel;
 }) {
+  const NameHeading = headingLevel;
   const sections = getRenderableSections(data);
   const fontClass = theme.fontDisplay === "serif" ? "font-serif" : "font-sans";
   const nameSizeClass = theme.headingStyle === "tracked" ? "tracking-wide" : "";
@@ -32,14 +39,14 @@ export function SingleColumnLayout({
       style={theme.darkHeader ? { background: theme.accent } : undefined}
     >
       <div className="min-w-0 flex-1">
-        <h1
+        <NameHeading
           className={`${fontClass} ${nameSizeClass} text-[26px] font-semibold ${
             resumeTheme === "dark" && !theme.darkHeader ? "text-[var(--r-ink)]" : ""
           }`}
           style={!theme.darkHeader && resumeTheme !== "dark" ? { color: theme.accent } : undefined}
         >
           {data.basicInfo.name || "Your Name"}
-        </h1>
+        </NameHeading>
         <div className="mt-2">
           <ContactLine info={data.basicInfo} light={theme.darkHeader} />
         </div>

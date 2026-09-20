@@ -21,8 +21,6 @@ export function PreviewPane({
 }) {
   const templateId = useBuilderStore((s) => s.templateId);
   const setTemplateId = useBuilderStore((s) => s.setTemplateId);
-  const toggleSectionPageBreak = useBuilderStore((s) => s.toggleSectionPageBreak);
-  const toggleItemPageBreak = useBuilderStore((s) => s.toggleItemPageBreak);
   const data = useResumeData();
   const theme = getTheme(templateId);
   const empty = !hasAddedSection(data);
@@ -70,13 +68,7 @@ export function PreviewPane({
         )}
         {(!empty || printable) && (
           <div className={empty ? "h-0 overflow-hidden print-unclip" : undefined} aria-hidden={empty || undefined}>
-            <ResumePreviewFrame
-              data={data}
-              printable={printable}
-              onToggleSectionBreak={toggleSectionPageBreak}
-              onToggleItemBreak={toggleItemPageBreak}
-            />
-          </div>
+            <ResumePreviewFrame data={data} printable={printable} />          </div>
         )}
         {/* Never on the export/print step — kept well clear of the Download
             button so there's nothing here to accidentally click through to. */}

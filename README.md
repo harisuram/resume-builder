@@ -41,6 +41,41 @@ templates (rendered with both a fully populated and an empty resume), the
 builder shell → export flow end to end, and the AdSense slot's
 enabled/disabled/no-fill states.
 
+### Printed-PDF page gaps (Playwright)
+
+```bash
+npm run test:e2e         # all templates, headless Chromium
+npm run test:e2e -- -g dossier   # one template
+npm run test:e2e:ui      # pick and watch cases interactively
+```
+
+jsdom cannot paginate, so page breaks have no unit test. `e2e/pdf-gaps.spec.ts`
+drives a real Chromium instead: for **every** template in the registry it
+seeds the builder with a fixture long enough to print ~10+ pages
+(`e2e/fixtures/longResume.ts`), walks to the export step, fires the same
+`resume:prepare-print` the Download button fires, prints through the real
+`@page` rules, and reads the PDF back with `pdfjs-dist` to measure how much
+of each sheet is empty.
+
+A sheet fails when it ends earlier than the layout can explain. Content
+flows continuously into the print root, so a sheet only stops early when the
+print engine refuses to split the next run of content — a
+`.break-inside-avoid` entry, or a heading glued to the entry after it. The
+tallest such run is measured live from the print DOM and becomes that
+template's gap budget (capped at 30% of a sheet, so one runaway block cannot
+license its own hole). The suite flags:
+
+- a trailing or interior blank sheet,
+- an unbreakable block taller than 55% of a sheet,
+- an interior sheet with more empty space at the bottom than the budget,
+- the same for the main column alone on two-column templates, where a
+  full-height rail otherwise hides the hole,
+- a sheet after the first that starts more than 10% of the way down.
+
+Failures attach the offending PDF and a per-sheet JSON report. Thresholds
+live in one place, `e2e/helpers/gapBudget.ts`. `npm run test:e2e` starts
+`next dev` itself, or reuses one already on :3000.
+
 ## Architecture notes
 
 - **Static export.** `next build` sets `output: "export"` (via `scripts/build.mjs`).
@@ -159,4 +194,5 @@ lib/                   Data model, Zustand store, section config, localStorage/a
 workers/               Cloudflare Worker for POST /api/optimize and /api/import (free-plan CDN for the rest)
 functions/             Pages Function adapter if the site is still on Pages
 test-utils/            Shared fixtures for tests (not part of the app bundle)
+e2e/                   Playwright: prints every template to a real multi-page PDF and measures page gaps
 ```

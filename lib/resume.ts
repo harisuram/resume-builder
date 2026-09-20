@@ -72,17 +72,16 @@ export function hasSummary(data: ResumeData): boolean {
 }
 
 /** Whether the user has explicitly chosen for this section to start on a
- * fresh printed page (see ResumeData.pageBreakSections). */
-export function hasForcedPageBreak(data: ResumeData, key: SectionKey): boolean {
-  return Boolean(data.pageBreakSections?.includes(key));
+ * fresh printed page. Forced partitions were removed — always false; kept
+ * so older saved resumes / tests that call this stay harmless. */
+export function hasForcedPageBreak(_data: ResumeData, _key: SectionKey): boolean {
+  return false;
 }
 
-/** DOM attrs every layout stamps on a section wrapper so the preview can
- * simulate a page start (kept in the PDF as the same padding gap). */
-export function sectionBreakProps(data: ResumeData, key: SectionKey) {
+/** DOM attrs every layout stamps on a section wrapper (guides / measure). */
+export function sectionBreakProps(_data: ResumeData, key: SectionKey) {
   return {
     "data-section-key": key,
-    "data-force-break": hasForcedPageBreak(data, key) || undefined,
   } as const;
 }
 

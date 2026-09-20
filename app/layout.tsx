@@ -84,10 +84,20 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <>
             {/* Funding Choices (Google-certified CMP) must load before
                 adsbygoogle so EEA/UK/US-states visitors see a consent
-                message before any ad request goes out. */}
-            <script async src={fundingChoicesScriptSrc()} />
-            <script dangerouslySetInnerHTML={{ __html: FUNDING_CHOICES_PRESENT_SNIPPET }} />
-            <script async src={adsenseScriptSrc()} crossOrigin="anonymous" />
+                message before any ad request goes out.
+                suppressHydrationWarning: AdSense rewrites these tags
+                (managed show_*.js, fetchpriority) before React hydrates. */}
+            <script async src={fundingChoicesScriptSrc()} suppressHydrationWarning />
+            <script
+              dangerouslySetInnerHTML={{ __html: FUNDING_CHOICES_PRESENT_SNIPPET }}
+              suppressHydrationWarning
+            />
+            <script
+              async
+              src={adsenseScriptSrc()}
+              crossOrigin="anonymous"
+              suppressHydrationWarning
+            />
           </>
         )}
       </head>

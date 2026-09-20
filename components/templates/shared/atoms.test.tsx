@@ -28,6 +28,18 @@ describe("BulletList", () => {
     expect(container.textContent).toContain(data.sections.keyAchievements![0]);
     expect(container.textContent).toContain(data.sections.experience![0].bullets[0]);
     expect(container.textContent).toContain("Mar 2019 – Present");
+    // Bullets (and experience cards) fragment like print: `li`/`p` use
+    // break-inside:auto so a tall entry fills the sheet instead of jumping.
+    const experienceBullets = container.querySelectorAll('[data-item-key^="experience:"] [data-bullet-kind]');
+    expect(experienceBullets.length).toBeGreaterThan(0);
+    for (const bullet of experienceBullets) {
+      expect(bullet.className).not.toContain("break-inside-avoid");
+    }
+    const experienceCards = container.querySelectorAll('[data-item-key^="experience:"]');
+    expect(experienceCards.length).toBeGreaterThan(0);
+    for (const card of experienceCards) {
+      expect(card.className).not.toContain("break-inside-avoid");
+    }
   });
 
   it("prints Present for an explicitly current role and a real end date otherwise", () => {

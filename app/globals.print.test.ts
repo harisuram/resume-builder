@@ -2,18 +2,20 @@ import { readFileSync } from "fs";
 import { join } from "path";
 
 const css = readFileSync(join(__dirname, "globals.css"), "utf8");
+const PRINT_AT = css.indexOf("@media print {");
+const screenBlock = css.slice(0, PRINT_AT);
+const printBlock = css.slice(PRINT_AT);
 
 describe("print stylesheet", () => {
   it("pins the preview stage to the 760px design width instead of 100%", () => {
     // `width: 100%` collapsed to 0px in print because the visibility trick
     // zeroed the flex ancestors, which produced a blank PDF.
-    const printBlock = css.slice(css.indexOf("@media print"));
     expect(printBlock).toContain("width: 760px !important");
     expect(printBlock).not.toMatch(/\.resume-scale-stage\s*\{[^}]*width:\s*100%/);
   });
 
   it("zeroes @page margin so the browser cannot stamp date, title, or URL", () => {
-    const pageBlock = css.slice(css.indexOf("@page"), css.indexOf("@media print"));
+    const pageBlock = css.slice(css.indexOf("@page"), PRINT_AT);
     expect(pageBlock).toMatch(/margin:\s*0;/);
     expect(pageBlock).not.toMatch(/margin:\s*12mm/);
     expect(pageBlock).toContain("content: none");
@@ -26,77 +28,105 @@ describe("print stylesheet", () => {
   });
 
   it("unclips html/body and the builder overflow wrappers so the resume can paint", () => {
-    const printBlock = css.slice(css.indexOf("@media print"));
     expect(printBlock).toContain("overflow: visible !important");
     expect(printBlock).toContain(".print-unclip");
     expect(printBlock).toMatch(/html,\s*body\s*\{[^}]*height:\s*auto !important/);
   });
 
   it("cancels enter animations so Chromium cannot print the resume at opacity 0", () => {
-    const printBlock = css.slice(css.indexOf("@media print"));
     expect(printBlock).toMatch(/body \*\s*\{[^}]*animation:\s*none !important/);
     expect(printBlock).toMatch(/\.print-unclip\s*\{[^}]*opacity:\s*1 !important/);
   });
 
   it("gives sidebar templates a full A4 min-height so the rail paints to the bottom of the page", () => {
     expect(css).toMatch(/\.resume-sidebar-page\s*\{[^}]*min-height:\s*297mm/);
-    const printBlock = css.slice(css.indexOf("@media print"));
     expect(printBlock).toContain("min-height: 297mm");
   });
 
-  it("paints the leftover last-page rail as 34% of the 760px page, not a second overlay", () => {
-    const printBlock = css.slice(css.indexOf("@media print"));
+  it("paints the sidebar rail full-bleed via ::before on screen and gradient in print", () => {
+    expect(screenBlock).toContain(".resume-sidebar-page::before");
     expect(printBlock).toContain("background-size: 760px 100%");
     expect(printBlock).toContain("box-decoration-break: clone");
     expect(printBlock).toContain(".resume-split-page-pad");
     expect(printBlock).toContain(".resume-page-body");
     expect(printBlock).not.toContain(".resume-sidebar-print-fill");
-    expect(printBlock).not.toContain("position: fixed");
+    // The leftover last-page rail is a fixed strip repeated per sheet, but
+    // its geometry must never be a percentage: a fixed box resolves
+    // percentages against the sheet, which is wider than the 760px print
+    // root, and paints a rail wider than the 34% column beneath it. Width
+    // and left come from inline px in SidebarLayout instead.
+    const railFillBlock = printBlock.slice(printBlock.indexOf(".resume-rail-print-fill {"));
+    const railFillRules = railFillBlock.slice(0, railFillBlock.indexOf("}"));
+    expect(railFillRules).toContain("position: fixed");
+    expect(railFillRules).not.toMatch(/width:\s*\d+%/);
+    expect(railFillRules).not.toMatch(/left:\s*\d+%/);
     const columnsBlock = printBlock.slice(printBlock.indexOf(".resume-sidebar-columns {"));
     expect(columnsBlock).toContain("background: none !important");
-    // height:100% + dark header overflowed into a blank third sheet.
     expect(columnsBlock).toMatch(/height:\s*auto !important/);
     expect(columnsBlock).not.toMatch(/height:\s*100% !important/);
   });
 
-  it("lets a forced section inside a two-column template start a page instead of dragging its column", () => {
-    const printBlock = css.slice(css.indexOf("@media print"));
+  it("lets two-column templates fragment instead of dragging a whole column", () => {
     expect(printBlock).toContain(".resume-split-narrow > div");
     expect(printBlock).toContain("break-inside: auto");
-    expect(printBlock).toContain(".resume-sidebar-rail > * + *");
-    expect(printBlock).toContain('[data-resume-column="rail"] [data-force-break="true"]');
+    expect(printBlock).toContain(".resume-col-pad > * + *");
   });
 
-  it("keeps preview-simulated page-separator gaps in the PDF", () => {
-    const printBlock = css.slice(css.indexOf("@media print"));
-    // Print parks the viewport on body and turns break-kind spacers into
-    // real CSS page breaks (absolute print root ignored break-before).
-    expect(printBlock).toContain('body > *:not([data-print-viewport])');
+  it("keeps the sidebar rail painted across every printed sheet", () => {
+    expect(screenBlock).toContain(".resume-sidebar-page::before");
+    expect(printBlock).toContain("background-size: 760px 100%");
+    expect(printBlock).toContain("background: var(--resume-rail-bg) !important");
+  });
+
+  it("lays Twin/asymmetric out as a table on screen so preview matches print breaks", () => {
+    expect(screenBlock).toMatch(/\.resume-split-columns\s*\{[^}]*display:\s*table/);
+    expect(screenBlock).toMatch(/\.resume-split-narrow\s*,\s*\n\s*\.resume-split-wide\s*\{[^}]*display:\s*table-cell/);
+    expect(screenBlock).toContain(".resume-split-narrow > div > * + *");
+    expect(screenBlock).toContain(".resume-scale-stage.print-layout-sim .resume-split-pad-narrow");
+  });
+
+  it("keeps right-rail sidebars on the right under print-layout-sim (not a second strip)", () => {
+    expect(screenBlock).toMatch(
+      /\.resume-scale-stage\.print-layout-sim \.resume-sidebar-columns--right\s*\{[^}]*direction:\s*rtl/,
+    );
+  });
+
+  it("keeps Twin header→columns spacing in print (does not zero split margin-top)", () => {
+    const start = printBlock.indexOf(".resume-split-columns {");
+    const end = printBlock.indexOf("}", start);
+    const rule = printBlock.slice(start, end + 1);
+    expect(rule).toContain("display: table !important");
+    expect(rule).not.toMatch(/margin-top:\s*0/);
+  });
+
+  it("prints natural content flow (no Move/Undo spacer page breaks)", () => {
+    expect(printBlock).toContain("body > *:not([data-print-viewport])");
     expect(printBlock).toMatch(/#resume-print-root\s*\{[^}]*position:\s*static/);
     expect(printBlock).not.toMatch(/#resume-print-root\s*\{[^}]*position:\s*absolute/);
-    expect(printBlock).not.toMatch(/\[data-section-key\],\s*\[data-item-key\]\s*\{[^}]*margin-top:\s*0 !important/);
-    expect(printBlock).toContain('[data-page-gap-spacer="true"]');
-    expect(printBlock).toMatch(/data-page-gap-kind="break"[^{]*\{[^}]*break-after:\s*page/);
-    expect(printBlock).toMatch(/\[data-force-break="true"\]\s*\{[^}]*margin-top:\s*0 !important/);
-    expect(printBlock).toContain("#resume-print-root .break-inside-avoid");
+    expect(printBlock).toContain("#resume-print-root .break-after-avoid");
+    expect(printBlock).toMatch(/break-after:\s*avoid-page/);
+    expect(printBlock).toContain("#resume-print-root li");
+    expect(printBlock).not.toContain("data-page-gap-spacer");
+    expect(printBlock).not.toContain("data-force-break");
   });
 
   it("prints single-column bodies as blocks so they fragment like the preview", () => {
-    const printBlock = css.slice(css.indexOf("@media print"));
     expect(printBlock).toMatch(/\.resume-page-body\s*\{[^}]*display:\s*block !important/);
     expect(printBlock).toContain(".resume-dark-header");
+    expect(printBlock).toContain('.resume-surface[data-layout="labeled"]');
   });
 
   it("clones sidebar/split columns as table cells and leaves page-2 inset to JS margins", () => {
-    const printBlock = css.slice(css.indexOf("@media print"));
     expect(printBlock).toContain("table-header-group");
-    expect(printBlock).toContain("border-collapse: separate");
+    expect(printBlock).toContain("table-footer-group");
+    expect(printBlock).toContain("border-collapse: collapse");
+    // 5% top inset on page 2+ via thead; rail pad painted so it isn’t a white patch.
     expect(printBlock).toContain(".resume-sidebar-pad-rail");
-    expect(printBlock).toMatch(/\.resume-sidebar-pad-rail,\s*\n\s*\.resume-sidebar-pad-main\s*\{[^}]*height:\s*0/);
-    // Cloning padding-top onto every fragment invented a blank trailing page
-    // (gray rail stub) on Inkwell/Pacific downloads — page-2 inset is JS only.
-    expect(printBlock).not.toMatch(/\.resume-sidebar-rail,\s*\n\s*\.resume-main-column\s*\{[^}]*padding-top:\s*32px/);
-    expect(printBlock).toMatch(/\.resume-sidebar-rail,\s*\n\s*\.resume-main-column\s*\{[^}]*padding-top:\s*0 !important/);
+    expect(printBlock).toMatch(/height:\s*var\(--resume-page-inset/);
+    expect(printBlock).toMatch(/margin-top:\s*calc\(-1 \* var\(--resume-page-inset/);
+    expect(printBlock).toMatch(/\.resume-sidebar-pad-rail\s*\{[^}]*background:\s*var\(--resume-rail-bg\)/);
+    expect(printBlock).toMatch(/\.resume-sidebar-rail,\s*\n\s*\.resume-main-column\s*\{[^}]*padding:\s*0 !important/);
+    expect(printBlock).toContain(".resume-col-pad");
     expect(printBlock).not.toMatch(/--page-inset:\s*0px/);
   });
 });

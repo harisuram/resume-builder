@@ -1,3 +1,9 @@
 # Google’s ads.txt crawler must get a plain-text file at /ads.txt.
 # auto-trailing-slash would otherwise 404 /ads.txt/ through the Worker.
 /ads.txt/ /ads.txt 301
+
+# Canonicalize on the apex — wrangler.jsonc registers both hostnames as
+# custom domains, so without this, www and apex both serve the same pages
+# as two separately-crawlable 200s (duplicate content), even though the
+# canonical tag already points at the apex.
+https://www.freeresumebuilder.co.in/* https://freeresumebuilder.co.in/:splat 301

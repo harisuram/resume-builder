@@ -6,8 +6,6 @@ import type { SectionKey } from "@/lib/types";
 import { TEMPLATE_COMPONENTS, TEMPLATE_LIST } from "./registry";
 import { NARROW_SECTION_KEYS } from "./shared/ResumeSection";
 
-/** List sections whose individual entries can start a page. Chip-style
- * sections (skills, hobbies, soft skills) only break as a whole block. */
 const ITEM_SECTIONS: SectionKey[] = [
   "keyAchievements",
   "education",
@@ -23,77 +21,40 @@ const ITEM_SECTIONS: SectionKey[] = [
 
 const EVERY_SECTION: SectionKey[] = getNavSectionOrder();
 
-describe("page-break simulation across every template", () => {
+describe("section / item tags across every template", () => {
   it.each(TEMPLATE_LIST.map((t) => [t.id, t.name, t.layout] as const))(
-    "%s (%s, %s) tags summary and every content section so a break can land anywhere",
+    "%s (%s, %s) tags summary and every content section",
     (id) => {
       const Template = TEMPLATE_COMPONENTS[id];
       const { container, unmount } = render(<Template data={makeFullResumeData({ templateId: id })} />);
       for (const key of EVERY_SECTION) {
         expect(container.querySelector(`[data-section-key="${key}"]`)).not.toBeNull();
       }
+      expect(container.querySelector("[data-force-break]")).toBeNull();
       unmount();
     },
   );
 
-  it.each(TEMPLATE_LIST.map((t) => [t.id, t.name] as const))(
-    "%s honors a forced section break on every section, including rail vs main",
-    (id) => {
-      const Template = TEMPLATE_COMPONENTS[id];
-      for (const key of EVERY_SECTION) {
-        const { container, unmount } = render(
-          <Template data={makeFullResumeData({ templateId: id, pageBreakSections: [key] })} />,
-        );
-        const el = container.querySelector(`[data-section-key="${key}"]`);
-        expect(el).not.toBeNull();
-        expect(el).toHaveAttribute("data-force-break", "true");
-        for (const other of EVERY_SECTION) {
-          if (other === key) continue;
-          expect(container.querySelector(`[data-section-key="${other}"]`)).not.toHaveAttribute("data-force-break");
-        }
-        unmount();
-      }
-    },
-  );
-
-  it.each(TEMPLATE_LIST.map((t) => [t.id, t.name] as const))(
-    "%s honors a forced entry break on every list section",
-    (id) => {
-      const Template = TEMPLATE_COMPONENTS[id];
-      for (const key of ITEM_SECTIONS) {
-        const itemKey = itemBreakKey(key, 0);
-        const { container, unmount } = render(
-          <Template data={makeFullResumeData({ templateId: id, pageBreakItems: [itemKey] })} />,
-        );
-        const el = container.querySelector(`[data-item-key="${itemKey}"]`);
-        expect(el).not.toBeNull();
-        expect(el).toHaveAttribute("data-force-break", "true");
-        unmount();
-      }
-    },
-  );
-
-  it("can force a later language and a later achievement, not only the first entry", () => {
-    const Template = TEMPLATE_COMPONENTS["jakes-resume"];
-    const { container } = render(
-      <Template
-        data={makeFullResumeData({
-          pageBreakItems: ["languages:1", "keyAchievements:1"],
-        })}
-      />,
-    );
-    expect(container.querySelector('[data-item-key="languages:1"]')).toHaveAttribute("data-force-break", "true");
-    expect(container.querySelector('[data-item-key="languages:0"]')).not.toHaveAttribute("data-force-break");
-    expect(container.querySelector('[data-item-key="keyAchievements:1"]')).toHaveAttribute("data-force-break", "true");
-    expect(container.querySelector('[data-item-key="keyAchievements:0"]')).not.toHaveAttribute("data-force-break");
+  it.each(TEMPLATE_LIST.map((t) => [t.id, t.name] as const))("%s tags list entries without force-break", (id) => {
+    const Template = TEMPLATE_COMPONENTS[id];
+    for (const key of ITEM_SECTIONS) {
+      const itemKey = itemBreakKey(key, 0);
+      const { container, unmount } = render(
+        <Template data={makeFullResumeData({ templateId: id, pageBreakItems: [itemKey] })} />,
+      );
+      const el = container.querySelector(`[data-item-key="${itemKey}"]`);
+      expect(el).not.toBeNull();
+      expect(el).not.toHaveAttribute("data-force-break");
+      unmount();
+    }
   });
 });
 
-describe("narrow vs wide split stays consistent under a forced break", () => {
-  it("keeps compact sections in the rail when a main-column section starts a page", () => {
+describe("narrow vs wide split", () => {
+  it("keeps compact sections in the rail", () => {
     const Template = TEMPLATE_COMPONENTS["bre-creative"];
     const { container } = render(
-      <Template data={makeFullResumeData({ templateId: "bre-creative", pageBreakSections: ["experience"] })} />,
+      <Template data={makeFullResumeData({ templateId: "bre-creative" })} />,
     );
     const rail = container.querySelector(".resume-sidebar-rail")!;
     const main = container.querySelector(".resume-main-column")!;
@@ -101,6 +62,7 @@ describe("narrow vs wide split stays consistent under a forced break", () => {
       expect(rail.querySelector(`[data-section-key="${key}"]`)).not.toBeNull();
       expect(main.querySelector(`[data-section-key="${key}"]`)).toBeNull();
     }
-    expect(main.querySelector('[data-section-key="experience"]')).toHaveAttribute("data-force-break", "true");
+    expect(main.querySelector('[data-section-key="experience"]')).not.toBeNull();
+    expect(main.querySelector('[data-section-key="experience"]')).not.toHaveAttribute("data-force-break");
   });
 });

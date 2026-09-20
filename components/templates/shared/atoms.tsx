@@ -12,31 +12,26 @@ import type {
 } from "@/lib/types";
 import { formatDateRange, formatMonth, isCurrentExperience } from "@/lib/date";
 import { DEFAULT_DIAL_CODE } from "@/lib/countryCodes";
-import { forcedItemIndices, itemBreakKey } from "@/lib/resume";
+import { itemBreakKey } from "@/lib/resume";
 import { CertificationIcon, GithubIcon, GlobeIcon, LinkedInIcon, MailIcon, PhoneIcon, PinIcon } from "./icons";
 import type { TemplateTheme } from "./theme";
 
-/** Which entries of one section the user has pushed onto a fresh page, ready
- * for the entry lists below to tag onto the DOM. Resolved per section by the
- * layout so each list stays unaware of the whole resume. */
+/** Section + empty forced set — forced item partitions were removed; kept so
+ * call sites that still pass `itemBreaks(...)` compile unchanged. */
 export interface ItemBreaks {
   section: SectionKey;
   forced: Set<number>;
 }
 
-export function itemBreaks(data: ResumeData, section: SectionKey): ItemBreaks {
-  return { section, forced: forcedItemIndices(data, section) };
+export function itemBreaks(_data: ResumeData, section: SectionKey): ItemBreaks {
+  return { section, forced: new Set() };
 }
 
-/** Per-entry hooks for the two things that act on a single list entry: the
- * preview's page-break simulation (kept in the PDF as an inline gap) and
- * the guides, which read the label back out of the DOM so the offer to
- * move an entry can name it. */
+/** Per-entry DOM hooks for measure / guides (no forced page cuts). */
 function itemAttrs(breaks: ItemBreaks, index: number, label: string) {
   return {
     "data-item-key": itemBreakKey(breaks.section, index),
     "data-item-label": label,
-    "data-force-break": breaks.forced.has(index) || undefined,
   };
 }
 
@@ -161,7 +156,12 @@ export function ContactGrid({ info }: { info: BasicInfo }) {
 
 export function SummaryText({ text }: { text?: string }) {
   if (!text) return null;
-  return <p className="text-[12.5px] leading-relaxed text-[var(--r-ink)]">{text}</p>;
+  // Fragmentable: print already sets `p { break-inside: auto }`. Keeping
+  // break-inside-avoid here made the preview pull the cut to the paragraph
+  // top and leave a blank band the PDF never had.
+  return (
+    <p className="text-[12.5px] leading-relaxed text-[var(--r-ink)]">{text}</p>
+  );
 }
 
 /** Heading title for the three Experience-shaped sections — kept separate
@@ -343,7 +343,11 @@ export function ExperienceList({
   return (
     <div className={`flex flex-col ${densityGap(theme.density)}`}>
       {items.map((exp, i) => (
-        <div key={i} className="break-inside-avoid" {...itemAttrs(breaks, i, exp.role)}>
+        // Fragmentable on purpose: a tall role+bullets card with
+        // break-inside-avoid was pushed whole to the next sheet and left a
+        // half-empty page. Print already splits `li`/`p`; preview snaps to
+        // line boxes instead.
+        <div key={i} {...itemAttrs(breaks, i, exp.role)}>
           <div className="flex flex-wrap items-baseline justify-between gap-x-3">
             <p className={`text-[13px] font-semibold ${tone(light, "strong")}`}>
               {exp.role} <span className={`font-normal ${tone(light, "soft")}`}>{exp.company ? ` ${exp.company}` : ""}</span>
@@ -375,7 +379,7 @@ export function ProjectList({
   return (
     <div className={`flex flex-col ${densityGap(theme.density)}`}>
       {items.map((project, i) => (
-        <div key={i} className="break-inside-avoid" {...itemAttrs(breaks, i, project.name)}>
+        <div key={i} {...itemAttrs(breaks, i, project.name)}>
           <div className="flex flex-wrap items-baseline gap-x-2">
             <p className={`text-[13px] font-semibold ${tone(light, "strong")}`}>{project.name}</p>
             {project.link && (
@@ -422,7 +426,7 @@ export function KeyAchievementsList({
       {cleaned.map((item, i) => (
         <li
           key={i}
-          className="flex gap-1.5 break-inside-avoid"
+          className="flex gap-1.5"
           data-bullet-kind={kind}
           {...itemAttrs(breaks, i, item)}
         >
