@@ -1,3 +1,4 @@
+import { getTheme } from "@/components/templates/shared/theme";
 import type { ResumeData, ResumeSections, SectionKey, TemplateId } from "./types";
 
 /** Demo resume shown in empty builder previews and the templates gallery.
@@ -114,22 +115,55 @@ export const SAMPLE_RESUME: ResumeData = {
   templateId: "jakes-resume",
 };
 
-/** Lean demo for gallery tiles — fewer sections so thumbnails stay readable. */
+/** Demo for gallery tiles. Every tile is a whole A4 sheet, so the sample has
+ * to be long enough to reach the bottom of one — a five-section sample filled
+ * barely half the paper and every card read as a mostly blank page. It also
+ * has to span both halves of `NARROW_SECTION_KEYS`, or a sidebar template
+ * shows an empty rail next to a full main column. Still short of a real
+ * resume: the full `SAMPLE_RESUME` runs onto a second page, which a
+ * single-page thumbnail would cut mid-entry. */
 export const GALLERY_SAMPLE_RESUME: ResumeData = {
   ...SAMPLE_RESUME,
   sections: {
     summary: SAMPLE_RESUME.sections.summary,
-    experience: SAMPLE_RESUME.sections.experience?.slice(0, 1),
+    keyAchievements: SAMPLE_RESUME.sections.keyAchievements,
+    experience: [
+      {
+        company: "Nimbus Systems International",
+        role: "Senior Staff Software Engineer",
+        startDate: "2019-03",
+        bullets: [
+          "Led the redesign of the payments ledger, cutting settlement time from hours to minutes",
+          "Mentored a team of six engineers through two platform migrations",
+          "Set the service-level objectives now used across all twelve backend services",
+        ],
+      },
+      {
+        company: "Delta Harbor Software",
+        role: "Senior Backend Engineer",
+        startDate: "2016-07",
+        endDate: "2019-02",
+        bullets: [
+          "Rebuilt the ingestion pipeline to handle 40M events a day",
+          "Introduced contract testing across eight teams",
+        ],
+      },
+    ],
     projects: SAMPLE_RESUME.sections.projects,
     education: SAMPLE_RESUME.sections.education,
     skills: SAMPLE_RESUME.sections.skills,
+    certifications: SAMPLE_RESUME.sections.certifications,
+    languages: SAMPLE_RESUME.sections.languages,
   },
   sectionStatus: {
     summary: "complete",
+    keyAchievements: "complete",
     experience: "complete",
     projects: "complete",
     education: "complete",
     skills: "complete",
+    certifications: "complete",
+    languages: "complete",
   },
 };
 
@@ -178,6 +212,39 @@ export function sampleResumeForPreview(
   };
 }
 
+/** Two-column templates split the same sections across two columns, so the
+ * one-page gallery sample that fills a single-column sheet only reaches
+ * halfway down theirs. These sections top up both columns — narrow gets
+ * soft skills and hobbies, wide gets the publications block. */
+const TWO_COLUMN_EXTRA_SECTIONS: Partial<ResumeSections> = {
+  softSkills: SAMPLE_RESUME.sections.softSkills,
+  hobbies: SAMPLE_RESUME.sections.hobbies,
+  additional: SAMPLE_RESUME.sections.additional,
+  internships: SAMPLE_RESUME.sections.internships,
+  projects: [
+    ...(GALLERY_SAMPLE_RESUME.sections.projects ?? []),
+    {
+      name: "Ledger replay tool",
+      description: "Replays a day of payment events against a candidate build to diff the ledger.",
+      technologies: ["Go", "PostgreSQL"],
+    },
+  ],
+};
+
 export function sampleResumeForTemplate(templateId: TemplateId): ResumeData {
-  return { ...GALLERY_SAMPLE_RESUME, templateId };
+  if (getTheme(templateId).layout !== "asymmetric") {
+    return { ...GALLERY_SAMPLE_RESUME, templateId };
+  }
+  return {
+    ...GALLERY_SAMPLE_RESUME,
+    templateId,
+    sections: { ...GALLERY_SAMPLE_RESUME.sections, ...TWO_COLUMN_EXTRA_SECTIONS },
+    sectionStatus: {
+      ...GALLERY_SAMPLE_RESUME.sectionStatus,
+      softSkills: "complete",
+      hobbies: "complete",
+      additional: "complete",
+      internships: "complete",
+    },
+  };
 }

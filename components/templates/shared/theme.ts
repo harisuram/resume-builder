@@ -429,3 +429,12 @@ export function requestedTemplateId(search: string): string | null {
   const id = new URLSearchParams(query).get("template");
   return id && isTemplateId(id) ? id : null;
 }
+
+/** Sidebar and two-column templates lay their columns out as a real table
+ * (same model print uses). Any surface that renders one outside the builder's
+ * paginated sheets has to opt into that model too — see
+ * `PRINT_LAYOUT_SIM_CLASS`. */
+export function isMultiColumnTemplate(id: string): boolean {
+  const { layout } = getTheme(id);
+  return layout === "sidebar" || layout === "asymmetric";
+}

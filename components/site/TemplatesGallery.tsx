@@ -107,17 +107,37 @@ export function TemplatesGallery() {
             className="template-card-in min-w-0"
             style={{ "--template-card-delay": `${Math.min(index, 11) * 45}ms` } as CSSProperties}
           >
-            <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-card transition duration-300 ease-out hover:-translate-y-1 hover:border-[var(--color-accent)]/35 hover:shadow-[0_22px_44px_-28px_color-mix(in_srgb,var(--color-ink)_45%,transparent)]">
-              <div className="relative aspect-[210/297] w-full overflow-hidden bg-white" aria-hidden="true">
-                <div className="absolute inset-0 origin-top transition-transform duration-500 ease-out group-hover:scale-[1.035]">
+            <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-card transition duration-300 ease-out hover:border-[var(--color-accent)]/35 hover:shadow-[0_22px_44px_-28px_color-mix(in_srgb,var(--color-ink)_45%,transparent)]">
+              <div className="relative aspect-[210/297] w-full overflow-hidden bg-white">
+                <div
+                  className="absolute inset-0 origin-top transition-transform duration-500 ease-out group-hover:scale-[1.035]"
+                  aria-hidden="true"
+                >
                   <ScaledTemplatePreview theme={template} compact fullPage framed={false} fillParent />
                 </div>
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/35 to-transparent opacity-0 transition duration-300 group-hover:opacity-100" />
-                <span className="pointer-events-none absolute bottom-2.5 left-1/2 z-10 -translate-x-1/2 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-[var(--color-ink)] shadow-card opacity-0 transition duration-300 group-hover:opacity-100">
-                  Use template
-                </span>
+                {/* An overlay rather than a button wrapped around the sheet:
+                    Vitae draws its own light/dark toggle, and a button inside a
+                    button is invalid HTML that breaks hydration. Opening the
+                    preview is all this does — only the link below navigates, so
+                    a mis-aimed tap while scanning the grid can't drop someone
+                    into the builder. */}
+                <button
+                  type="button"
+                  aria-haspopup="dialog"
+                  aria-label={`Preview ${template.name} layout`}
+                  onClick={(event) => openPreview(template, event.currentTarget)}
+                  className="absolute inset-0 z-[2] flex cursor-zoom-in items-end justify-center pb-2.5 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--color-focus)]"
+                >
+                  {/* Surface/ink, not white/ink: on a dark theme --color-ink is
+                      near-white, so the old white pill printed white on white. */}
+                  <span className="flex items-center gap-1 rounded-full bg-[var(--color-surface)]/95 px-2.5 py-1 text-[11px] font-semibold text-[var(--color-ink)] shadow-card opacity-0 transition duration-300 group-hover:opacity-100 [button:focus-visible>&]:opacity-100">
+                    <ExpandIcon />
+                    Preview
+                  </span>
+                </button>
               </div>
-              <div className="min-w-0 border-t border-[var(--color-border)] px-2.5 py-2.5 sm:px-3 sm:py-3">
+              <div className="flex min-w-0 flex-1 flex-col border-t border-[var(--color-border)] px-2.5 py-2.5 sm:px-3 sm:py-3">
                 <div className="flex min-w-0 items-center gap-2">
                   <h2 className="min-w-0 truncate font-display text-[13.5px] font-semibold tracking-tight text-[var(--color-ink)] sm:text-[15px]">
                     {template.name}
@@ -126,31 +146,26 @@ export function TemplatesGallery() {
                     {layoutLabel(template.layout)}
                   </span>
                 </div>
-                <p className="mt-0.5 min-h-[2.4em] text-[11.5px] leading-snug text-[var(--color-ink-soft)] sm:min-h-0 sm:text-[12.5px]">
+                <p className="mt-0.5 mb-2.5 min-h-[2.4em] text-[11.5px] leading-snug text-[var(--color-ink-soft)] sm:mb-3 sm:min-h-0 sm:text-[12.5px]">
                   {template.description}
                 </p>
+                {/* mt-auto so the buttons line up across a row whatever the
+                    description wraps to. */}
+                <Link
+                  href={builderHref(template.id)}
+                  aria-label={`Use ${template.name} template`}
+                  className="mt-auto inline-flex min-h-9 w-full items-center justify-center rounded-lg bg-[var(--color-accent)] px-3 py-2 text-[12px] font-semibold text-[var(--color-accent-ink)] shadow-cta transition duration-150 hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)] sm:text-[12.5px]"
+                >
+                  Use template
+                </Link>
               </div>
-              <Link
-                href={builderHref(template.id)}
-                aria-label={`Use ${template.name} template`}
-                className="absolute inset-0 z-[1] rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]"
-              />
-              <button
-                type="button"
-                aria-haspopup="dialog"
-                aria-label={`Preview ${template.name} layout`}
-                onClick={(event) => openPreview(template, event.currentTarget)}
-                className="absolute top-2 left-2 z-[2] hidden h-8 w-8 items-center justify-center rounded-full border border-white/70 bg-white/90 text-[var(--color-ink-soft)] shadow-card backdrop-blur-sm transition duration-200 hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)] sm:flex sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
-              >
-                <ExpandIcon />
-              </button>
             </article>
           </li>
         ))}
       </ul>
 
       <p className="mt-8 text-center text-[13px] text-[var(--color-ink-soft)] sm:mt-10">
-        Click a template to open it in the builder.
+        Tap a sheet for a closer look, or Use template to open it in the builder.
       </p>
 
       {preview && <TemplatePreviewModal theme={preview} onClose={closePreview} />}

@@ -34,10 +34,38 @@ describe("sampleResumeForPreview", () => {
 });
 
 describe("sampleResumeForTemplate", () => {
-  it("returns the lean gallery sample for a template id", () => {
+  it("returns the gallery sample for a template id", () => {
     const sample = sampleResumeForTemplate("inkwell");
     expect(sample.templateId).toBe("inkwell");
     expect(sample.sections.experience).toEqual(GALLERY_SAMPLE_RESUME.sections.experience);
     expect(sample.sections.patents).toBeUndefined();
+  });
+
+  /* Each tile is a whole sheet of paper, so the sample has to reach the
+   * bottom of one in every layout family — including the two-column ones,
+   * which split the same sections over two columns and so run half as far. */
+  it("tops the sample up for two-column templates", () => {
+    const twoColumn = sampleResumeForTemplate("deedy-reversed");
+    const singleColumn = sampleResumeForTemplate("jakes-resume");
+
+    expect(twoColumn.sections.softSkills).toBeDefined();
+    expect(twoColumn.sections.hobbies).toBeDefined();
+    expect(twoColumn.sections.additional).toBeDefined();
+    expect(twoColumn.sections.projects?.length).toBeGreaterThan(
+      singleColumn.sections.projects?.length ?? 0,
+    );
+
+    expect(singleColumn.sections.softSkills).toBeUndefined();
+    expect(singleColumn.sections.hobbies).toBeUndefined();
+  });
+
+  it("fills both halves of a sidebar split", () => {
+    const sample = sampleResumeForTemplate("bre-creative");
+    // Rail sections (NARROW_SECTION_KEYS) and main-column sections both
+    // present, or a sidebar tile shows one full column beside an empty rail.
+    expect(sample.sections.education).toBeDefined();
+    expect(sample.sections.skills).toBeDefined();
+    expect(sample.sections.certifications).toBeDefined();
+    expect(sample.sections.experience?.length).toBeGreaterThan(1);
   });
 });

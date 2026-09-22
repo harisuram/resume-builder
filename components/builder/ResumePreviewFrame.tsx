@@ -2,7 +2,7 @@
 
 import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { getTemplateComponent } from "@/components/templates/registry";
-import { getTheme, tint } from "@/components/templates/shared/theme";
+import { getTheme, isMultiColumnTemplate, tint } from "@/components/templates/shared/theme";
 import {
   PAGE_HEIGHT_PX as PAGE_HEIGHT,
   PAGE_INSET_PX as PAGE_INSET,
@@ -174,7 +174,7 @@ export function ResumePreviewFrame({
 
   useLayoutEffect(() => {
     const stack = stackRef.current;
-    if (!stack || !isMultiColumnTheme(data.templateId)) return;
+    if (!stack || !isMultiColumnTemplate(data.templateId)) return;
     for (const el of stack.querySelectorAll<HTMLElement>("[data-page-visual-stage]")) {
       setPrintLayoutSimulation(el, true);
     }
@@ -254,7 +254,7 @@ export function ResumePreviewFrame({
                   <div
                     data-page-visual-stage="true"
                     className={`resume-scale-stage origin-top-left ${
-                      isMultiColumnTheme(data.templateId) ? PRINT_LAYOUT_SIM_CLASS : ""
+                      isMultiColumnTemplate(data.templateId) ? PRINT_LAYOUT_SIM_CLASS : ""
                     }`}
                     style={{
                       width: PAGE_WIDTH,
@@ -306,11 +306,6 @@ function sidebarRailFill(theme: ReturnType<typeof getTheme>, scale: number): CSS
     bottom: 0,
     backgroundColor: railBg,
   };
-}
-
-function isMultiColumnTheme(templateId: string): boolean {
-  const layout = getTheme(templateId).layout;
-  return layout === "sidebar" || layout === "asymmetric";
 }
 
 function offsetsEqual(a: number[], b: number[]) {

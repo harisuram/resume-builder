@@ -17,7 +17,34 @@ describe("templates gallery", () => {
     expect(document.querySelector('[data-sample-resume="jakes-resume"]')).not.toBeNull();
     expect(document.querySelector('[data-template-skeleton]')).toBeNull();
     expect(document.querySelector('[data-layout="single"]')).not.toBeNull();
-    expect(screen.getByText(/click a template to open it in the builder/i)).toBeInTheDocument();
+    expect(screen.getByText(/use template to open it in the builder/i)).toBeInTheDocument();
+  });
+
+  /* The card used to be one big link, so anywhere you tapped sent you to the
+   * builder. Only the button does that now. */
+  it("navigates from the Use template button and nowhere else on the card", () => {
+    render(<TemplatesPage />);
+    const card = screen.getByRole("heading", { name: "Atlas" }).closest("article") as HTMLElement;
+
+    const links = within(card).getAllByRole("link");
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveTextContent("Use template");
+    expect(links[0]).toHaveAccessibleName("Use Atlas template");
+
+    // The sheet is a preview trigger, not a second way into the builder.
+    expect(within(card).getByRole("button", { name: "Preview Atlas layout" })).toHaveAttribute(
+      "aria-haspopup",
+      "dialog",
+    );
+  });
+
+  /* The label sat on a white pill in --color-ink, which is near-white on the
+   * dark theme — the button read as blank. */
+  it("paints the Use template label against the button's own background", () => {
+    render(<TemplatesPage />);
+    const cta = screen.getByRole("link", { name: "Use Atlas template" });
+    expect(cta).toHaveClass("bg-[var(--color-accent)]", "text-[var(--color-accent-ink)]");
+    expect(cta.className).not.toMatch(/bg-white/);
   });
 
   it("opens a sample-text preview of the layout and sends that template to the builder", async () => {

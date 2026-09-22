@@ -2,8 +2,9 @@
 
 import { useLayoutEffect, useRef, useState } from "react";
 import { getTemplateComponent } from "@/components/templates/registry";
-import { getTheme } from "@/components/templates/shared/theme";
+import { getTheme, isMultiColumnTemplate } from "@/components/templates/shared/theme";
 import { PAGE_WIDTH_PX } from "@/lib/page";
+import { PRINT_LAYOUT_SIM_CLASS } from "@/lib/pagination/printLayout";
 import { sampleResumeForPreview } from "@/lib/sampleResume";
 import type { ResumeData } from "@/lib/types";
 
@@ -66,7 +67,9 @@ export function EmptyResumePreview({
       >
         <div
           ref={stageRef}
-          className="resume-scale-stage pointer-events-none relative origin-top-left overflow-hidden rounded-sm border border-[var(--color-border)] shadow-card"
+          className={`resume-scale-stage pointer-events-none relative origin-top-left overflow-hidden rounded-sm border border-[var(--color-border)] shadow-card ${
+            isMultiColumnTemplate(theme.id) ? PRINT_LAYOUT_SIM_CLASS : ""
+          }`}
           aria-hidden="true"
           data-sample-resume={theme.id}
           style={{ width: PAGE_WIDTH_PX, transform: `scale(${scale})` }}

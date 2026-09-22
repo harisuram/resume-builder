@@ -13,7 +13,8 @@ export default function TemplatesPage() {
           <PageTitle>Free resume templates (and CV layouts)</PageTitle>
           <Lead>
             {TEMPLATES.length} free resume templates, including curriculum vitae layouts. Each tile shows sample
-            text in that layout — the same look you&apos;ll get as a PDF. Click one to open it in the builder.
+            text in that layout — the same look you&apos;ll get as a PDF. Open a sheet for a closer look, or send
+            one straight to the builder.
           </Lead>
         </div>
 

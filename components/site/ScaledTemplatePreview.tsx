@@ -2,8 +2,9 @@
 
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { getTemplateComponent } from "@/components/templates/registry";
-import type { TemplateTheme } from "@/components/templates/shared/theme";
+import { isMultiColumnTemplate, type TemplateTheme } from "@/components/templates/shared/theme";
 import { PAGE_WIDTH_PX } from "@/lib/page";
+import { PRINT_LAYOUT_SIM_CLASS } from "@/lib/pagination/printLayout";
 import { sampleResumeForTemplate } from "@/lib/sampleResume";
 
 /** Layout width the sample resume is drawn at before it is scaled down. */
@@ -65,10 +66,17 @@ export function ScaledTemplatePreview({
       ? { width: paperWidth, visibility: "hidden" as const }
       : { width: "100%" };
 
+  /* Sidebar/two-column templates size their columns as a real table, the way
+   * print does. Off-print the stylesheet falls back to flex, which the
+   * colgroup then squeezes into the 34% rail column — a sample rendered
+   * a third of a page wide with the rest blank. The builder's sheets opt into
+   * the print model for these; the marketing previews have to as well. */
+  const stageClass = isMultiColumnTemplate(theme.id) ? `resume-scale-stage ${PRINT_LAYOUT_SIM_CLASS}` : "";
+
   const page = (
     <div
       ref={pageRef}
-      className={`origin-top-left ${framed ? "overflow-hidden rounded-sm border border-[var(--color-border)] shadow-card" : ""}`}
+      className={`origin-top-left ${stageClass} ${framed ? "overflow-hidden rounded-sm border border-[var(--color-border)] shadow-card" : ""}`}
       data-sample-resume={theme.id}
       style={pageStyle}
     >
