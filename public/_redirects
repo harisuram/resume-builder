@@ -2,8 +2,18 @@
 # auto-trailing-slash would otherwise 404 /ads.txt/ through the Worker.
 /ads.txt/ /ads.txt 301
 
-# Canonicalize on the apex — wrangler.jsonc registers both hostnames as
-# custom domains, so without this, www and apex both serve the same pages
-# as two separately-crawlable 200s (duplicate content), even though the
-# canonical tag already points at the apex.
-https://www.freeresumebuilder.co.in/* https://freeresumebuilder.co.in/:splat 301
+# No www → apex rule here, on purpose. Workers Static Assets validates the
+# *source* of a `_redirects` line with `onlyRelative`, so an absolute
+# `https://www.…/*` source is rejected (Cloudflare API error 100324) and takes
+# the whole deploy down with it — the destination may be absolute, the source
+# may not. Rewriting it relative does not help either: a `/*` source matches
+# the apex too and would 301 it to itself.
+#
+# Hostname canonicalization has to sit above the asset layer. Add a zone-level
+# Redirect Rule in the Cloudflare dashboard instead:
+#   www.freeresumebuilder.co.in/*  →  https://freeresumebuilder.co.in/${1}  (301)
+# It matches on hostname, runs at the edge, and costs no Worker invocations —
+# unlike doing it in workers/index.ts, which would need `run_worker_first`
+# widened past /api/* and would bill every page view against the free plan.
+#
+# Until that rule exists, the canonical tag is what points crawlers at the apex.
