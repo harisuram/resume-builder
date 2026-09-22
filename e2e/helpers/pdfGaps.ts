@@ -2,7 +2,7 @@
  * Reads a printed resume PDF back and reports, sheet by sheet, how much
  * vertical space is left empty. This is the only way to see the breaks the
  * PDF actually took: jsdom has no pagination, and the DOM under print
- * emulation is still one continuous 760px column.
+ * emulation is still one continuous A4-width column.
  */
 
 /** CSS px per PDF point. Chromium lays the print root out at 96dpi. */

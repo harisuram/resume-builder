@@ -55,6 +55,7 @@ describe("template layouts share the same section split", () => {
     expect(container.querySelector(".resume-sidebar-page")).not.toBeNull();
     expect(container.querySelector(".resume-col-pad")).not.toBeNull();
     expect(container.querySelector("thead.resume-sidebar-page-pad")).not.toBeNull();
+    expect(container.querySelector("tfoot.resume-sidebar-page-pad-foot")).not.toBeNull();
   });
 
   it("AsymmetricLayout puts compact lists in the 32% column and patents/additional in the wide column", () => {
@@ -125,6 +126,7 @@ describe("template layouts share the same section split", () => {
       expect(container.querySelector(".resume-sidebar-columns--right")).not.toBeNull();
       expect(container.querySelector(".resume-sidebar-page--right")).not.toBeNull();
       expect(container.querySelector("thead.resume-sidebar-page-pad")).not.toBeNull();
+      expect(container.querySelector("tfoot.resume-sidebar-page-pad-foot")).not.toBeNull();
       unmount();
     }
   });

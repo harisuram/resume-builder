@@ -17,6 +17,8 @@
     0 16px 32px -20px color-mix(in srgb, var(--color-ink) 16%, transparent);
   --shadow-cta: 0 1px 2px color-mix(in srgb, var(--color-accent) 28%, transparent),
     0 12px 24px -10px color-mix(in srgb, var(--color-accent) 50%, transparent);
+  /* Keep in sync with PAGE_WIDTH_PX in lib/page.ts (A4 width @ 96dpi). */
+  --resume-page-width: 794px;
 }
 
 /* Thin, low-contrast scrollbars for long bullet fields (and similar panes). */
@@ -1069,7 +1071,7 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
 .resume-sidebar-page {
   position: relative;
   isolation: isolate;
-  width: 760px;
+  width: var(--resume-page-width);
   min-height: 297mm;
   /* Defeat .resume-surface's `background` shorthand so we control paint. */
   background-color: #ffffff !important;
@@ -1092,6 +1094,9 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
   right: 0;
 }
 .resume-sidebar-page-pad {
+  display: none;
+}
+.resume-sidebar-page-pad-foot {
   display: none;
 }
 /* Print-only rail strip (see @media print). Off-print the rail is painted
@@ -1148,6 +1153,16 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
 }
 .resume-scale-stage.print-layout-sim .resume-sidebar-page-pad {
   display: none !important;
+}
+.resume-scale-stage.print-layout-sim .resume-sidebar-page-pad-foot {
+  display: none !important;
+}
+/* Same as print: flatten flex+gap so sim height matches the PDF. The
+ * sibling-margin rule below replaces gap-5; leaving flex active stacked
+ * both and made preview page breaks land earlier than download. */
+.resume-scale-stage.print-layout-sim .resume-col-pad {
+  display: block !important;
+  gap: 0 !important;
 }
 .resume-scale-stage.print-layout-sim .resume-sidebar-columns tbody {
   display: table-row-group !important;
@@ -1331,8 +1346,8 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
     max-height: none !important;
     overflow: visible !important;
     transform: none !important;
-    width: 760px !important;
-    max-width: 760px !important;
+    width: var(--resume-page-width) !important;
+    max-width: var(--resume-page-width) !important;
     border: none !important;
     box-shadow: none !important;
     margin: 0 !important;
@@ -1349,10 +1364,11 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
   }
 
   /* In normal flow (not absolute) so forced page breaks on gap spacers are
-     honored. Width stays at PAGE_WIDTH (760px). */
+     honored. Width is A4 @ 96dpi — same as PAGE_WIDTH_PX / preview. */
   #resume-print-root {
     position: static;
-    width: 760px;
+    width: var(--resume-page-width) !important;
+    max-width: var(--resume-page-width) !important;
     margin: 0;
     padding: 0;
     overflow: visible;
@@ -1367,14 +1383,14 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
     position: relative !important;
     isolation: isolate;
     display: block !important;
-    width: 760px !important;
-    max-width: 760px !important;
+    width: var(--resume-page-width) !important;
+    max-width: var(--resume-page-width) !important;
     min-height: 297mm;
     overflow: visible !important;
     /* Print fragments clone this gradient onto every A4 sheet. */
     background-color: #ffffff !important;
     background-image: linear-gradient(to right, var(--resume-rail-bg) 34%, #ffffff 34%) !important;
-    background-size: 760px 100% !important;
+    background-size: var(--resume-page-width) 100% !important;
     background-repeat: repeat-y !important;
     box-decoration-break: clone;
     -webkit-box-decoration-break: clone;
@@ -1400,7 +1416,7 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
     bottom: 0 !important;
     /* `width` / `left` come from the element's own inline style, resolved in
        px off PAGE_WIDTH. A percentage here would resolve against the sheet,
-       which is wider than the 760px print root, and paint a rail wider than
+       which is wider than the print root when they diverge, and paint a rail wider than
        the 34% column it sits under. */
     right: auto !important;
     z-index: 0 !important;
@@ -1416,18 +1432,16 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
     position: relative;
     z-index: 1;
     display: table !important;
-    width: 760px !important;
+    width: var(--resume-page-width) !important;
     height: auto !important;
     min-height: 0;
     border-collapse: collapse !important;
     border-spacing: 0 !important;
     table-layout: fixed;
     background: none !important;
-    /* Page 1's 4% top inset is real padding on .resume-col-pad below (its
-       own true top edge). The repeating thead renders unconditionally on
-       every page including page 1, so pull it off page 1 here — page 2+
-       keep it as their 4% top band (no real padding lands on an internal
-       page-break's "false" top edge). */
+  /* Page 1 is flush at the top (no .resume-col-pad paddingTop). The
+     repeating thead still renders on page 1, so pull it off here — page 2+
+     keep it as their 4% top band. */
     margin-top: calc(-1 * var(--resume-page-inset, 43px)) !important;
   }
   .resume-sidebar-columns--right {
@@ -1436,13 +1450,25 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
   .resume-sidebar-page-pad {
     display: table-header-group !important;
   }
+  .resume-sidebar-page-pad-foot {
+    display: table-footer-group !important;
+  }
+  /* Sim keeps these hidden on screen; print must win while the stage is
+   * still tagged print-layout-sim during prepare-print / window.print(). */
+  .resume-scale-stage.print-layout-sim .resume-sidebar-page-pad {
+    display: table-header-group !important;
+  }
+  .resume-scale-stage.print-layout-sim .resume-sidebar-page-pad-foot {
+    display: table-footer-group !important;
+  }
   .resume-sidebar-columns tbody {
     display: table-row-group !important;
   }
   .resume-sidebar-columns tr {
     display: table-row !important;
   }
-  .resume-sidebar-columns--right .resume-sidebar-page-pad {
+  .resume-sidebar-columns--right .resume-sidebar-page-pad,
+  .resume-sidebar-columns--right .resume-sidebar-page-pad-foot {
     direction: rtl;
   }
   .resume-sidebar-pad-rail,
@@ -1480,11 +1506,11 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
        their wrappers for print for the same reason; the sibling margin
        below replaces the flex gap, so spacing is unchanged. */
     display: block !important;
-    /* Real 4% top+bottom padding here only ever paints at the column's true
-       start (page 1) and true end (the last page) — fragmentation doesn't
-       repeat padding at an internal page-break. Page 2+'s top comes from
-       the repeating thead band above instead. */
-    padding: var(--resume-pad-y, 43px) var(--resume-pad-x, 15px) !important;
+    /* Top inset on page 1 from real column padding (doesn’t repeat on later
+       fragments). Page 2+ top inset comes from the repeating thead. Bottom
+       inset on every sheet comes from the repeating tfoot — not from
+       padding here (that would only paint on the true column end). */
+    padding: var(--resume-pad-y, 43px) var(--resume-pad-x, 15px) 0 !important;
     box-sizing: border-box;
   }
   .resume-sidebar-rail {
@@ -1510,6 +1536,12 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
     display: table-header-group !important;
   }
   .resume-split-page-pad-foot {
+    display: table-footer-group !important;
+  }
+  .resume-scale-stage.print-layout-sim .resume-split-page-pad {
+    display: table-header-group !important;
+  }
+  .resume-scale-stage.print-layout-sim .resume-split-page-pad-foot {
     display: table-footer-group !important;
   }
   .resume-split-columns tbody {

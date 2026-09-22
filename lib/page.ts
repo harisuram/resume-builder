@@ -1,12 +1,12 @@
-/** Design-pixel width the preview and print stylesheet both lay the resume
- * out at. Print pins `#resume-print-root` to this width (see app/globals.css)
- * so wrapping and columns can't drift between the two. */
-export const PAGE_WIDTH_PX = 760;
+/** Design-pixel width shared by the preview and the print stylesheet.
+ * Exact A4 width at 96dpi (`210mm`) so Chrome lays the root out 1:1 against
+ * the page box — a narrower root (e.g. 760) left ~34px of empty sheet and
+ * some print paths effectively measured lines against the wider page, so the
+ * PDF wrapped more words per line than the preview. */
+export const PAGE_WIDTH_PX = Math.round((210 / 25.4) * 96);
 
 /** Height of one printed A4 page, in the CSS pixels the print root is laid
- * out in. Chrome does not scale the 760px-wide root up to A4 width — it
- * lays it out 1:1 against the page box — so a sheet holds 297mm at 96dpi,
- * not `width × (297/210)`.
+ * out in. Matched to `297mm` at 96dpi (same basis as PAGE_WIDTH_PX).
  *
  * Measured rather than assumed: position markers every 5px down a real
  * print root, print it, and read which marker lands on which PDF page.

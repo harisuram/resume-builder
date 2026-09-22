@@ -3,9 +3,9 @@
  * when one fix undid another.
  *
  * 1. Rails are full-bleed (no white “patch” bands around the rail)
- * 2. Every page gets an even 4% content inset, top and bottom — page 1 (and
- *    any single-page render) from real .resume-col-pad padding, page 2+'s
- *    top from a repeating band the rail fill still covers
+ * 2. Page 1 content has a 4% top inset (column padding); every sheet gets
+ *    a 4% bottom chrome band; page 2+ also get a 4% top band (rail fill
+ *    covers both)
  * 3. No invented trailing blank sheets from height snap / stub cuts
  * 4. Side/bottom content padding is even (same px on rail + main)
  * 5. Left and right sidebars mirror the same rules — rail fill, pad cells,
@@ -49,16 +49,22 @@ describe("sidebar pagination regressions", () => {
     expect(sheets.length).toBeGreaterThanOrEqual(2);
 
     // The sheet wrapper itself never carries CSS padding (that would paint a
-    // white patch outside the rail fill) — page 1's 4% top inset instead
-    // comes from real .resume-col-pad padding inside its cropped render.
+    // white patch outside the rail fill). Page 1 top inset lives in the
+    // template’s column padding, not sheet chrome.
     expect(sheets[0].style.paddingTop).toBe("0px");
     expect(sheets[0].querySelector("[data-page-top-band]")).toBeNull();
+    // Explicit tfoot-matching bottom band on every sidebar sheet.
+    expect(sheets[0].querySelector("[data-page-bottom-band]")).not.toBeNull();
     expect(parseFloat(sheets[0].style.height)).toBe(PAGE_HEIGHT_PX);
 
     const band = sheets[1].querySelector<HTMLElement>("[data-page-top-band]");
     expect(band).not.toBeNull();
     expect(parseFloat(band!.style.height)).toBe(PAGE_PAD_Y_PX);
+    expect(sheets[1].querySelector("[data-page-bottom-band]")).not.toBeNull();
     expect(sheets[1].style.paddingTop).toBe("0px");
+    // Page 2 = top band + content slice + bottom band (= one A4), not
+    // top band stacked on a full paper window (that double-counted the inset).
+    expect(parseFloat(sheets[1].style.height)).toBe(PAGE_HEIGHT_PX);
 
     for (const sheet of sheets) {
       const fill = sheet.querySelector<HTMLElement>("[data-rail-fill]");
@@ -72,7 +78,7 @@ describe("sidebar pagination regressions", () => {
     }
   });
 
-  it("applies the same even 4%/2% content padding on rail and main", () => {
+  it("applies the same even side content padding on rail and main", () => {
     const { container } = render(
       <SidebarLayout data={makeFullResumeData({ templateId: "bre-creative" })} theme={getTheme("bre-creative")} />,
     );
@@ -82,8 +88,9 @@ describe("sidebar pagination regressions", () => {
       expect(pad.style.paddingTop).toBe(`${PAGE_PAD_Y_PX}px`);
       expect(pad.style.paddingLeft).toBe(`${PAGE_PAD_X_PX}px`);
       expect(pad.style.paddingRight).toBe(`${PAGE_PAD_X_PX}px`);
-      expect(pad.style.paddingBottom).toBe(`${PAGE_PAD_Y_PX}px`);
+      expect(pad.style.paddingBottom).toBe("0px");
     }
+    expect(container.querySelector("tfoot.resume-sidebar-page-pad-foot")).not.toBeNull();
   });
 
   it("mirrors the same padding and rail-fill rules for a right-hand sidebar", () => {
@@ -94,7 +101,7 @@ describe("sidebar pagination regressions", () => {
     const pads = container.querySelectorAll<HTMLElement>(".resume-col-pad");
     for (const pad of pads) {
       expect(pad.style.paddingTop).toBe(`${PAGE_PAD_Y_PX}px`);
-      expect(pad.style.paddingBottom).toBe(`${PAGE_PAD_Y_PX}px`);
+      expect(pad.style.paddingBottom).toBe("0px");
     }
     const sheets = container.querySelectorAll<HTMLElement>(".resume-page-sheet");
     expect(sheets.length).toBeGreaterThanOrEqual(2);
@@ -109,7 +116,7 @@ describe("sidebar pagination regressions", () => {
     expect(parseFloat(band!.style.height)).toBe(PAGE_PAD_Y_PX);
   });
 
-  it("pulls an orphaned rail section title to the next page on both a left and a right sidebar", () => {
+  it("does not let a rail section title pull the shared page cut", () => {
     function stubBox(el: HTMLElement, top: number, height: number) {
       Object.defineProperty(el, "offsetHeight", { configurable: true, value: height });
       Object.defineProperty(el, "offsetTop", { configurable: true, value: top });
@@ -139,9 +146,9 @@ describe("sidebar pagination regressions", () => {
           top: 0,
           bottom: PAGE_HEIGHT_PX * 2,
           height: PAGE_HEIGHT_PX * 2,
-          width: 760,
+          width: PAGE_WIDTH_PX,
           left: 0,
-          right: 760,
+          right: PAGE_WIDTH_PX,
           x: 0,
           y: 0,
           toJSON() {},
@@ -156,9 +163,9 @@ describe("sidebar pagination regressions", () => {
       stubBox(skills, titleTop, 200);
       stubBox(heading!, titleTop, 20);
 
-      // The rail's title sits just above the hard edge with body content
-      // running past it — the cut must move up to the title on both sides.
-      expect(avoidOrphanSectionTitle(stage, PAGE_HEIGHT_PX, 1)).toBe(titleTop);
+      // Rail titles must not steer the shared cut — that made Soft Skills
+      // jump a page earlier in the preview than in the PDF.
+      expect(avoidOrphanSectionTitle(stage, PAGE_HEIGHT_PX, 1)).toBe(PAGE_HEIGHT_PX);
       unmount();
     }
   });

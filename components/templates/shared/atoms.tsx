@@ -179,7 +179,10 @@ export function experienceTitle(key: "experience" | "internships" | "partTime"):
 }
 
 function densityGap(density: TemplateTheme["density"]) {
-  return density === "compact" ? "gap-2.5" : "gap-3.5";
+  // `space-y-*` (margin), not flex `gap`: flex items don’t fragment cleanly
+  // across printed pages, so a tall role was jumping whole to the next sheet
+  // and leaving Internships (etc.) stranded below a half-empty page.
+  return density === "compact" ? "space-y-2.5" : "space-y-3.5";
 }
 
 /** Bullet marks follow the template's heading style so a boxed resume
@@ -305,7 +308,7 @@ export function EducationList({
   light?: boolean;
 }) {
   return (
-    <div className={`flex flex-col ${densityGap(theme.density)}`}>
+    <div className={densityGap(theme.density)}>
       {items.map((edu, i) => (
         <div key={i} className="break-inside-avoid" {...itemAttrs(breaks, i, edu.institution)}>
           <div className="flex flex-wrap items-baseline justify-between gap-x-3">
@@ -341,12 +344,13 @@ export function ExperienceList({
   light?: boolean;
 }) {
   return (
-    <div className={`flex flex-col ${densityGap(theme.density)}`}>
+    <div className={densityGap(theme.density)}>
       {items.map((exp, i) => (
         // Fragmentable on purpose: a tall role+bullets card with
         // break-inside-avoid was pushed whole to the next sheet and left a
         // half-empty page. Print already splits `li`/`p`; preview snaps to
-        // line boxes instead.
+        // line boxes instead. Parent is block + space-y (not flex) so the
+        // print engine can split mid-card instead of jumping the whole item.
         <div key={i} {...itemAttrs(breaks, i, exp.role)}>
           <div className="flex flex-wrap items-baseline justify-between gap-x-3">
             <p className={`text-[13px] font-semibold ${tone(light, "strong")}`}>
@@ -377,7 +381,7 @@ export function ProjectList({
   light?: boolean;
 }) {
   return (
-    <div className={`flex flex-col ${densityGap(theme.density)}`}>
+    <div className={densityGap(theme.density)}>
       {items.map((project, i) => (
         <div key={i} {...itemAttrs(breaks, i, project.name)}>
           <div className="flex flex-wrap items-baseline gap-x-2">
@@ -466,7 +470,7 @@ export function CertificationList({
   light?: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="space-y-1.5">
       {items.map((cert, i) => (
         <div key={i} className="flex items-start gap-1.5 text-[12px] break-inside-avoid" {...itemAttrs(breaks, i, cert.name)}>
           <CertificationIcon className={`mt-0.5 h-3 w-3 shrink-0 ${tone(light, "faint")}`} />
@@ -492,7 +496,7 @@ export function PatentList({
   light?: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="space-y-1.5">
       {items.map((patent, i) => (
         <div key={i} className="break-inside-avoid text-[12px]" {...itemAttrs(breaks, i, patent.title)}>
           <p className={`font-semibold ${tone(light, "strong")}`}>{patent.title}</p>
@@ -529,7 +533,7 @@ export function LanguageList({
   light?: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-0.5">
+    <div className="space-y-0.5">
       {items.map((lang, i) => (
         <p
           key={i}
@@ -556,7 +560,7 @@ export function AdditionalList({
   light?: boolean;
 }) {
   return (
-    <div className={`flex flex-col ${densityGap(theme.density)}`}>
+    <div className={densityGap(theme.density)}>
       {items.map((item, i) => (
         <div key={i} className="break-inside-avoid" {...itemAttrs(breaks, i, item.title)}>
           <div className="flex flex-wrap items-baseline justify-between gap-x-3">

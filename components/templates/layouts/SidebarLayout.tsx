@@ -10,21 +10,17 @@ import { SectionHeading } from "../shared/SectionHeading";
 import { tint, type TemplateTheme } from "../shared/theme";
 
 /** The rail is 34% of the page. Kept as a resolved px number for the print
- * fill, which is positioned against the sheet rather than this 760px root. */
+ * fill, which is positioned against the sheet rather than this page-width root. */
 const RAIL_WIDTH_PX = Math.round(PAGE_WIDTH_PX * 0.34 * 100) / 100;
 
-/** Even 4% content inset on all four sides, every page. Page 1 (and any
- * standalone single-page render — gallery thumbnails, the empty skeleton)
- * gets it straight from this padding, since it's the box's real top/bottom
- * edge. Page 2+ can't repeat real padding at an internal print page-break,
- * so the same 4% reappears there as a repeating table head/foot band the
- * columns table paints per column color — text gets the gap, the rail's
- * color runs straight through it (see `.resume-sidebar-page-pad` in
- * app/globals.css and the matching band in ResumePreviewFrame). */
+/** Side inset 2%, top inset 4% (page 1 only — padding doesn’t repeat on
+ * later fragments). Page 2+ get their top band from the repeating thead;
+ * every printed sheet gets a bottom band from the repeating tfoot (preview
+ * mirrors leftover paper / `data-page-bottom-band`). */
 const COL_PAD_STYLE: CSSProperties = {
   paddingTop: PAGE_PAD_Y_PX,
   paddingRight: PAGE_PAD_X_PX,
-  paddingBottom: PAGE_PAD_Y_PX,
+  paddingBottom: 0,
   paddingLeft: PAGE_PAD_X_PX,
 };
 
@@ -124,7 +120,7 @@ export function SidebarLayout({
    *
    * Geometry is resolved px off PAGE_WIDTH, never a percentage: a fixed box
    * resolves percentages against the *sheet*, which is wider than this
-   * 760px root, and 34% of the sheet is a visibly wider rail than the 34%
+   * page-width root, and 34% of the sheet is a visibly wider rail than the 34%
    * column it has to sit under. */
   const printRail = (
     <div
@@ -139,8 +135,9 @@ export function SidebarLayout({
   );
 
   /* thead repeats on every printed page; margin-top pulls it off page 1
-   * (its own real .resume-col-pad padding covers that page instead).
-   * Pad cells match column colors so the 4% band isn’t a white “patch”. */
+   * so page 1’s top inset comes only from column padding (not a double
+   * band). Page 2+ keep the thead as their 4% top inset. Pad cells match
+   * column colors so the band isn’t a white “patch”. */
   const columns = (
     <table
       className={`resume-sidebar-columns w-full ${right ? "resume-sidebar-columns--right" : ""}`}
@@ -170,6 +167,19 @@ export function SidebarLayout({
           {main}
         </tr>
       </tbody>
+      {/* Repeats on every printed sheet as the 4% bottom inset — same role
+       * as the thead at the top of page 2+. Screen preview synthesizes the
+       * matching space via leftover paper / data-page-bottom-band. */}
+      <tfoot className="resume-sidebar-page-pad-foot">
+        <tr>
+          <td className="resume-sidebar-pad-rail" aria-hidden="true" style={{ backgroundColor: railBg }}>
+            {"\u00a0"}
+          </td>
+          <td className="resume-sidebar-pad-main" aria-hidden="true">
+            {"\u00a0"}
+          </td>
+        </tr>
+      </tfoot>
     </table>
   );
 

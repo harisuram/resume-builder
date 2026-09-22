@@ -1,5 +1,6 @@
 import { expect, test, type TestInfo } from "@playwright/test";
 import { TEMPLATES } from "@/components/templates/shared/theme";
+import { PAGE_HEIGHT_PX, PAGE_WIDTH_PX } from "@/lib/page";
 import { TARGET_PAGES } from "./fixtures/longResume";
 import { describePx, gapBudget, MIN_PAGES } from "./helpers/gapBudget";
 import { measureGaps, readPdfPages, type PageGaps, type Region } from "./helpers/pdfGaps";
@@ -36,8 +37,13 @@ test.describe(`printed PDF gaps (~${TARGET_PAGES}-page resume)`, () => {
     test(`${theme.name} — ${theme.id} (${theme.layout})`, async ({ page }, testInfo) => {
       await openPrintableResume(page, theme.id);
       const layout = await measurePrintLayout(page);
+      // Preview and print share PAGE_WIDTH_PX (A4 @ 96dpi). If the parked
+      // root is any other width, lines wrap differently than the preview.
+      expect(layout.rootWidthPx, "print root width must match A4 design width").toBeCloseTo(PAGE_WIDTH_PX, 0);
       const pdf = await printToPdf(page);
       const sheets = await readPdfPages(pdf);
+      expect(sheets[0]?.widthPx, "PDF page width should match A4 @ 96dpi").toBeCloseTo(PAGE_WIDTH_PX, 0);
+      expect(sheets[0]?.heightPx, "PDF page height should match A4 @ 96dpi").toBeCloseTo(PAGE_HEIGHT_PX, 0);
 
       expect(sheets.length, "printed no pages at all").toBeGreaterThan(0);
       const sheetHeight = sheets[0].heightPx;

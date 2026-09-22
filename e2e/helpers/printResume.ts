@@ -14,10 +14,8 @@ export interface ColumnRange {
 }
 
 export interface PrintLayout {
-  /** Print root width in CSS px — 760, pinned by the print stylesheet. The
-   * sheet is wider (A4 is ~793px at 96dpi) and `@page { margin: 0 }` leaves
-   * the root flush against its left edge, so a column's x on the sheet is
-   * its fraction of *this* width, not of the sheet's. */
+  /** Print root width in CSS px — A4 @ 96dpi, pinned by the print stylesheet
+   * (`PAGE_WIDTH_PX`). Must match the page box so line wrapping matches preview. */
   rootWidthPx: number;
   /** Tallest run of content the print engine is not allowed to split —
    * a `.break-inside-avoid` entry, or a heading glued to the block after

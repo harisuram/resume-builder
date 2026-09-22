@@ -9,7 +9,7 @@ export {
   promoteFirstEntryOffer,
   sectionLabel,
 } from "./markers";
-export { avoidOrphanSectionTitle, avoidSplitBlocks, computePageOffsets } from "./orphans";
+export { avoidOrphanSectionTitle, avoidSplitBlocks, computePageOffsets, snapToLineBoundary } from "./orphans";
 export { setPrintLayoutSimulation, PRINT_LAYOUT_SIM_CLASS } from "./printLayout";
 export { type SettleResult, settlePageBreaks } from "./settle";
 export { isMultiColumnSurface } from "./surface";

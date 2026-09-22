@@ -80,10 +80,10 @@ export function ResumePreviewFrame({
 
       const settled = settlePageBreaks(stage!, nextScale, { printable });
       const extent = settled.guideLimit > 1 ? settled.guideLimit : settled.naturalHeight;
-      // A sidebar repeats a band at the top of every printed sheet; page 1
-      // clears that much extra flow instead. Pass it so the preview's cuts
-      // land where the PDF's do.
-      const offsets = computePageOffsets(stage!, extent, nextScale, sidebarSheet ? PAGE_PAD_Y_PX : 0);
+      // A sidebar repeats bands at the top (page 2+) and bottom (every
+      // sheet) of each printed page. Pass both so preview cuts match the PDF.
+      const pad = sidebarSheet ? PAGE_PAD_Y_PX : 0;
+      const offsets = computePageOffsets(stage!, extent, nextScale, pad, pad);
 
       setScale((prev) => (prev === settled.scale ? prev : settled.scale));
       setStageHeight((prev) => (Math.abs(prev - settled.stageHeight) < 0.5 ? prev : settled.stageHeight));
@@ -153,14 +153,22 @@ export function ResumePreviewFrame({
     pageCount < 1
       ? stageHeight
       : Array.from({ length: pageCount }, (_, i) => {
-          // Sidebar page 1 gets its 4% top inset from real .resume-col-pad
-          // padding baked into the cropped render itself. Page 2+ can't
-          // repeat that padding at an internal break, so this band stands
-          // in for the same 4% the print thead reserves there.
-          const topBand = sidebarSheet && i > 0 ? PAGE_PAD_Y_PX * scale : 0;
-          const topPad = sidebarSheet ? 0 : i === 0 ? 0 : edgePad;
-          const bottomPad = sidebarSheet ? 0 : edgePad;
-          return PAGE_HEIGHT * scale + topBand + topPad + bottomPad;
+          const start = pageOffsets[i] ?? 0;
+          const end = pageOffsets[i + 1] ?? start + PAGE_HEIGHT;
+          const contentH = Math.max(end - start, 1);
+          if (sidebarSheet) {
+            // Top/bottom chrome bands only — never nest the slice in a full
+            // PAGE_HEIGHT paper window. That double-counted the top inset on
+            // page 2+ (band + leftover inside the paper) and left a large
+            // empty gap under the content.
+            const topBand = i > 0 ? PAGE_PAD_Y_PX * scale : 0;
+            const bottomBand = PAGE_PAD_Y_PX * scale;
+            const contentScreenH = Math.max(0, Math.floor(Math.min(contentH, PAGE_HEIGHT) * scale));
+            return Math.max(PAGE_HEIGHT * scale, contentScreenH + topBand + bottomBand);
+          }
+          const topPad = i === 0 ? 0 : edgePad;
+          const bottomPad = edgePad;
+          return PAGE_HEIGHT * scale + topPad + bottomPad;
         }).reduce((a, b) => a + b, 0) +
         Math.max(0, pageCount - 1) * PAGE_STACK_GAP_PX;
 
@@ -176,8 +184,8 @@ export function ResumePreviewFrame({
     <div
       ref={viewportRef}
       data-print-viewport={printable ? "true" : undefined}
-      className="resume-scale-viewport relative mx-auto w-full max-w-[760px]"
-      style={{ height: stackHeight || stageHeight || undefined }}
+      className="resume-scale-viewport relative mx-auto w-full"
+      style={{ maxWidth: PAGE_WIDTH, height: stackHeight || stageHeight || undefined }}
     >
       <div
         ref={stageRef}
@@ -205,16 +213,19 @@ export function ResumePreviewFrame({
           const start = pageOffsets[i] ?? 0;
           const end = pageOffsets[i + 1] ?? start + PAGE_HEIGHT;
           const contentH = Math.max(end - start, 1);
-          const paperScreenH = PAGE_HEIGHT * scale;
-          const contentScreenH = Math.min(contentH, PAGE_HEIGHT) * scale;
-          // Never use CSS padding for this synthetic band — padding sits
-          // outside absolute rail-fill and paints a white “patch” band.
-          // Real 4% padding does render inside the cropped Template itself
-          // for page 1 (its true top edge), so only page 2+ needs this.
+          // Floor the crop so a sub-pixel of the next line can’t paint through
+          // the overflow edge (mid-glyph slices on the sheet).
+          const contentScreenH = Math.max(0, Math.floor(Math.min(contentH, PAGE_HEIGHT) * scale));
+          // Sidebar: explicit top/bottom chrome bands matching print thead/tfoot.
+          // Do not wrap the slice in a full PAGE_HEIGHT window — that left
+          // (top+bottom) leftover under the content *on top of* the top band.
           const topBand = sidebarSheet && i > 0 ? PAGE_PAD_Y_PX * scale : 0;
+          const bottomBand = sidebarSheet ? PAGE_PAD_Y_PX * scale : 0;
           const topPad = sidebarSheet ? 0 : i === 0 ? 0 : edgePad;
           const bottomPad = sidebarSheet ? 0 : edgePad;
-          const sheetScreenH = paperScreenH + topBand + topPad + bottomPad;
+          const sheetScreenH = sidebarSheet
+            ? Math.max(PAGE_HEIGHT * scale, contentScreenH + topBand + bottomBand)
+            : PAGE_HEIGHT * scale + topPad + bottomPad;
           return (
             <div
               key={`sheet-${i}-${Math.round(start)}`}
@@ -239,25 +250,26 @@ export function ResumePreviewFrame({
                 {topBand > 0 ? (
                   <div aria-hidden data-page-top-band="true" style={{ height: topBand, flexShrink: 0 }} />
                 ) : null}
-                <div className="relative w-full overflow-hidden" style={{ height: paperScreenH }}>
-                  <div className="relative w-full overflow-hidden" style={{ height: contentScreenH }}>
-                    <div
-                      data-page-visual-stage="true"
-                      className={`resume-scale-stage origin-top-left ${
-                        isMultiColumnTheme(data.templateId) ? PRINT_LAYOUT_SIM_CLASS : ""
-                      }`}
-                      style={{
-                        width: PAGE_WIDTH,
-                        transform: `scale(${scale}) translateY(${-start}px)`,
-                        ["--page-inset" as string]: `${PAGE_INSET}px`,
-                        ["--resume-page-inset" as string]: `${PAGE_INSET}px`,
-                      }}
-                    >
-                      {/* eslint-disable-next-line react-hooks/static-components -- stable registry lookup */}
-                      <Template data={data} />
-                    </div>
+                <div className="relative w-full overflow-hidden" style={{ height: contentScreenH }}>
+                  <div
+                    data-page-visual-stage="true"
+                    className={`resume-scale-stage origin-top-left ${
+                      isMultiColumnTheme(data.templateId) ? PRINT_LAYOUT_SIM_CLASS : ""
+                    }`}
+                    style={{
+                      width: PAGE_WIDTH,
+                      transform: `scale(${scale}) translateY(${-start}px)`,
+                      ["--page-inset" as string]: `${PAGE_INSET}px`,
+                      ["--resume-page-inset" as string]: `${PAGE_INSET}px`,
+                    }}
+                  >
+                    {/* eslint-disable-next-line react-hooks/static-components -- stable registry lookup */}
+                    <Template data={data} />
                   </div>
                 </div>
+                {bottomBand > 0 ? (
+                  <div aria-hidden data-page-bottom-band="true" style={{ height: bottomBand, flexShrink: 0 }} />
+                ) : null}
               </div>
             </div>
           );
@@ -275,7 +287,7 @@ export function ResumePreviewFrame({
  * paint on the left. Both sides need an explicit value here.
  *
  * Width is a resolved px number, not "34%": the real column is 34% of the
- * *unscaled* 760px template, shrunk by the `transform: scale()` on the
+ * *unscaled* page-width template, shrunk by the `transform: scale()` on the
  * cropped stage. This div sits outside that transform, so "34%" of its own
  * (already-shrunk) box rounds to a different sub-pixel edge than the scaled
  * column does — visible as the rail looking a hair wider right at the

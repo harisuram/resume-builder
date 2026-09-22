@@ -14,12 +14,11 @@ import {
 } from "./page";
 
 describe("page geometry", () => {
-  it("matches the print root width and the real printable A4 height", () => {
-    expect(PAGE_WIDTH_PX).toBe(760);
-    // Chrome lays the 760px print root out 1:1 against the page box rather
-    // than scaling it to A4 width, so a sheet holds 297mm at 96dpi. Printing
-    // position markers down a real print root put the page breaks 1122.5px
-    // apart, confirming this over the old `width × (297/210)` (1075).
+  it("matches real A4 width and height at 96dpi so preview wrapping matches the PDF", () => {
+    expect(PAGE_WIDTH_PX).toBe(Math.round((210 / 25.4) * 96));
+    expect(PAGE_WIDTH_PX).toBe(794);
+    // Chrome lays the print root out 1:1 against the page box. Matching the
+    // root to A4 width keeps line breaks identical between preview and PDF.
     expect(PAGE_HEIGHT_PX).toBe(Math.round((297 / 25.4) * 96));
     expect(PAGE_HEIGHT_PX).toBe(1123);
   });

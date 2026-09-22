@@ -183,13 +183,15 @@ describe("ResumePreviewFrame", () => {
       expect(sheets[0].style.paddingBottom).toBe("0px");
       expect(sheets[1].style.paddingTop).toBe("0px");
       expect(sheets[1].style.paddingBottom).toBe("0px");
-      // Page 1's 4% inset is real .resume-col-pad padding baked into its own
-      // crop; page 2+ can't repeat that at an internal break, so it gets a
-      // matching 4% band instead (rail fill still covers it either way).
+      // Page 1 top inset is column padding inside the crop; page 2+ get a
+      // matching 4% band for the print thead (rail fill still covers it).
       expect(sheets[0].querySelector("[data-page-top-band]")).toBeNull();
       const band = sheets[1].querySelector<HTMLElement>("[data-page-top-band]");
       expect(band).not.toBeNull();
       expect(parseFloat(band!.style.height)).toBe(PAGE_PAD_Y_PX);
+      // Every sidebar sheet gets an explicit bottom band (print tfoot).
+      expect(sheets[0].querySelector("[data-page-bottom-band]")).not.toBeNull();
+      expect(sheets[1].querySelector("[data-page-bottom-band]")).not.toBeNull();
       const fill = sheets[0].querySelector<HTMLElement>("[data-rail-fill]");
       expect(fill).not.toBeNull();
       // A resolved px number (not "34%") so this overlay's edge lines up
@@ -199,7 +201,8 @@ describe("ResumePreviewFrame", () => {
       expect(parseFloat(fill!.style.width)).toBeCloseTo(PAGE_WIDTH_PX * 0.34, 5);
       expect(fill!.style.backgroundColor).toMatch(/#3A4750|#3a4750|rgb\(58,\s*71,\s*80\)/i);
       expect(parseFloat(sheets[0].style.height)).toBe(PAGE_HEIGHT_PX);
-      expect(parseFloat(sheets[1].style.height)).toBe(PAGE_HEIGHT_PX + PAGE_PAD_Y_PX);
+      // Page 2 is one A4 (top + slice + bottom), not A4 + extra top band.
+      expect(parseFloat(sheets[1].style.height)).toBe(PAGE_HEIGHT_PX);
     });
 
     it("paints right-rail fills on the right for Atelier", () => {

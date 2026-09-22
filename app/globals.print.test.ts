@@ -1,5 +1,6 @@
 import { readFileSync } from "fs";
 import { join } from "path";
+import { PAGE_WIDTH_PX } from "@/lib/page";
 
 const css = readFileSync(join(__dirname, "globals.css"), "utf8");
 const PRINT_AT = css.indexOf("@media print {");
@@ -7,10 +8,16 @@ const screenBlock = css.slice(0, PRINT_AT);
 const printBlock = css.slice(PRINT_AT);
 
 describe("print stylesheet", () => {
-  it("pins the preview stage to the 760px design width instead of 100%", () => {
+  it("keeps the CSS --resume-page-width token in sync with PAGE_WIDTH_PX", () => {
+    expect(PAGE_WIDTH_PX).toBe(794);
+    expect(screenBlock).toContain(`--resume-page-width: ${PAGE_WIDTH_PX}px`);
+  });
+
+  it("pins the preview stage to the A4 design width instead of 100%", () => {
     // `width: 100%` collapsed to 0px in print because the visibility trick
     // zeroed the flex ancestors, which produced a blank PDF.
-    expect(printBlock).toContain("width: 760px !important");
+    expect(printBlock).toContain("width: var(--resume-page-width) !important");
+    expect(screenBlock).toContain("--resume-page-width: 794px");
     expect(printBlock).not.toMatch(/\.resume-scale-stage\s*\{[^}]*width:\s*100%/);
   });
 
@@ -45,15 +52,15 @@ describe("print stylesheet", () => {
 
   it("paints the sidebar rail full-bleed via ::before on screen and gradient in print", () => {
     expect(screenBlock).toContain(".resume-sidebar-page::before");
-    expect(printBlock).toContain("background-size: 760px 100%");
+    expect(printBlock).toContain("background-size: var(--resume-page-width) 100%");
     expect(printBlock).toContain("box-decoration-break: clone");
     expect(printBlock).toContain(".resume-split-page-pad");
     expect(printBlock).toContain(".resume-page-body");
     expect(printBlock).not.toContain(".resume-sidebar-print-fill");
     // The leftover last-page rail is a fixed strip repeated per sheet, but
     // its geometry must never be a percentage: a fixed box resolves
-    // percentages against the sheet, which is wider than the 760px print
-    // root, and paints a rail wider than the 34% column beneath it. Width
+    // percentages against the sheet, which is wider than the print root
+    // when they diverge, and paints a rail wider than the 34% column beneath it. Width
     // and left come from inline px in SidebarLayout instead.
     const railFillBlock = printBlock.slice(printBlock.indexOf(".resume-rail-print-fill {"));
     const railFillRules = railFillBlock.slice(0, railFillBlock.indexOf("}"));
@@ -66,6 +73,28 @@ describe("print stylesheet", () => {
     expect(columnsBlock).not.toMatch(/height:\s*100% !important/);
   });
 
+  it("repeats sidebar top and bottom inset bands on every printed sheet", () => {
+    expect(printBlock).toContain(".resume-sidebar-page-pad");
+    expect(printBlock).toContain("table-header-group");
+    expect(printBlock).toContain(".resume-sidebar-page-pad-foot");
+    expect(printBlock).toContain("table-footer-group");
+    // Sim hides these on screen; print must re-enable while prepare-print
+    // still has print-layout-sim on the stage.
+    expect(printBlock).toContain(
+      ".resume-scale-stage.print-layout-sim .resume-sidebar-page-pad",
+    );
+    expect(printBlock).toContain(
+      ".resume-scale-stage.print-layout-sim .resume-sidebar-page-pad-foot",
+    );
+  });
+
+  it("flattens sidebar col-pad to block under print-layout-sim (no flex gap + margin)", () => {
+    expect(screenBlock).toContain(".resume-scale-stage.print-layout-sim .resume-col-pad");
+    expect(screenBlock).toMatch(
+      /\.resume-scale-stage\.print-layout-sim \.resume-col-pad\s*\{[^}]*display:\s*block !important/,
+    );
+  });
+
   it("lets two-column templates fragment instead of dragging a whole column", () => {
     expect(printBlock).toContain(".resume-split-narrow > div");
     expect(printBlock).toContain("break-inside: auto");
@@ -74,7 +103,7 @@ describe("print stylesheet", () => {
 
   it("keeps the sidebar rail painted across every printed sheet", () => {
     expect(screenBlock).toContain(".resume-sidebar-page::before");
-    expect(printBlock).toContain("background-size: 760px 100%");
+    expect(printBlock).toContain("background-size: var(--resume-page-width) 100%");
     expect(printBlock).toContain("background: var(--resume-rail-bg) !important");
   });
 

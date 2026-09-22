@@ -61,8 +61,8 @@ export function EmptyResumePreview({
     <div data-empty-resume-preview="" role="region" aria-label={`${theme.name} template preview`} className="relative">
       <div
         ref={viewportRef}
-        className="resume-scale-viewport relative mx-auto w-full max-w-[760px] overflow-hidden"
-        style={{ height: stageHeight || undefined }}
+        className="resume-scale-viewport relative mx-auto w-full overflow-hidden"
+        style={{ maxWidth: PAGE_WIDTH_PX, height: stageHeight || undefined }}
       >
         <div
           ref={stageRef}

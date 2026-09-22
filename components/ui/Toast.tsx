@@ -1,6 +1,6 @@
 "use client";
 
-import { showToast, useToastStore } from "@/lib/toast";
+import { useToastStore } from "@/lib/toast";
 
 function CloseIcon() {
   return (
@@ -73,5 +73,3 @@ export function ToastHost() {
   );
 }
 
-/** Re-export so call sites can `import { showToast } from "@/components/ui/Toast"`. */
-export { showToast };

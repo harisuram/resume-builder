@@ -1,11 +1,17 @@
 /** Print switches sidebar/split columns from flex to table. Spacers sized
  * against the flex preview are too short in the PDF, so content can still
  * start at the bottom of page 1. Force the print display model, remesure,
- * then restore after printing. */
+ * then restore after printing.
+ *
+ * Do NOT force thead/tfoot (`.resume-*-page-pad*`) on here. On screen,
+ * `print-layout-sim` CSS hides them so page-1 measure matches the PDF
+ * (print cancels thead with a negative margin; preview uses sheet chrome
+ * instead). Inline `display: table-header-group !important` used to win
+ * over that hide, shifting every Y by ~4% and cutting Soft Skills a page
+ * early. Print re-enables the bands via `@media print` rules that beat
+ * the sim hide. */
 const PRINT_LAYOUT: { sel: string; display: string; verticalAlign?: string }[] = [
   { sel: ".resume-sidebar-columns, .resume-split-columns", display: "table" },
-  { sel: ".resume-sidebar-page-pad, .resume-split-page-pad", display: "table-header-group" },
-  { sel: ".resume-split-page-pad-foot", display: "table-footer-group" },
   { sel: ".resume-sidebar-columns tbody, .resume-split-columns tbody", display: "table-row-group" },
   { sel: ".resume-sidebar-columns tr, .resume-split-columns tr", display: "table-row" },
   {
@@ -13,6 +19,10 @@ const PRINT_LAYOUT: { sel: string; display: string; verticalAlign?: string }[] =
     display: "table-cell",
     verticalAlign: "top",
   },
+  // Match print: block + sibling margin, not flex `gap-5` stacked on top of
+  // the sim margin rule (that doubled section spacing and made preview
+  // cuts land earlier than the PDF).
+  { sel: ".resume-col-pad", display: "block" },
   { sel: ".resume-page-body", display: "block" },
   { sel: ".resume-split-narrow > div, .resume-split-wide > div", display: "block" },
 ];

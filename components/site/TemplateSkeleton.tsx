@@ -246,7 +246,7 @@ function SidebarSkeleton({
   const colPad = {
     paddingTop: PAGE_PAD_Y_PX,
     paddingRight: PAGE_PAD_X_PX,
-    paddingBottom: PAGE_PAD_Y_PX,
+    paddingBottom: 0,
     paddingLeft: PAGE_PAD_X_PX,
   } as const;
   const railCol = (

@@ -95,7 +95,7 @@ live in one place, `e2e/helpers/gapBudget.ts`. `npm run test:e2e` starts
   print target — so a download can never visually drift from what was
   previewed. PDF goes through the browser's print pipeline against the
   actual selected template, laid out on the same A4 box (`lib/page.ts`:
-  760px wide, zero-margin A4 height).
+  A4 width × height at 96dpi, zero margin).
 
 ## Ads (Google AdSense)
 
