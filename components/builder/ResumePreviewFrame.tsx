@@ -13,15 +13,15 @@ import {
   isMultiColumnSurface,
   PRINT_LAYOUT_SIM_CLASS,
   computePageOffsets,
+  fragmentRanges,
   setPrintLayoutSimulation,
   settlePageBreaks,
+  type SheetRange,
 } from "@/lib/pagination";
 import type { ResumeData } from "@/lib/types";
 
 /** Screen-only gap between stacked paper sheets (px, after scale). */
 const PAGE_STACK_GAP_PX = 16;
-/** Breathing room inside each paper sheet for non-sidebar templates. */
-const PAGE_EDGE_PAD_PX = 24;
 
 /**
  * The single rendering surface shared by the live preview and the export
@@ -46,12 +46,20 @@ export function ResumePreviewFrame({
   const Template = getTemplateComponent(data.templateId);
   const theme = getTheme(data.templateId);
   const sidebarSheet = theme.layout === "sidebar";
+  /* Sheets that all hold the same amount of content can be measured against a
+     real column-fragmentation pass, because columns are uniform by definition.
+     Two column qualifies even though its band sits below the name header
+     rather than at the paper edge: the repeating thead costs the same 56px on
+     sheet 1 either way. A sidebar does not — its sheet-1 inset is column
+     padding the stage already counts as content, so sheet 1 carries more than
+     the rest — and keeps the arithmetic model, which tracks its PDFs. */
+  const uniformSheets = theme.layout !== "sidebar";
   const viewportRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const stackRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const [stageHeight, setStageHeight] = useState(0);
-  const [pageOffsets, setPageOffsets] = useState<number[]>([0, PAGE_HEIGHT]);
+  const [pageRanges, setPageRanges] = useState<SheetRange[]>([{ start: 0, end: PAGE_HEIGHT }]);
 
   useLayoutEffect(() => {
     const viewport = viewportRef.current;
@@ -80,14 +88,30 @@ export function ResumePreviewFrame({
 
       const settled = settlePageBreaks(stage!, nextScale, { printable });
       const extent = settled.guideLimit > 1 ? settled.guideLimit : settled.naturalHeight;
-      // A sidebar repeats bands at the top (page 2+) and bottom (every
-      // sheet) of each printed page. Pass both so preview cuts match the PDF.
-      const pad = sidebarSheet ? PAGE_PAD_Y_PX : 0;
-      const offsets = computePageOffsets(stage!, extent, nextScale, pad, pad);
+      // Every family holds the same band back at both paper edges of every
+      // sheet: a sidebar repeats a table header and footer, everything else
+      // clones the print root's padding. Sheet 1 is the exception for a
+      // sidebar — its top inset is the template's own column padding, which
+      // the stage already measures as content.
+      const inset = sidebarSheet ? PAGE_PAD_Y_PX : PAGE_INSET;
+      // Every sheet of a block-flow template is the same height, so the
+      // browser's own fragmenter can be asked where the cuts fall (columns and
+      // pages share one engine). The table families reserve their bands with a
+      // repeating thead, which makes sheet 1 taller than the rest and has no
+      // equivalent in a column box — they keep the arithmetic model, which
+      // already tracks their PDFs.
+      const measured = uniformSheets
+        ? fragmentRanges(stage!, { pageBudgetPx: PAGE_HEIGHT - inset - inset })
+        : null;
+      const ranges =
+        measured ??
+        offsetsToRanges(
+          computePageOffsets(stage!, extent, nextScale, inset, inset, sidebarSheet ? 0 : inset),
+        );
 
       setScale((prev) => (prev === settled.scale ? prev : settled.scale));
       setStageHeight((prev) => (Math.abs(prev - settled.stageHeight) < 0.5 ? prev : settled.stageHeight));
-      setPageOffsets((prev) => (offsetsEqual(prev, offsets) ? prev : offsets));
+      setPageRanges((prev) => (rangesEqual(prev, ranges) ? prev : ranges));
       syncVisualStages();
     }
 
@@ -142,33 +166,43 @@ export function ResumePreviewFrame({
       }
       if (multiColumn) setPrintLayoutSimulation(stage, false);
     };
-    // sidebarSheet is a pure function of data.templateId (already a dep) —
-    // listed for exhaustive-deps, not because it can change independently.
-  }, [data, printable, sidebarSheet]);
+    // sidebarSheet / uniformSheets are pure functions of data.templateId
+    // (already a dep) — listed for exhaustive-deps, not because they can
+    // change independently.
+  }, [data, printable, sidebarSheet, uniformSheets]);
 
-  const pageCount = Math.max(1, pageOffsets.length - 1);
-  const edgePad = sidebarSheet ? 0 : PAGE_EDGE_PAD_PX;
+  const pageCount = Math.max(1, pageRanges.length);
+  /* Matches what print holds back at the paper edges: the sidebar's repeating
+     table header and footer, or the cloned print-root padding for the
+     families that flow continuously. A screen-only pad here instead put an
+     inset on the preview that the PDF never had. */
+  const edgeInset = sidebarSheet ? PAGE_PAD_Y_PX : PAGE_INSET;
+  /* A sidebar's sheet-1 top inset is its own column padding, drawn inside the
+     content slice; every other family reserves the band on sheet 1 too. */
+  const firstSheetTopBand = sidebarSheet ? 0 : edgeInset;
   const railFill = sidebarRailFill(theme, scale);
   const stackHeight =
     pageCount < 1
       ? stageHeight
       : Array.from({ length: pageCount }, (_, i) => {
-          const start = pageOffsets[i] ?? 0;
-          const end = pageOffsets[i + 1] ?? start + PAGE_HEIGHT;
+          const { start, end } = pageRanges[i] ?? { start: 0, end: PAGE_HEIGHT };
           const contentH = Math.max(end - start, 1);
           if (sidebarSheet) {
             // Top/bottom chrome bands only — never nest the slice in a full
             // PAGE_HEIGHT paper window. That double-counted the top inset on
             // page 2+ (band + leftover inside the paper) and left a large
             // empty gap under the content.
-            const topBand = i > 0 ? PAGE_PAD_Y_PX * scale : 0;
-            const bottomBand = PAGE_PAD_Y_PX * scale;
-            const contentScreenH = Math.max(0, Math.floor(Math.min(contentH, PAGE_HEIGHT) * scale));
-            return Math.max(PAGE_HEIGHT * scale, contentScreenH + topBand + bottomBand);
+            const topInset = i > 0 ? edgeInset : firstSheetTopBand;
+            const contentScreenH = Math.max(
+              0,
+              Math.floor(Math.min(contentH, PAGE_HEIGHT - topInset - edgeInset) * scale),
+            );
+            return Math.max(
+              PAGE_HEIGHT * scale,
+              contentScreenH + (topInset + edgeInset) * scale,
+            );
           }
-          const topPad = i === 0 ? 0 : edgePad;
-          const bottomPad = edgePad;
-          return PAGE_HEIGHT * scale + topPad + bottomPad;
+          return PAGE_HEIGHT * scale;
         }).reduce((a, b) => a + b, 0) +
         Math.max(0, pageCount - 1) * PAGE_STACK_GAP_PX;
 
@@ -178,7 +212,7 @@ export function ResumePreviewFrame({
     for (const el of stack.querySelectorAll<HTMLElement>("[data-page-visual-stage]")) {
       setPrintLayoutSimulation(el, true);
     }
-  }, [data.templateId, pageCount, scale, pageOffsets]);
+  }, [data.templateId, pageCount, scale, pageRanges]);
 
   return (
     <div
@@ -210,32 +244,32 @@ export function ResumePreviewFrame({
         style={{ gap: PAGE_STACK_GAP_PX }}
       >
         {Array.from({ length: pageCount }, (_, i) => {
-          const start = pageOffsets[i] ?? 0;
-          const end = pageOffsets[i + 1] ?? start + PAGE_HEIGHT;
+          const { start, end } = pageRanges[i] ?? { start: 0, end: PAGE_HEIGHT };
           const contentH = Math.max(end - start, 1);
-          // Floor the crop so a sub-pixel of the next line can’t paint through
-          // the overflow edge (mid-glyph slices on the sheet).
-          const contentScreenH = Math.max(0, Math.floor(Math.min(contentH, PAGE_HEIGHT) * scale));
           // Sidebar: explicit top/bottom chrome bands matching print thead/tfoot.
           // Do not wrap the slice in a full PAGE_HEIGHT window — that left
           // (top+bottom) leftover under the content *on top of* the top band.
-          const topBand = sidebarSheet && i > 0 ? PAGE_PAD_Y_PX * scale : 0;
-          const bottomBand = sidebarSheet ? PAGE_PAD_Y_PX * scale : 0;
-          const topPad = sidebarSheet ? 0 : i === 0 ? 0 : edgePad;
-          const bottomPad = sidebarSheet ? 0 : edgePad;
+          const topInset = i > 0 ? edgeInset : firstSheetTopBand;
+          const topBand = topInset * scale;
+          const bottomBand = edgeInset * scale;
+          // Never taller than the paper left between the bands. Two cuts are
+          // the tops of consecutive sheets' first lines, and the gap between
+          // them includes a block margin that print drops at the break — so the
+          // span can read wider than the sheet, squeeze the bottom band, and
+          // slice the last line in half. Floor the crop too, so a sub-pixel of
+          // the next line can’t paint through the overflow edge.
+          const contentScreenH = Math.max(
+            0,
+            Math.floor(Math.min(contentH, PAGE_HEIGHT - topInset - edgeInset) * scale),
+          );
           const sheetScreenH = sidebarSheet
             ? Math.max(PAGE_HEIGHT * scale, contentScreenH + topBand + bottomBand)
-            : PAGE_HEIGHT * scale + topPad + bottomPad;
+            : PAGE_HEIGHT * scale;
           return (
             <div
               key={`sheet-${i}-${Math.round(start)}`}
               className="resume-page-sheet relative box-border w-full overflow-hidden rounded-sm border border-[var(--color-border)] shadow-card"
-              style={{
-                height: sheetScreenH,
-                paddingTop: topPad,
-                paddingBottom: bottomPad,
-                backgroundColor: "#ffffff",
-              }}
+              style={{ height: sheetScreenH, backgroundColor: "#ffffff" }}
               data-page-sheet={i + 1}
             >
               {railFill ? (
@@ -308,10 +342,22 @@ function sidebarRailFill(theme: ReturnType<typeof getTheme>, scale: number): CSS
   };
 }
 
-function offsetsEqual(a: number[], b: number[]) {
+/** `computePageOffsets` gives boundaries, where one sheet ends exactly where
+ * the next begins. The oracle gives each sheet its own slice, so the fallback
+ * is widened to the same shape. */
+function offsetsToRanges(offsets: number[]): SheetRange[] {
+  const ranges: SheetRange[] = [];
+  for (let i = 0; i < offsets.length - 1; i++) {
+    ranges.push({ start: offsets[i], end: offsets[i + 1] });
+  }
+  return ranges.length ? ranges : [{ start: 0, end: PAGE_HEIGHT }];
+}
+
+function rangesEqual(a: SheetRange[], b: SheetRange[]) {
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i++) {
-    if (Math.abs(a[i] - b[i]) > 0.5) return false;
+    if (Math.abs(a[i].start - b[i].start) > 0.5) return false;
+    if (Math.abs(a[i].end - b[i].end) > 0.5) return false;
   }
   return true;
 }

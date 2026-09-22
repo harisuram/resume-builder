@@ -13,6 +13,14 @@ function hasGapSpacer(el: HTMLElement) {
   return prev?.getAttribute("data-page-gap-spacer") === "true";
 }
 
+/** The sheet wrapper must carry no padding of its own — whether that is an
+ * explicit 0 or no declaration at all. Padding there paints outside the rail
+ * fill on a sidebar, and on the other families it inset the preview by an
+ * amount the PDF never had. */
+function carriesNoPadding(value: string): boolean {
+  return value === "" || parseFloat(value) === 0;
+}
+
 describe("ResumePreviewFrame", () => {
   it("renders the template matching the resume's templateId", () => {
     const data = makeFullResumeData({ templateId: "jakes-resume" });
@@ -171,6 +179,35 @@ describe("ResumePreviewFrame", () => {
       expect(container.querySelector(".resume-print-source")).not.toBeNull();
     });
 
+    /* These sheets used to sit under a screen-only 24px pad that print had no
+     * counterpart for, so the preview showed edges the PDF didn't. Both sides
+     * now hold back PAGE_INSET_PX — cloned print-root padding in print, these
+     * bands on screen — on every sheet, sheet 1 included. */
+    it("gives non-sidebar sheets the same paper margins print reserves", () => {
+      mockContentHeight(2500);
+      const { container } = render(
+        <ResumePreviewFrame data={makeFullResumeData({ templateId: "jakes-resume" })} />,
+      );
+      const sheets = container.querySelectorAll<HTMLElement>(".resume-page-sheet");
+      expect(sheets.length).toBeGreaterThanOrEqual(2);
+
+      // Same band at both edges of every sheet, sheet 1 included: uniform
+      // sheets are what let the cuts come from real fragmentation.
+      for (const sheet of sheets) {
+        const head = sheet.querySelector<HTMLElement>("[data-page-top-band]");
+        const foot = sheet.querySelector<HTMLElement>("[data-page-bottom-band]");
+        expect(head).not.toBeNull();
+        expect(foot).not.toBeNull();
+        expect(parseFloat(head!.style.height)).toBe(PAGE_INSET_PX);
+        expect(parseFloat(foot!.style.height)).toBe(PAGE_INSET_PX);
+      }
+      for (const sheet of sheets) {
+        expect(carriesNoPadding(sheet.style.paddingTop)).toBe(true);
+        expect(carriesNoPadding(sheet.style.paddingBottom)).toBe(true);
+        expect(parseFloat(sheet.style.height)).toBe(PAGE_HEIGHT_PX);
+      }
+    });
+
     it("keeps sidebar sheets full-bleed with a rail fill under leftover bands", () => {
       mockContentHeight(2500);
       const { container } = render(
@@ -179,10 +216,10 @@ describe("ResumePreviewFrame", () => {
       const sheets = container.querySelectorAll<HTMLElement>(".resume-page-sheet");
       expect(sheets.length).toBeGreaterThanOrEqual(2);
       // No CSS padding on sidebar sheets — that painted white outside the rail fill.
-      expect(sheets[0].style.paddingTop).toBe("0px");
-      expect(sheets[0].style.paddingBottom).toBe("0px");
-      expect(sheets[1].style.paddingTop).toBe("0px");
-      expect(sheets[1].style.paddingBottom).toBe("0px");
+      expect(carriesNoPadding(sheets[0].style.paddingTop)).toBe(true);
+      expect(carriesNoPadding(sheets[0].style.paddingBottom)).toBe(true);
+      expect(carriesNoPadding(sheets[1].style.paddingTop)).toBe(true);
+      expect(carriesNoPadding(sheets[1].style.paddingBottom)).toBe(true);
       // Page 1 top inset is column padding inside the crop; page 2+ get a
       // matching 4% band for the print thead (rail fill still covers it).
       expect(sheets[0].querySelector("[data-page-top-band]")).toBeNull();

@@ -1283,6 +1283,41 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
   @bottom-right { content: none; }
 }
 
+/* Fragmentation rules for the cut oracle (lib/pagination/fragment.ts).
+   The oracle lays a clone of the resume into CSS columns sized like sheets and
+   reads which column each line lands in, so the preview cuts where the browser
+   cuts instead of predicting it with arithmetic. Columns and pages share one
+   fragmentation engine, but the print rules below live in `@media print` and
+   would not reach the probe — these mirror the ones that decide *where* a
+   break may fall. `avoid` rather than `avoid-page`: the page-specific keyword
+   is ignored in a column context. */
+.resume-fragment-probe,
+.resume-fragment-probe * {
+  orphans: 1;
+  widows: 1;
+}
+.resume-fragment-probe li,
+.resume-fragment-probe p {
+  break-inside: auto !important;
+}
+.resume-fragment-probe [data-section-key],
+.resume-fragment-probe [data-item-key] {
+  break-before: auto;
+}
+.resume-fragment-probe .break-after-avoid,
+.resume-fragment-probe [data-section-key] > h3 {
+  break-after: avoid !important;
+  break-inside: avoid !important;
+}
+/* Same exception as print: a labeled row's title is a grid cell beside the
+   content, and holding it together freezes the whole row. */
+.resume-fragment-probe .resume-surface[data-layout="labeled"] [data-section-key] > h3 {
+  break-inside: auto !important;
+}
+.resume-fragment-probe .resume-surface[data-layout="labeled"] .resume-page-body > [data-section-key] {
+  break-inside: auto;
+}
+
 @media print {
   html,
   body {
@@ -1373,6 +1408,31 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
     padding: 0;
     overflow: visible;
     transform: none;
+  }
+
+  /* Paper margins for the templates that flow continuously. Nothing reserved
+     space at the edges, so a heading printed flush against the top of sheet 2+
+     and the last line ran into the bottom of every sheet (single column, two
+     column, and labeled alike).
+
+     The space has to come from inside the page box, never from an `@page`
+     margin: a non-zero margin hands Chromium/Safari a band to stamp the date,
+     document title, and page URL into (the "Headers and footers" chrome), and
+     they appear in the downloaded PDF.
+
+     `box-decoration-break: clone` repeats the padding on every fragment, so
+     every printed sheet gets the same band — page 1 included. Uniform pages
+     are what let the preview derive its cuts from a real fragmentation pass
+     (every fragment the same height) instead of predicting them arithmetically.
+
+     Sidebar is excluded: it already reserves the same bands with a repeating
+     table header and footer, and would otherwise stack the two.
+     Keep in sync with PAGE_INSET_PX in lib/page.ts. */
+  #resume-print-root:not(:has(.resume-sidebar-page)):not(:has(.resume-split-page)) {
+    padding-top: 56px;
+    padding-bottom: 56px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
   }
 
   #resume-print-root:has(.resume-sidebar-page) {
@@ -1550,17 +1610,25 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
   .resume-split-columns tr {
     display: table-row !important;
   }
+  /* Two column reserves its paper margins the way the sidebar does — with the
+     repeating thead/tfoot it already carries. A fragmenting table doesn't
+     honor the cloned padding the other families take theirs from. Both
+     selectors: the stage keeps `print-layout-sim` on while parked for print,
+     so the sim rule is live here and would otherwise zero this back out. The
+     screen copy of this rule (outside @media print) stays at 0 — the preview
+     draws its own bands as sheet chrome. */
   .resume-scale-stage.print-layout-sim .resume-split-pad-narrow,
   .resume-scale-stage.print-layout-sim .resume-split-pad-wide,
   .resume-split-pad-narrow,
   .resume-split-pad-wide {
-    height: 0 !important;
+    height: 56px !important;
     padding: 0 !important;
     font-size: 0 !important;
     line-height: 0 !important;
     border: none !important;
     overflow: hidden !important;
   }
+
   .resume-split-narrow,
   .resume-split-wide {
     display: table-cell !important;
@@ -1644,6 +1712,18 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
     break-inside: avoid !important;
     page-break-after: avoid !important;
     page-break-inside: avoid !important;
+  }
+
+  /* A labeled CV puts its section title in a grid cell beside the content
+     rather than above it, so the rule above reaches a row label instead of a
+     heading. `break-inside: avoid` on a grid item makes Chromium treat the
+     whole grid row as unbreakable: the tall Work experience row could not be
+     split, was pushed off sheet 1, and the first page printed with nothing but
+     the candidate's name. The label is a word or two and needs no protecting —
+     `break-after: avoid` still keeps it with its own row's content. */
+  #resume-print-root .resume-surface[data-layout="labeled"] [data-section-key] > h3 {
+    break-inside: auto !important;
+    page-break-inside: auto !important;
   }
 
   .no-print {

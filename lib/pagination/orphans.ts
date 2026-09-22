@@ -36,9 +36,11 @@ const BLOCK_SNAP_SEL = ".break-inside-avoid, h1, h2, h3, .break-after-avoid";
 /** Fixed A4 cuts, snapped so we don’t slice mid-glyph / mid-bullet, and so a
  * section title near the edge isn’t left alone above the cut.
  *
- * `repeatingTopInsetPx` / `repeatingBottomInsetPx` are the bands a sidebar
- * repeats via table thead/tfoot. Measure hides thead (print cancels it), so
- * page 1 only reserves the bottom band; every later sheet loses both.
+ * `repeatingTopInsetPx` / `repeatingBottomInsetPx` are the bands print holds
+ * back at the paper edges on every sheet. `firstPageTopInsetPx` is how much of
+ * the top band sheet 1 reserves as well — the same as the rest where the band
+ * is page chrome, but 0 for a sidebar, whose sheet-1 inset is the template's
+ * own column padding and so is already part of the measured content.
  * Measured against real output by printing position markers and reading
  * which marker landed on which PDF page. */
 export function computePageOffsets(
@@ -47,21 +49,28 @@ export function computePageOffsets(
   scale: number,
   repeatingTopInsetPx = 0,
   repeatingBottomInsetPx = 0,
+  firstPageTopInsetPx = 0,
 ): number[] {
   // Absorb trailing column-pad slack so we don’t invent an empty last sheet.
   let end = Math.max(contentBottom, 1);
   const rem = end % PAGE_HEIGHT;
   if (rem > 0 && rem <= TRAILING_STUB_PX) end -= rem;
-  if (end <= PAGE_HEIGHT + 2) return [0, Math.max(end, 1)];
 
   const topInset = Math.max(0, repeatingTopInsetPx);
   const bottomInset = Math.max(0, repeatingBottomInsetPx);
   const laterPageBudget = Math.max(1, PAGE_HEIGHT - topInset - bottomInset);
+  const firstPageBudget = Math.max(
+    1,
+    PAGE_HEIGHT - Math.max(0, firstPageTopInsetPx) - bottomInset,
+  );
+  // Against the bare page, not sheet 1's budget: `settlePageBreaks` floors the
+  // extent at one page height, so anything shorter reports exactly PAGE_HEIGHT
+  // and would otherwise be split in two. Where the reserved bands really do
+  // push a short resume onto a second sheet, the fragment oracle catches it.
+  if (end <= PAGE_HEIGHT + 2) return [0, Math.max(end, 1)];
+
   const offsets = [0];
-  // Page 1: measure hides thead (print cancels it with a negative margin), so
-  // content Y starts at 0 — only the repeating tfoot is reserved. Later
-  // sheets lose both the top and bottom bands.
-  let target = PAGE_HEIGHT - bottomInset;
+  let target = firstPageBudget;
   while (target < end - 2) {
     const prev = offsets[offsets.length - 1];
     let next = resolveCut(stage, target, scale);

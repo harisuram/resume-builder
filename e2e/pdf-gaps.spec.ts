@@ -1,6 +1,6 @@
 import { expect, test, type TestInfo } from "@playwright/test";
 import { TEMPLATES } from "@/components/templates/shared/theme";
-import { PAGE_HEIGHT_PX, PAGE_WIDTH_PX } from "@/lib/page";
+import { PAGE_HEIGHT_PX, PAGE_INSET_PX, PAGE_PAD_Y_PX, PAGE_WIDTH_PX } from "@/lib/page";
 import { TARGET_PAGES } from "./fixtures/longResume";
 import { describePx, gapBudget, MIN_PAGES } from "./helpers/gapBudget";
 import { measureGaps, readPdfPages, type PageGaps, type Region } from "./helpers/pdfGaps";
@@ -47,7 +47,10 @@ test.describe(`printed PDF gaps (~${TARGET_PAGES}-page resume)`, () => {
 
       expect(sheets.length, "printed no pages at all").toBeGreaterThan(0);
       const sheetHeight = sheets[0].heightPx;
-      const budget = gapBudget(sheetHeight, layout.tallestAtomicPx);
+      // Space the layout reserves at the bottom of every sheet on purpose:
+      // the sidebar's repeating tfoot band, or the `@page resume-flow` margin.
+      const reservedBottom = theme.layout === "sidebar" ? PAGE_PAD_Y_PX : PAGE_INSET_PX;
+      const budget = gapBudget(sheetHeight, layout.tallestAtomicPx, reservedBottom);
 
       // Two-column templates hide gaps: the rail paints to the paper edge
       // and the main column can stop halfway up with the whole-sheet

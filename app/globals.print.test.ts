@@ -1,6 +1,6 @@
 import { readFileSync } from "fs";
 import { join } from "path";
-import { PAGE_WIDTH_PX } from "@/lib/page";
+import { PAGE_INSET_PX, PAGE_WIDTH_PX } from "@/lib/page";
 
 const css = readFileSync(join(__dirname, "globals.css"), "utf8");
 const PRINT_AT = css.indexOf("@media print {");
@@ -19,6 +19,39 @@ describe("print stylesheet", () => {
     expect(printBlock).toContain("width: var(--resume-page-width) !important");
     expect(screenBlock).toContain("--resume-page-width: 794px");
     expect(printBlock).not.toMatch(/\.resume-scale-stage\s*\{[^}]*width:\s*100%/);
+  });
+
+  /* Content printed flush against the paper: a heading against the top of
+   * sheet 2+, the last line against the bottom of every sheet. The space is
+   * reserved inside the page box — cloned padding for the families that flow
+   * as blocks, the repeating thead/tfoot for two column. Sidebar is excluded
+   * from both; it already carries its own bands. */
+  it("reserves paper margins inside the page box", () => {
+    expect(printBlock).toContain(
+      "#resume-print-root:not(:has(.resume-sidebar-page)):not(:has(.resume-split-page))",
+    );
+    expect(printBlock).toContain(`padding-top: ${PAGE_INSET_PX}px`);
+    expect(printBlock).toContain(`padding-bottom: ${PAGE_INSET_PX}px`);
+    expect(printBlock).toContain("box-decoration-break: clone");
+    // Nothing cancels the band on sheet 1. Sheets of one height are what let
+    // the preview read its cuts off a real column-fragmentation pass.
+    expect(printBlock).not.toContain(`margin-top: -${PAGE_INSET_PX}px`);
+    // Two column: a fragmenting table ignores the cloned padding.
+    expect(printBlock).toMatch(
+      new RegExp(`\\.resume-split-pad-wide \\{\\s*height: ${PAGE_INSET_PX}px !important`),
+    );
+  });
+
+  /* The reserved space must never come from an `@page` margin. A non-zero one
+   * hands Chromium/Safari a band to stamp the date, document title, and page
+   * URL into, and they show up in the downloaded PDF. */
+  it("keeps every @page margin at zero so the browser cannot stamp headers or footers", () => {
+    // Everything between the first @page rule and the print block is @page
+    // rules and nothing else.
+    const pageBlock = css.slice(css.indexOf("@page"), PRINT_AT);
+    expect(pageBlock).toMatch(/margin:\s*0;/);
+    // A longhand here would re-open the band even with the shorthand at 0.
+    expect(pageBlock).not.toMatch(/margin-(top|bottom|left|right)\s*:/);
   });
 
   it("zeroes @page margin so the browser cannot stamp date, title, or URL", () => {

@@ -19,6 +19,14 @@ import { ResumePreviewFrame } from "@/components/builder/ResumePreviewFrame";
 import { SidebarLayout } from "@/components/templates/layouts/SidebarLayout";
 import { getTheme } from "@/components/templates/shared/theme";
 
+/** The sheet wrapper must carry no padding of its own — whether that is an
+ * explicit 0 or no declaration at all. Padding there paints outside the rail
+ * fill on a sidebar, and on the other families it inset the preview by an
+ * amount the PDF never had. */
+function carriesNoPadding(value: string): boolean {
+  return value === "" || parseFloat(value) === 0;
+}
+
 describe("sidebar pagination regressions", () => {
   afterEach(() => {
     jest.restoreAllMocks();
@@ -51,7 +59,7 @@ describe("sidebar pagination regressions", () => {
     // The sheet wrapper itself never carries CSS padding (that would paint a
     // white patch outside the rail fill). Page 1 top inset lives in the
     // template’s column padding, not sheet chrome.
-    expect(sheets[0].style.paddingTop).toBe("0px");
+    expect(carriesNoPadding(sheets[0].style.paddingTop)).toBe(true);
     expect(sheets[0].querySelector("[data-page-top-band]")).toBeNull();
     // Explicit tfoot-matching bottom band on every sidebar sheet.
     expect(sheets[0].querySelector("[data-page-bottom-band]")).not.toBeNull();
@@ -61,7 +69,7 @@ describe("sidebar pagination regressions", () => {
     expect(band).not.toBeNull();
     expect(parseFloat(band!.style.height)).toBe(PAGE_PAD_Y_PX);
     expect(sheets[1].querySelector("[data-page-bottom-band]")).not.toBeNull();
-    expect(sheets[1].style.paddingTop).toBe("0px");
+    expect(carriesNoPadding(sheets[1].style.paddingTop)).toBe(true);
     // Page 2 = top band + content slice + bottom band (= one A4), not
     // top band stacked on a full paper window (that double-counted the inset).
     expect(parseFloat(sheets[1].style.height)).toBe(PAGE_HEIGHT_PX);

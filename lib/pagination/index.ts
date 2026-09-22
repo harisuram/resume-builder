@@ -1,3 +1,4 @@
+export { fragmentRanges, measureFragmentCuts, type SheetRange } from "./fragment";
 export { clearAllPageGaps, getGapSpacer, hasPageGap, pageGapHeightCss, writePageGap } from "./gaps";
 export { inRailColumn, offsetTopIn, straddlesPage } from "./geometry";
 export {

@@ -41,10 +41,24 @@ export interface GapBudget {
   maxAtomicPx: number;
 }
 
-export function gapBudget(pageHeightPx: number, tallestAtomicPx: number): GapBudget {
+/**
+ * `reservedBottomPx` is the band the layout deliberately holds back above the
+ * paper edge — the sidebar family's repeating table footer, or the
+ * `@page resume-flow` bottom margin. Gaps are measured from the paper edge,
+ * so without it that reserved band reads as stranded whitespace on every
+ * single sheet and the budget is short by exactly its height.
+ */
+export function gapBudget(
+  pageHeightPx: number,
+  tallestAtomicPx: number,
+  reservedBottomPx = 0,
+): GapBudget {
+  const usableHeightPx = Math.max(1, pageHeightPx - reservedBottomPx);
   return {
     pageHeightPx,
-    maxBottomGapPx: Math.min(pageHeightPx * HARD_BOTTOM_RATIO, tallestAtomicPx + LINE_SLACK_PX),
+    maxBottomGapPx:
+      reservedBottomPx +
+      Math.min(usableHeightPx * HARD_BOTTOM_RATIO, tallestAtomicPx + LINE_SLACK_PX),
     maxTopGapPx: pageHeightPx * TOP_RATIO,
     maxAtomicPx: pageHeightPx * ATOMIC_RATIO,
   };

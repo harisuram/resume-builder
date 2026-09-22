@@ -44,6 +44,18 @@ export function AsymmetricLayout({
       </div>
 
       <table className="resume-split-columns mt-5 w-full" role="presentation">
+        {/* Fixed table layout sizes columns off the *first* row. Off-print
+         * that is the tbody row, whose cells carry 32/68 — but print promotes
+         * the thead to a repeating header group, and its pad cells have no
+         * width, so the columns silently fell back to an even 50/50. The wide
+         * column lost a third of its width, every line rewrapped, and the PDF
+         * ran four sheets longer than the preview. An explicit colgroup pins
+         * the split in every mode (the sidebar table carries one for the
+         * mirror-image reason). */}
+        <colgroup>
+          <col style={{ width: "32%" }} />
+          <col style={{ width: "68%" }} />
+        </colgroup>
         <thead className="resume-split-page-pad">
           <tr>
             <th className="resume-split-pad-narrow" aria-hidden="true">
