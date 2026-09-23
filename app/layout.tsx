@@ -43,6 +43,12 @@ export const metadata: Metadata = {
   description: HOME_DESCRIPTION,
   keywords: [...SITE_KEYWORDS],
   robots: { index: true, follow: true },
+  // Search Console's HTML-tag method. Preferred over its file method here:
+  // `html_handling: "auto-trailing-slash"` (wrangler.jsonc) 307s any `*.html`
+  // request to its extensionless form, so a verification *file* would never
+  // return 200 at the URL Google fetches, and a redirected one reads as
+  // missing. A meta tag sits in every page's <head> and sidesteps that.
+  verification: { google: "GFCWGpyf43Ywu3vECFLTdOx2zbeppn9f7YZazzcGFqM" },
   openGraph: {
     title: HOME_TITLE,
     description: HOME_DESCRIPTION,
