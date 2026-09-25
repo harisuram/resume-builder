@@ -14,12 +14,10 @@ export function readStoredTheme(): ColorTheme | null {
   }
 }
 
-export function prefersDark(): boolean {
-  return typeof window.matchMedia === "function" && window.matchMedia("(prefers-color-scheme: dark)").matches;
-}
-
+/** Light unless the user has picked dark with the toggle — the OS
+ * dark-mode setting is deliberately ignored. */
 export function resolvedTheme(): ColorTheme {
-  return readStoredTheme() ?? (prefersDark() ? "dark" : "light");
+  return readStoredTheme() ?? "light";
 }
 
 export function applyTheme(theme: ColorTheme) {

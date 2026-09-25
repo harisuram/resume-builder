@@ -192,7 +192,12 @@ export function TemplatePreviewModal({ theme, onClose }: { theme: TemplateTheme;
           </div>
         </div>
 
-        <div className="min-h-0 overflow-x-hidden overflow-y-auto overscroll-contain bg-[var(--color-paper)]">
+        {/* scrollbar-gutter keeps the width fixed whether or not the sheet
+            overflows. The preview scales to this width, so with classic
+            (non-overlay) scrollbars a sheet just taller than the box — Harbor —
+            gained a scrollbar, shrank to fit, lost it, grew back, and flickered
+            every frame. */}
+        <div className="min-h-0 overflow-x-hidden overflow-y-auto overscroll-contain bg-[var(--color-paper)] [scrollbar-gutter:stable]">
           <div className="w-full px-3 py-3 sm:px-6 sm:py-5">
             <ScaledTemplatePreview theme={theme} />
           </div>

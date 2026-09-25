@@ -212,7 +212,7 @@ describe("BuilderShell", () => {
     expect(screen.getByRole("heading", { name: "Preview & download" })).toBeInTheDocument();
   });
 
-  it("renders the export step full-width with only the section nav aside (no separate preview aside)", async () => {
+  it("renders the export step with the section nav and a desktop-only template rail (no preview aside)", async () => {
     const { container } = render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
     act(() => useBuilderStore.getState().setSkills(["TypeScript"]));
@@ -220,7 +220,11 @@ describe("BuilderShell", () => {
 
     expect(screen.getByRole("heading", { name: "Preview & download" })).toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(container.querySelectorAll("aside")).toHaveLength(1);
+    const asides = container.querySelectorAll("aside");
+    expect(asides).toHaveLength(2);
+    expect(asides[1].className).toMatch(/(^| )hidden( |$)/);
+    expect(asides[1].className).toContain("md:flex");
+    expect(asides[1].className).toContain("no-print");
     expect(container.querySelector("main")!.className).toContain("print-unclip");
     expect(container.querySelector("main")!.className).toContain("overflow-y-auto");
     expect(container.querySelector(".animate-step-in-from-right, .animate-step-in-from-left")?.className).toContain(
@@ -229,6 +233,19 @@ describe("BuilderShell", () => {
     // Nested preview scroll is for the side column only — on this step the
     // main pane is the scroller, or the wheel over the resume goes nowhere.
     expect(container.querySelector("main")!.querySelector(".overflow-y-auto")).toBeNull();
+  });
+
+  it("switches templates from the export-step rail", async () => {
+    render(<BuilderShell />);
+    await screen.findByRole("heading", { name: "Basic info" });
+    act(() => useBuilderStore.getState().setSkills(["TypeScript"]));
+    await userEvent.click(nav().getByText("Preview & download"));
+
+    const rail = screen.getByRole("list", { name: "Templates" });
+    const option = within(rail).getByRole("button", { name: "Use Harbor template" });
+    await userEvent.click(option);
+    expect(useBuilderStore.getState().templateId).toBe("bre-cool");
+    expect(option).toHaveAttribute("aria-pressed", "true");
   });
 
   it("keeps the side-by-side preview aside to desktop (phones use the sheet instead)", async () => {

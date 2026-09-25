@@ -13,11 +13,15 @@ import { ResumePreviewFrame } from "./ResumePreviewFrame";
 export function PreviewPane({
   printable = false,
   showAd,
+  pickerMobileOnly = false,
 }: {
   printable?: boolean;
   /** Defaults to on for the live column, off for print/export. The mobile
    * sheet also turns this off so the résumé can use the full height. */
   showAd?: boolean;
+  /** Hide the dropdown from md up — the export step shows a thumbnail rail
+   * beside the preview there instead. */
+  pickerMobileOnly?: boolean;
 }) {
   const templateId = useBuilderStore((s) => s.templateId);
   const setTemplateId = useBuilderStore((s) => s.setTemplateId);
@@ -40,19 +44,32 @@ export function PreviewPane({
             <p className="text-[12.5px] font-medium text-[var(--color-ink)]">{theme.name}</p>
             <p className="truncate text-[11px] leading-tight text-[var(--color-ink-faint)]">{theme.description}</p>
           </div>
-          <TemplatePicker
-            value={templateId}
-            onChange={setTemplateId}
-            emphasized={empty}
-            open={pickerOpen}
-            onOpenChange={setPickerOpen}
-          />
+          <div className={pickerMobileOnly ? "md:hidden" : undefined}>
+            <TemplatePicker
+              value={templateId}
+              onChange={setTemplateId}
+              emphasized={empty}
+              open={pickerOpen}
+              onOpenChange={setPickerOpen}
+            />
+          </div>
         </div>
         {empty && (
           <p className="text-[11px] leading-snug text-[var(--color-ink-soft)]">
             This is a sample of <span className="font-medium text-[var(--color-ink)]">{theme.name}</span>. Use{" "}
-            <span className="font-medium text-[var(--color-accent)]">Change template</span> to try another look
-            before you add entries.
+            {pickerMobileOnly ? (
+              <>
+                <span className="md:hidden">
+                  <span className="font-medium text-[var(--color-accent)]">Change template</span> to try
+                </span>
+                <span className="hidden md:inline">the templates on the right to try</span>
+              </>
+            ) : (
+              <>
+                <span className="font-medium text-[var(--color-accent)]">Change template</span> to try
+              </>
+            )}{" "}
+            another look before you add entries.
           </p>
         )}
       </div>

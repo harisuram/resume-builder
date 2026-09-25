@@ -180,6 +180,10 @@ export function ResumePreviewFrame({
   /* A sidebar's sheet-1 top inset is its own column padding, drawn inside the
      content slice; every other family reserves the band on sheet 1 too. */
   const firstSheetTopBand = sidebarSheet ? 0 : edgeInset;
+  /* A single-column colour band (Marquee, Copper) runs up to the paper edge —
+     print pulls it into the root padding, so sheet 1's top band takes its
+     colour here instead of showing a white strip above it. */
+  const firstSheetBandColor = theme.darkHeader && !sidebarSheet ? theme.accent : undefined;
   const railFill = sidebarRailFill(theme, scale);
   const stackHeight =
     pageCount < 1
@@ -282,7 +286,15 @@ export function ResumePreviewFrame({
               ) : null}
               <div className="relative z-[1] flex h-full w-full flex-col">
                 {topBand > 0 ? (
-                  <div aria-hidden data-page-top-band="true" style={{ height: topBand, flexShrink: 0 }} />
+                  <div
+                    aria-hidden
+                    data-page-top-band="true"
+                    style={{
+                      height: topBand,
+                      flexShrink: 0,
+                      backgroundColor: i === 0 ? firstSheetBandColor : undefined,
+                    }}
+                  />
                 ) : null}
                 <div className="relative w-full overflow-hidden" style={{ height: contentScreenH }}>
                   <div

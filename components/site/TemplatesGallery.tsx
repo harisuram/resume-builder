@@ -40,6 +40,21 @@ function ExpandIcon() {
   );
 }
 
+function ArrowIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" aria-hidden="true">
+      <path
+        d="M3.5 8h9M9 4.5 12.5 8 9 11.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function TemplatesGallery() {
   const [filter, setFilter] = useState<LayoutFilter>("all");
   const [previewId, setPreviewId] = useState<string | null>(null);
@@ -115,7 +130,7 @@ export function TemplatesGallery() {
                 >
                   <ScaledTemplatePreview theme={template} compact fullPage framed={false} fillParent />
                 </div>
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/35 to-transparent opacity-0 transition duration-300 group-hover:opacity-100" />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/45 to-transparent opacity-0 transition duration-300 group-hover:opacity-100 group-focus-within:opacity-100" />
                 {/* An overlay rather than a button wrapped around the sheet:
                     Vitae draws its own light/dark toggle, and a button inside a
                     button is invalid HTML that breaks hydration. Opening the
@@ -127,15 +142,28 @@ export function TemplatesGallery() {
                   aria-haspopup="dialog"
                   aria-label={`Preview ${template.name} layout`}
                   onClick={(event) => openPreview(template, event.currentTarget)}
-                  className="absolute inset-0 z-[2] flex cursor-zoom-in items-end justify-center pb-2.5 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--color-focus)]"
+                  className="absolute inset-0 z-[2] flex cursor-zoom-in items-center justify-center focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--color-focus)]"
                 >
-                  {/* Surface/ink, not white/ink: on a dark theme --color-ink is
-                      near-white, so the old white pill printed white on white. */}
-                  <span className="flex items-center gap-1 rounded-full bg-[var(--color-surface)]/95 px-2.5 py-1 text-[11px] font-semibold text-[var(--color-ink)] shadow-card opacity-0 transition duration-300 group-hover:opacity-100 [button:focus-visible>&]:opacity-100">
+                  {/* Fixed gray, not theme tokens: the sheet is always white
+                      paper, so a white/surface pill vanished into it (and on a
+                      dark theme --color-ink printed white on white). */}
+                  <span className="flex items-center gap-1 rounded-full bg-zinc-800/90 px-2.5 py-1 text-[11px] font-semibold text-white shadow-card ring-1 ring-white/10 opacity-0 transition duration-300 group-hover:opacity-100 [button:focus-visible>&]:opacity-100">
                     <ExpandIcon />
                     Preview
                   </span>
                 </button>
+                {/* The builder link lives on the sheet instead of as a full-width
+                    button under every card — a grid of identical solid CTAs
+                    drowned out the templates themselves. Pointer devices reveal
+                    it on hover/focus; touch devices (no hover) always show it. */}
+                <Link
+                  href={builderHref(template.id)}
+                  aria-label={`Use ${template.name} template`}
+                  className="absolute inset-x-2 bottom-2 z-[3] inline-flex min-h-8 items-center justify-center gap-1 rounded-lg bg-[var(--color-accent)] px-3 py-1.5 text-[11.5px] font-semibold text-[var(--color-accent-ink)] shadow-cta transition-[opacity,filter] duration-300 ease-out hover:brightness-110 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)] group-hover:opacity-100 sm:inset-x-3 sm:bottom-3 sm:text-[12.5px] [@media(hover:hover)]:opacity-0"
+                >
+                  Use template
+                  <ArrowIcon />
+                </Link>
               </div>
               <div className="flex min-w-0 flex-1 flex-col border-t border-[var(--color-border)] px-2.5 py-2.5 sm:px-3 sm:py-3">
                 <div className="flex min-w-0 items-center gap-2">
@@ -146,18 +174,9 @@ export function TemplatesGallery() {
                     {layoutLabel(template.layout)}
                   </span>
                 </div>
-                <p className="mt-0.5 mb-2.5 min-h-[2.4em] text-[11.5px] leading-snug text-[var(--color-ink-soft)] sm:mb-3 sm:min-h-0 sm:text-[12.5px]">
+                <p className="mt-0.5 text-[11.5px] leading-snug text-[var(--color-ink-soft)] sm:text-[12.5px]">
                   {template.description}
                 </p>
-                {/* mt-auto so the buttons line up across a row whatever the
-                    description wraps to. */}
-                <Link
-                  href={builderHref(template.id)}
-                  aria-label={`Use ${template.name} template`}
-                  className="mt-auto inline-flex min-h-9 w-full items-center justify-center rounded-lg bg-[var(--color-accent)] px-3 py-2 text-[12px] font-semibold text-[var(--color-accent-ink)] shadow-cta transition duration-150 hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)] sm:text-[12.5px]"
-                >
-                  Use template
-                </Link>
               </div>
             </article>
           </li>
@@ -165,7 +184,7 @@ export function TemplatesGallery() {
       </ul>
 
       <p className="mt-8 text-center text-[13px] text-[var(--color-ink-soft)] sm:mt-10">
-        Tap a sheet for a closer look, or Use template to open it in the builder.
+        Tap a sheet for a closer look, or hit Use template to open it in the builder.
       </p>
 
       {preview && <TemplatePreviewModal theme={preview} onClose={closePreview} />}

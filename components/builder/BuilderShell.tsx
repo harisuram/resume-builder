@@ -38,6 +38,7 @@ import { ResumeImportProvider } from "./ResumeImport";
 import { adjacentUnskippedStep, getWizardOrder, type NavKey } from "./nav";
 import { MobilePreviewSheet } from "./MobilePreviewSheet";
 import { PreviewPane } from "./PreviewPane";
+import { TemplateRail } from "./TemplateRail";
 import { SectionFooterNav } from "./SectionFooterNav";
 import { SectionNav } from "./SectionNav";
 
@@ -170,6 +171,8 @@ export function BuilderShell() {
   const clearSection = useBuilderStore((s) => s.clearSection);
   const clearBasicInfo = useBuilderStore((s) => s.clearBasicInfo);
   const sectionOrder = useBuilderStore((s) => s.sectionOrder);
+  const templateId = useBuilderStore((s) => s.templateId);
+  const setTemplateId = useBuilderStore((s) => s.setTemplateId);
   const [activeKey, setActiveKey] = useState<NavKey>("basicInfo");
   const [stepDir, setStepDir] = useState<1 | -1>(1);
   const [animateStep, setAnimateStep] = useState(false);
@@ -329,7 +332,8 @@ export function BuilderShell() {
           </aside>
 
           {activeKey === "export" ? (
-            <main ref={formPaneRef} className="print-unclip min-h-0 flex-1 overflow-y-auto overflow-x-clip overscroll-contain px-5 py-6 sm:px-8">
+            <div className="print-unclip flex min-h-0 flex-1 overflow-hidden">
+            <main ref={formPaneRef} className="print-unclip min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-clip overscroll-contain px-5 py-6 sm:px-8">
               <div className="mx-auto w-full max-w-[820px]">
                 <StepEnter key={activeKey} direction={stepDir} enabled={animateStep}>
                   <ExportSection />
@@ -341,6 +345,12 @@ export function BuilderShell() {
                 />
               </div>
             </main>
+            {/* Desktop only: every template as a thumbnail, so picking a look
+                doesn't need the dropdown (which stays on mobile). */}
+            <aside className="no-print hidden min-h-0 border-l border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-ink)_3.5%,var(--color-paper))] px-3 pt-5 md:flex md:w-[260px] md:shrink-0 md:flex-col xl:w-[400px]">
+              <TemplateRail value={templateId} onChange={setTemplateId} />
+            </aside>
+            </div>
           ) : (
             <div className="flex min-h-0 flex-1 overflow-hidden">
               {/* Extra bottom padding on mobile: the sticky step footer sits

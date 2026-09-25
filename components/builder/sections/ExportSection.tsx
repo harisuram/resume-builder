@@ -127,7 +127,7 @@ export function ExportSection() {
         className="flex flex-col items-center gap-1"
       />
 
-      <PreviewPane printable />
+      <PreviewPane printable pickerMobileOnly />
     </div>
   );
 }

@@ -2,7 +2,6 @@ import {
   applyTheme,
   isColorTheme,
   persistTheme,
-  prefersDark,
   readStoredTheme,
   resolvedTheme,
   THEME_STORAGE_KEY,
@@ -33,25 +32,22 @@ describe("theme", () => {
     expect(isColorTheme(null)).toBe(false);
   });
 
-  it("follows the stored choice over the system preference", () => {
+  it("defaults to light even when the system prefers dark", () => {
     setScheme(true);
-    expect(resolvedTheme()).toBe("dark");
-    localStorage.setItem(THEME_STORAGE_KEY, "light");
-    expect(readStoredTheme()).toBe("light");
     expect(resolvedTheme()).toBe("light");
   });
 
-  it("ignores junk in storage and falls back to the system", () => {
-    localStorage.setItem(THEME_STORAGE_KEY, "neon");
-    setScheme(true);
-    expect(readStoredTheme()).toBeNull();
+  it("follows the stored choice", () => {
+    localStorage.setItem(THEME_STORAGE_KEY, "dark");
+    expect(readStoredTheme()).toBe("dark");
     expect(resolvedTheme()).toBe("dark");
   });
 
-  it("returns false for prefersDark when matchMedia is missing", () => {
-    // @ts-expect-error — jsdom can ship a stub; this covers older environments.
-    delete window.matchMedia;
-    expect(prefersDark()).toBe(false);
+  it("ignores junk in storage and falls back to light", () => {
+    localStorage.setItem(THEME_STORAGE_KEY, "neon");
+    setScheme(true);
+    expect(readStoredTheme()).toBeNull();
+    expect(resolvedTheme()).toBe("light");
   });
 
   it("applies and persists a toggle", () => {

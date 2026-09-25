@@ -57,23 +57,6 @@
   --color-undo-ink: #1a0a10;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --color-paper: #090c14;
-    --color-surface: #121826;
-    --color-ink: #f1f4fa;
-    --color-ink-soft: #b7c0d0;
-    --color-ink-faint: #7d889c;
-    --color-border: #263044;
-    --color-accent: #8b93ff;
-    --color-accent-ink: #0b1020;
-    --color-accent-tint: #1c2440;
-    --color-focus: #22d3ee;
-    --color-undo: #c45a78;
-    --color-undo-ink: #1a0a10;
-  }
-}
-
 @theme inline {
   --color-paper: var(--color-paper);
   --color-surface: var(--color-surface);
@@ -95,11 +78,11 @@
 }
 
 html {
-  color-scheme: light dark;
+  color-scheme: light;
 }
 
 /* Icon shown is the action (moon = go dark, sun = go light). Follows the
-   stored data-theme when set, otherwise the system preference. */
+   stored data-theme; light by default. */
 .theme-icon-sun {
   display: none;
 }
@@ -111,14 +94,6 @@ html[data-theme="dark"] .theme-icon-sun {
 }
 html[data-theme="dark"] .theme-icon-moon {
   display: none;
-}
-@media (prefers-color-scheme: dark) {
-  html:not([data-theme="light"]) .theme-icon-sun {
-    display: block;
-  }
-  html:not([data-theme="light"]) .theme-icon-moon {
-    display: none;
-  }
 }
 
 body {
@@ -1678,6 +1653,26 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
   .resume-dark-header {
     break-inside: avoid;
     break-after: auto;
+  }
+  /* Single-column colour band (Marquee, Copper): paint its colour up through
+     the print root's 56px top padding so sheet 1 has no white strip above
+     it. A pseudo-element, not a margin/padding change — layout is untouched,
+     so the page cuts stay where the preview measured them. */
+  #resume-print-root:not(:has(.resume-sidebar-page)):not(:has(.resume-split-page))
+    .resume-surface[data-layout="single"]
+    > .resume-dark-header {
+    position: relative;
+  }
+  #resume-print-root:not(:has(.resume-sidebar-page)):not(:has(.resume-split-page))
+    .resume-surface[data-layout="single"]
+    > .resume-dark-header::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100%;
+    height: 56px;
+    background: inherit;
   }
 
   /* Chromium's default orphans:2/widows:2 silently keeps 2 lines of a

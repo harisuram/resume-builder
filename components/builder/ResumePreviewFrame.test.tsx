@@ -35,6 +35,22 @@ describe("ResumePreviewFrame", () => {
     expect(screen.getAllByText("Alexandra Montgomery-Whitfield").length).toBeGreaterThan(0);
   });
 
+  it("paints sheet 1's top band in a single-column colour header's accent", () => {
+    const data = makeFullResumeData({ templateId: "bre-material-dark" });
+    const { container } = render(<ResumePreviewFrame data={data} />);
+    const band = container.querySelector<HTMLElement>('[data-page-sheet="1"] [data-page-top-band="true"]');
+    expect(band).not.toBeNull();
+    expect(band!.style.height).not.toBe("");
+    expect(band!.style.backgroundColor).toBe("rgb(201, 147, 47)");
+  });
+
+  it("keeps sheet 1's top band white for templates without a colour header", () => {
+    const data = makeFullResumeData({ templateId: "jakes-resume" });
+    const { container } = render(<ResumePreviewFrame data={data} />);
+    const band = container.querySelector<HTMLElement>('[data-page-sheet="1"] [data-page-top-band="true"]');
+    expect(band!.style.backgroundColor).toBe("");
+  });
+
   it("only tags the print root element when printable is true", () => {
     const data = makeFullResumeData();
     const { container, rerender } = render(<ResumePreviewFrame data={data} printable={false} />);
