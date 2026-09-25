@@ -3,7 +3,7 @@ import { PAGE_HEIGHT_PX, PAGE_PAD_X_PX, PAGE_PAD_Y_PX } from "@/lib/page";
 import { NARROW_SECTION_KEYS } from "@/lib/resume";
 import type { SectionKey } from "@/lib/types";
 import { SectionHeading } from "@/components/templates/shared/SectionHeading";
-import { tint, type TemplateTheme } from "@/components/templates/shared/theme";
+import { headerColor, railBackground, tint, type TemplateTheme } from "@/components/templates/shared/theme";
 
 /** Representative sections for a gallery preview — enough to show heading
  * style and column split without dumping every optional block. */
@@ -203,7 +203,7 @@ function SingleColumnSkeleton({
     <div className={`resume-surface min-h-full ${fontClass}`} style={fullPage ? { minHeight: PAGE_HEIGHT_PX } : undefined}>
       <div
         className={`flex items-center gap-6 ${theme.darkHeader ? "resume-dark-header px-8 py-7" : "px-8 pt-8"}`}
-        style={theme.darkHeader ? { background: theme.accent } : undefined}
+        style={theme.darkHeader ? { background: headerColor(theme) } : undefined}
       >
         <div className="min-w-0 flex-1 space-y-2.5">
           <NameBone theme={theme} light={theme.darkHeader} sizeClass="text-[26px]" />
@@ -241,7 +241,7 @@ function SidebarSkeleton({
   const solid = theme.sidebarStyle === "solid";
   const right = theme.sidebarSide === "right";
   const fontClass = theme.fontDisplay === "serif" ? "font-serif" : "font-sans";
-  const railBg = solid ? theme.accent : tint(theme.accent, 8);
+  const railBg = railBackground(theme);
   const gap = compact ? "gap-4" : "gap-5";
   const colPad = {
     paddingTop: PAGE_PAD_Y_PX,
@@ -318,7 +318,7 @@ function SidebarSkeleton({
       >
         <div
           className="resume-dark-header flex items-center gap-6"
-          style={{ background: theme.accent, padding: `${PAGE_PAD_Y_PX}px ${PAGE_PAD_X_PX * 2}px` }}
+          style={{ background: headerColor(theme), padding: `${PAGE_PAD_Y_PX}px ${PAGE_PAD_X_PX * 2}px` }}
         >
           <div className="min-w-0 flex-1 space-y-2">
             <NameBone theme={theme} light sizeClass="text-[24px]" />

@@ -4,6 +4,39 @@ import TemplatesPage from "./page";
 import { TEMPLATES } from "@/components/templates/shared/theme";
 
 describe("templates gallery", () => {
+  it("shows the live template count in the lead, the tally, and every layout filter", () => {
+    render(<TemplatesPage />);
+    expect(screen.getByText(new RegExp(`^${TEMPLATES.length} free resume templates`))).toBeInTheDocument();
+    expect(screen.getByText(`${TEMPLATES.length} templates`)).toBeInTheDocument();
+    const filters = screen.getByRole("group", { name: "Filter by layout" });
+    const byLayout = (layout: string) => TEMPLATES.filter((t) => t.layout === layout).length;
+    expect(within(filters).getByRole("button", { name: `All, ${TEMPLATES.length} templates` })).toBeInTheDocument();
+    expect(
+      within(filters).getByRole("button", { name: `Single column, ${byLayout("single")} templates` }),
+    ).toBeInTheDocument();
+    expect(within(filters).getByRole("button", { name: `Sidebar, ${byLayout("sidebar")} templates` })).toBeInTheDocument();
+    expect(
+      within(filters).getByRole("button", { name: `Two column, ${byLayout("asymmetric")} templates` }),
+    ).toBeInTheDocument();
+    expect(within(filters).getByRole("button", { name: `Labeled, ${byLayout("labeled")} templates` })).toBeInTheDocument();
+  });
+
+  it("shows the new two-tone templates under their layout filters", async () => {
+    render(<TemplatesPage />);
+    const filters = screen.getByRole("group", { name: "Filter by layout" });
+    await userEvent.click(within(filters).getByRole("button", { name: /^Sidebar,/ }));
+    for (const name of ["Tidewater", "Evergreen", "Plum", "Lagoon"]) {
+      expect(screen.getByRole("heading", { name })).toBeInTheDocument();
+    }
+    expect(screen.queryByRole("heading", { name: "Oxford" })).not.toBeInTheDocument();
+
+    await userEvent.click(within(filters).getByRole("button", { name: /^Single column,/ }));
+    for (const name of ["Oxford", "Laurel", "Regent", "Mulberry"]) {
+      expect(screen.getByRole("heading", { name })).toBeInTheDocument();
+    }
+    expect(screen.queryByRole("heading", { name: "Tidewater" })).not.toBeInTheDocument();
+  });
+
   it("lists every template as a link into the builder with that layout", () => {
     render(<TemplatesPage />);
     expect(screen.getByRole("heading", { level: 1, name: /free resume templates/i })).toBeInTheDocument();

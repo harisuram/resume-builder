@@ -1,4 +1,17 @@
-import { HOME_DESCRIPTION, HOME_FAQS, HOME_TITLE, howToJsonLd, pageMetadata, webApplicationJsonLd } from "./seo";
+import { TEMPLATES } from "@/components/templates/shared/theme";
+import { capitalizedNumberWords } from "./numberWords";
+import {
+  FEATURE_LIST,
+  FEATURES,
+  HOME_DESCRIPTION,
+  HOME_FAQS,
+  HOME_TITLE,
+  howToJsonLd,
+  PAGE_META,
+  pageMetadata,
+  TEMPLATE_COUNT_WORDS,
+  webApplicationJsonLd,
+} from "./seo";
 import { INDEXABLE_PATHS, SITE_URL, absoluteUrl } from "./site";
 
 describe("absoluteUrl", () => {
@@ -59,5 +72,21 @@ describe("JSON-LD", () => {
 describe("indexable paths", () => {
   it("does not include the builder", () => {
     expect(INDEXABLE_PATHS).not.toContain("/builder");
+  });
+});
+
+describe("template count copy", () => {
+  it("spells the live template count everywhere the copy mentions it", () => {
+    const words = capitalizedNumberWords(TEMPLATES.length);
+    expect(TEMPLATE_COUNT_WORDS).toBe(words);
+    expect(PAGE_META["/templates"].description.startsWith(`${words} free, unlimited resume templates.`)).toBe(true);
+    expect(pageMetadata("/templates").openGraph?.description).toBe(PAGE_META["/templates"].description);
+    expect(FEATURES.some((feature) => feature.title === `${words} templates, one live preview`)).toBe(true);
+    expect(FEATURE_LIST).toContain(`${words} resume templates with a live preview`);
+  });
+
+  it("never ships a stale hardcoded count", () => {
+    const copy = JSON.stringify([PAGE_META, FEATURES, FEATURE_LIST]);
+    expect(copy).not.toMatch(/Thirty-one/);
   });
 });

@@ -7,7 +7,7 @@ import type { NameHeadingLevel } from "../registry";
 import { Avatar, ContactLine, hasAvatar, SummaryText, visiblePhoto } from "../shared/atoms";
 import { NARROW_SECTION_KEYS, ResumeSection } from "../shared/ResumeSection";
 import { SectionHeading } from "../shared/SectionHeading";
-import { tint, type TemplateTheme } from "../shared/theme";
+import { headerColor, railBackground, type TemplateTheme } from "../shared/theme";
 
 /** The rail is 34% of the page. Kept as a resolved px number for the print
  * fill, which is positioned against the sheet rather than this page-width root. */
@@ -43,7 +43,7 @@ export function SidebarLayout({
   const solid = theme.sidebarStyle === "solid";
   const side = theme.sidebarSide ?? "left";
   const fontClass = theme.fontDisplay === "serif" ? "font-serif" : "font-sans";
-  const railBg = solid ? theme.accent : tint(theme.accent, 8);
+  const railBg = railBackground(theme);
   const right = side === "right";
   const pageStyle = {
     "--resume-rail-bg": railBg,
@@ -74,7 +74,7 @@ export function SidebarLayout({
                 size={72}
               />
             )}
-            <NameHeading className={`${fontClass} text-[19px] font-semibold`} style={{ color: solid ? "#ffffff" : theme.accent }}>
+            <NameHeading className={`${fontClass} text-[19px] font-semibold`} style={{ color: solid ? "#ffffff" : headerColor(theme) }}>
               {data.basicInfo.name || "Your Name"}
             </NameHeading>
             <ContactLine info={data.basicInfo} light={solid} stacked />
@@ -193,7 +193,7 @@ export function SidebarLayout({
         {printRail}
         <div
           className="resume-dark-header relative z-[1] flex items-center gap-6 text-white"
-          style={{ background: theme.accent, padding: `${PAGE_PAD_Y_PX}px ${PAGE_PAD_X_PX * 2}px` }}
+          style={{ background: headerColor(theme), padding: `${PAGE_PAD_Y_PX}px ${PAGE_PAD_X_PX * 2}px` }}
         >
           <div className="min-w-0 flex-1">
             <NameHeading className={`${fontClass} text-[24px] font-semibold`}>{data.basicInfo.name || "Your Name"}</NameHeading>

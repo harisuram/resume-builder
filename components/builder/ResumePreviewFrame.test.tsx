@@ -44,6 +44,13 @@ describe("ResumePreviewFrame", () => {
     expect(band!.style.backgroundColor).toBe("rgb(201, 147, 47)");
   });
 
+  it("paints sheet 1's top band in a two-tone template's header colour, not its accent", () => {
+    const data = makeFullResumeData({ templateId: "regent" });
+    const { container } = render(<ResumePreviewFrame data={data} />);
+    const band = container.querySelector<HTMLElement>('[data-page-sheet="1"] [data-page-top-band="true"]');
+    expect(band!.style.backgroundColor).toBe("rgb(42, 35, 80)");
+  });
+
   it("keeps sheet 1's top band white for templates without a colour header", () => {
     const data = makeFullResumeData({ templateId: "jakes-resume" });
     const { container } = render(<ResumePreviewFrame data={data} />);

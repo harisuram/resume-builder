@@ -5,7 +5,7 @@ import type { NameHeadingLevel } from "../registry";
 import { Avatar, ContactLine, hasAvatar, SummaryText, visiblePhoto } from "../shared/atoms";
 import { ResumeSection } from "../shared/ResumeSection";
 import { SectionHeading } from "../shared/SectionHeading";
-import type { TemplateTheme } from "../shared/theme";
+import { headerColor, type TemplateTheme } from "../shared/theme";
 
 export function SingleColumnLayout({
   data,
@@ -36,14 +36,14 @@ export function SingleColumnLayout({
       className={`flex items-center gap-6 ${
         theme.darkHeader ? "resume-dark-header px-8 py-7 text-white" : "px-8 pt-8"
       }`}
-      style={theme.darkHeader ? { background: theme.accent } : undefined}
+      style={theme.darkHeader ? { background: headerColor(theme) } : undefined}
     >
       <div className="min-w-0 flex-1">
         <NameHeading
           className={`${fontClass} ${nameSizeClass} text-[26px] font-semibold ${
             resumeTheme === "dark" && !theme.darkHeader ? "text-[var(--r-ink)]" : ""
           }`}
-          style={!theme.darkHeader && resumeTheme !== "dark" ? { color: theme.accent } : undefined}
+          style={!theme.darkHeader && resumeTheme !== "dark" ? { color: headerColor(theme) } : undefined}
         >
           {data.basicInfo.name || "Your Name"}
         </NameHeading>

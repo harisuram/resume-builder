@@ -1,9 +1,17 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Home from "@/app/page";
-import { HOME_FAQS } from "@/lib/seo";
+import { TEMPLATES } from "@/components/templates/shared/theme";
+import { HOME_FAQS, TEMPLATE_COUNT_WORDS } from "@/lib/seo";
 
 describe("homepage", () => {
+  it("shows the live template count in the strip and the feature copy", () => {
+    render(<Home />);
+    expect(screen.getByText(`${TEMPLATES.length} templates`)).toBeInTheDocument();
+    expect(screen.getByText(`${TEMPLATE_COUNT_WORDS} templates, one live preview`)).toBeInTheDocument();
+    expect(screen.queryByText(/Thirty-one/)).not.toBeInTheDocument();
+  });
+
   it("uses a brand-led heading and the shared FAQ copy", () => {
     render(<Home />);
     expect(screen.getAllByText("Free Resume Builder").length).toBeGreaterThanOrEqual(2);

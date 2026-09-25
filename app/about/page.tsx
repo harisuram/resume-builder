@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BuilderCta } from "@/components/site/BuilderCta";
 import { Article, Body, Lead, MarketingPage, PageTitle, SectionHeading } from "@/components/site/MarketingPage";
-import { SITE_NAME, pageMetadata } from "@/lib/seo";
+import { SITE_NAME, TEMPLATE_COUNT_WORDS, pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/about");
 
@@ -19,7 +19,7 @@ export default function AboutPage() {
         <SectionHeading>What it is</SectionHeading>
         <Body>
           A browser tool with a live preview. Roles, skills, degrees, and certifications offer suggestions that are not
-          software-only; you can still type anything. Thirty-one templates share one preview, and that preview is what
+          software-only; you can still type anything. {TEMPLATE_COUNT_WORDS} templates share one preview, and that preview is what
           you print. Phone numbers include a country code. Required fields are checked before you move on. Skip
           internships, patents, a photo, or anything else — skipped sections don’t leave empty headings. You can also
           drop an existing resume and we’ll fill every section we can read.

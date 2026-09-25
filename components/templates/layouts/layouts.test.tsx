@@ -2,7 +2,7 @@ import { render } from "@testing-library/react";
 import { getRenderableSections } from "@/lib/resume";
 import { makeFullResumeData } from "@/test-utils/fixtures";
 import { NARROW_SECTION_KEYS } from "../shared/ResumeSection";
-import { getTheme } from "../shared/theme";
+import { getTheme, railBackground, TEMPLATES, tint } from "../shared/theme";
 import { AsymmetricLayout } from "./AsymmetricLayout";
 import { LabeledLayout } from "./LabeledLayout";
 import { SidebarLayout } from "./SidebarLayout";
@@ -129,5 +129,83 @@ describe("template layouts share the same section split", () => {
       expect(container.querySelector("tfoot.resume-sidebar-page-pad-foot")).not.toBeNull();
       unmount();
     }
+  });
+});
+
+describe("two-tone templates", () => {
+  const TWO_TONE = TEMPLATES.filter((theme) => theme.headerColor);
+
+  function headingColors(root: Element): string[] {
+    return Array.from(root.querySelectorAll<HTMLElement>("h3")).map((h) => h.style.color);
+  }
+
+  it("ships the eight two-tone templates with a header colour distinct from the accent", () => {
+    expect(TWO_TONE.map((theme) => theme.id).sort()).toEqual([
+      "tidewater",
+      "evergreen",
+      "plum",
+      "lagoon",
+      "oxford",
+      "laurel",
+      "regent",
+      "mulberry",
+    ].sort());
+    for (const theme of TWO_TONE) {
+      expect(theme.headerColor!.toLowerCase()).not.toBe(theme.accent.toLowerCase());
+    }
+  });
+
+  it("single column without a band: the name takes the header colour, headings keep the accent", () => {
+    const theme = getTheme("oxford");
+    const { container } = render(<SingleColumnLayout data={makeFullResumeData()} theme={theme} />);
+    expect(container.querySelector(".resume-dark-header")).toBeNull();
+    expect(container.querySelector<HTMLElement>("h1")!.style.color).toBe(cssRgb(theme.headerColor!));
+    const colors = headingColors(container);
+    expect(colors.length).toBeGreaterThan(0);
+    for (const color of colors) expect(color).toBe(cssRgb(theme.accent));
+  });
+
+  it("single column with a band: the band takes the header colour, headings keep the accent", () => {
+    const theme = getTheme("regent");
+    const { container } = render(<SingleColumnLayout data={makeFullResumeData()} theme={theme} />);
+    const band = container.querySelector<HTMLElement>(".resume-dark-header")!;
+    expect(band.style.background).toBe(cssRgb(theme.headerColor!));
+    expect(container.querySelector<HTMLElement>("h1")!.style.color).toBe("");
+    for (const color of headingColors(container.querySelector(".resume-page-body")!)) {
+      expect(color).toBe(cssRgb(theme.accent));
+    }
+  });
+
+  it("sidebar: the band takes the header colour and the rail is tinted from the rail colour", () => {
+    const theme = getTheme("tidewater");
+    const { container } = render(<SidebarLayout data={makeFullResumeData()} theme={theme} />);
+    expect(container.querySelector<HTMLElement>(".resume-dark-header")!.style.background).toBe(
+      cssRgb(theme.headerColor!),
+    );
+    const page = container.querySelector<HTMLElement>(".resume-sidebar-page")!;
+    expect(page.style.getPropertyValue("--resume-rail-bg")).toBe(railBackground(theme));
+    expect(railBackground(theme)).toBe(tint(theme.railColor!, 8));
+    for (const color of headingColors(container.querySelector(".resume-main-column")!)) {
+      expect(color).toBe(cssRgb(theme.accent));
+    }
+  });
+
+  it("puts Lagoon's rail on the right", () => {
+    const { container } = render(<SidebarLayout data={makeFullResumeData()} theme={getTheme("lagoon")} />);
+    expect(container.querySelector(".resume-sidebar-page--right")).not.toBeNull();
+  });
+
+  it("leaves single-accent templates on the accent for band and rail", () => {
+    const marquee = getTheme("bre-material-dark");
+    const { container, unmount } = render(<SingleColumnLayout data={makeFullResumeData()} theme={marquee} />);
+    expect(container.querySelector<HTMLElement>(".resume-dark-header")!.style.background).toBe(cssRgb(marquee.accent));
+    unmount();
+
+    const inkwell = getTheme("inkwell");
+    const sidebar = render(<SidebarLayout data={makeFullResumeData()} theme={inkwell} />);
+    expect(sidebar.container.querySelector<HTMLElement>(".resume-dark-header")!.style.background).toBe(
+      cssRgb(inkwell.accent),
+    );
+    expect(railBackground(inkwell)).toBe(tint(inkwell.accent, 8));
   });
 });

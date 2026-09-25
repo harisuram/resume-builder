@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
+import { TEMPLATES } from "@/components/templates/shared/theme";
+import { capitalizedNumberWords } from "./numberWords";
 import { SITE_URL, absoluteUrl, type IndexablePath } from "./site";
+
+/** Spelled-out template count ("Forty"), derived from the catalog so the copy
+ * can't drift when templates are added or removed. */
+export const TEMPLATE_COUNT_WORDS = capitalizedNumberWords(TEMPLATES.length);
 
 export const SITE_NAME = "Free Resume Builder";
 
@@ -50,7 +56,7 @@ export const FEATURES = [
     body: "Roles, skills, degrees, certifications, and more are not software-only. The lists include pharmacy, architecture, construction, IT, networking, data, and databases — or type anything that isn’t there.",
   },
   {
-    title: "Thirty-one templates, one live preview",
+    title: `${TEMPLATE_COUNT_WORDS} templates, one live preview`,
     body: "Switch designs anytime and watch the page update instantly. What you see is the same view you'll download. The gallery lists every resume template and curriculum vitae layout.",
     href: "/templates" as const,
     linkLabel: "Browse templates",
@@ -73,7 +79,7 @@ export const FEATURE_LIST = [
   "Optional AI-powered ATS rewrite for experience bullets",
   "Choose only the resume sections you need",
   "Suggestions for roles and skills across software, data, IT, pharmacy, architecture, and construction",
-  "Thirty-one resume templates with a live preview",
+  `${TEMPLATE_COUNT_WORDS} resume templates with a live preview`,
   "Download a PDF of the same preview",
   "No account — drafts stay in this browser’s local storage, not on a resume hosting account",
 ] as const;
@@ -190,7 +196,7 @@ export const PAGE_META: Record<
   "/templates": {
     title: "Free Resume Templates",
     description:
-      "Thirty-one free, unlimited resume templates. Preview the best AI-powered layouts, switch designs live, and download a PDF — no account.",
+      `${TEMPLATE_COUNT_WORDS} free, unlimited resume templates. Preview the best AI-powered layouts, switch designs live, and download a PDF — no account.`,
   },
   "/ats": {
     title: "ATS-Friendly Resume Builder",

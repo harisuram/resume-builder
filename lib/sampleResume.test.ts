@@ -4,6 +4,9 @@ import {
   sampleResumeForPreview,
   sampleResumeForTemplate,
 } from "./sampleResume";
+import fs from "node:fs";
+import path from "node:path";
+import { TEMPLATES } from "@/components/templates/shared/theme";
 
 describe("sampleResumeForPreview", () => {
   it("keeps the selected template and drops skipped sections", () => {
@@ -67,5 +70,26 @@ describe("sampleResumeForTemplate", () => {
     expect(sample.sections.skills).toBeDefined();
     expect(sample.sections.certifications).toBeDefined();
     expect(sample.sections.experience?.length).toBeGreaterThan(1);
+  });
+});
+
+describe("sample portraits", () => {
+  const photos = TEMPLATES.map((theme) => sampleResumeForTemplate(theme.id).photo ?? "");
+
+  it("gives every template a bundled portrait, mixing men and women", () => {
+    for (const src of photos) {
+      expect(src).toMatch(/^\/samples\/portraits\/(man|woman)-\d\.\w+$/);
+      expect(fs.existsSync(path.join(process.cwd(), "public", src))).toBe(true);
+    }
+    expect(photos.some((src) => src.includes("/man-"))).toBe(true);
+    expect(photos.some((src) => src.includes("/woman-"))).toBe(true);
+  });
+
+  it("matches the sample name to the portrait", () => {
+    for (const theme of TEMPLATES) {
+      const sample = sampleResumeForTemplate(theme.id);
+      const expected = sample.photo?.includes("/woman-") ? "Alexandra" : "Alexander";
+      expect(sample.basicInfo.name.startsWith(`${expected} `)).toBe(true);
+    }
   });
 });

@@ -1,4 +1,4 @@
-import { getTheme } from "@/components/templates/shared/theme";
+import { TEMPLATES, getTheme } from "@/components/templates/shared/theme";
 import type { ResumeData, ResumeSections, SectionKey, TemplateId } from "./types";
 
 /** Demo resume shown in empty builder previews and the templates gallery.
@@ -231,11 +231,38 @@ const TWO_COLUMN_EXTRA_SECTIONS: Partial<ResumeSections> = {
   ],
 };
 
+/** Sample headshots for the template samples — every layout shows a photo
+ * when one is set, so each template gets one to show where it sits. Files live
+ * in `public/samples/portraits/` as 192px WebP (~5 KB, sharp at the largest
+ * avatar on a 2x screen); swap a file to change the face. The order is a fixed
+ * alternation rather than `Math.random()`: a per-render pick would differ
+ * between the server and client render and swap faces on hydration. */
+const SAMPLE_PORTRAITS = [
+  { src: "/samples/portraits/woman-1.webp", name: "Alexandra Montgomery-Whitfield" },
+  { src: "/samples/portraits/man-1.webp", name: "Alexander Montgomery-Whitfield" },
+  { src: "/samples/portraits/woman-2.webp", name: "Alexandra Montgomery-Whitfield" },
+  { src: "/samples/portraits/man-2.webp", name: "Alexander Montgomery-Whitfield" },
+  { src: "/samples/portraits/woman-3.webp", name: "Alexandra Montgomery-Whitfield" },
+] as const;
+
+const TEMPLATE_IDS = TEMPLATES.map((theme) => theme.id);
+
+/** The portrait (and matching first name) a template's sample shows. */
+export function samplePortraitFor(templateId: TemplateId) {
+  const index = Math.max(0, TEMPLATE_IDS.indexOf(templateId));
+  return SAMPLE_PORTRAITS[index % SAMPLE_PORTRAITS.length];
+}
+
+function withSamplePortrait(data: ResumeData): ResumeData {
+  const portrait = samplePortraitFor(data.templateId);
+  return { ...data, photo: portrait.src, basicInfo: { ...data.basicInfo, name: portrait.name } };
+}
+
 export function sampleResumeForTemplate(templateId: TemplateId): ResumeData {
   if (getTheme(templateId).layout !== "asymmetric") {
-    return { ...GALLERY_SAMPLE_RESUME, templateId };
+    return withSamplePortrait({ ...GALLERY_SAMPLE_RESUME, templateId });
   }
-  return {
+  return withSamplePortrait({
     ...GALLERY_SAMPLE_RESUME,
     templateId,
     sections: { ...GALLERY_SAMPLE_RESUME.sections, ...TWO_COLUMN_EXTRA_SECTIONS },
@@ -246,5 +273,5 @@ export function sampleResumeForTemplate(templateId: TemplateId): ResumeData {
       additional: "complete",
       internships: "complete",
     },
-  };
+  });
 }

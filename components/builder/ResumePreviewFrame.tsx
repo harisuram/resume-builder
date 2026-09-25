@@ -2,7 +2,7 @@
 
 import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { getTemplateComponent } from "@/components/templates/registry";
-import { getTheme, isMultiColumnTemplate, tint } from "@/components/templates/shared/theme";
+import { getTheme, headerColor, isMultiColumnTemplate, railBackground } from "@/components/templates/shared/theme";
 import {
   PAGE_HEIGHT_PX as PAGE_HEIGHT,
   PAGE_INSET_PX as PAGE_INSET,
@@ -183,7 +183,7 @@ export function ResumePreviewFrame({
   /* A single-column colour band (Marquee, Copper) runs up to the paper edge —
      print pulls it into the root padding, so sheet 1's top band takes its
      colour here instead of showing a white strip above it. */
-  const firstSheetBandColor = theme.darkHeader && !sidebarSheet ? theme.accent : undefined;
+  const firstSheetBandColor = theme.darkHeader && !sidebarSheet ? headerColor(theme) : undefined;
   const railFill = sidebarRailFill(theme, scale);
   const stackHeight =
     pageCount < 1
@@ -341,7 +341,7 @@ export function ResumePreviewFrame({
  * * scale` mirrors the same scale factor the column's transform applies. */
 function sidebarRailFill(theme: ReturnType<typeof getTheme>, scale: number): CSSProperties | null {
   if (theme.layout !== "sidebar") return null;
-  const railBg = theme.sidebarStyle === "solid" ? theme.accent : tint(theme.accent, 8);
+  const railBg = railBackground(theme);
   const right = theme.sidebarSide === "right";
   const safeScale = Number.isFinite(scale) && scale > 0 ? scale : 1;
   return {
