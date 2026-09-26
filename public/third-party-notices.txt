@@ -1,0 +1,57 @@
+Third-party notices
+===================
+
+This site includes the following third-party material. Each is used under
+the licence shown.
+
+GitHub mark (contact-link icon)
+-------------------------------
+From Octicons, https://github.com/primer/octicons
+
+MIT License
+
+Copyright (c) 2026 GitHub Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+GitHub and the GitHub logo are trademarks of GitHub, Inc. The mark is shown
+only beside a GitHub profile link; it implies no endorsement.
+
+LinkedIn mark (contact-link icon)
+---------------------------------
+Path data from Simple Icons, https://github.com/simple-icons/simple-icons,
+released under CC0 1.0 (public domain dedication).
+
+LinkedIn and the LinkedIn logo are trademarks of LinkedIn Corporation. The
+mark is shown only beside a LinkedIn profile link; it implies no endorsement.
+
+Fonts
+-----
+Inter, Source Serif 4, Fraunces, Playfair Display, Cormorant Garamond,
+JetBrains Mono and Syne, embedded in downloaded PDFs, are licensed under the
+SIL Open Font License 1.1. The full licence texts ship alongside the font
+files in /fonts/pdf/ (OFL-Inter.txt, OFL-SourceSerif4.txt, OFL-Fraunces.txt,
+OFL-PlayfairDisplay.txt, OFL-CormorantGaramond.txt, OFL-JetBrainsMono.txt,
+OFL-Syne.txt). The PDF copies are subset to Latin characters; the fonts are
+otherwise unmodified.
+
+PDF.js
+------
+/pdf.worker.min.mjs is PDF.js by the Mozilla Foundation, licensed under the
+Apache License 2.0. Its copyright and licence header is kept in the file.

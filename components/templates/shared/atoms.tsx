@@ -14,6 +14,7 @@ import { formatDateRange, formatMonth, isCurrentExperience } from "@/lib/date";
 import { DEFAULT_DIAL_CODE } from "@/lib/countryCodes";
 import { itemBreakKey } from "@/lib/resume";
 import { CertificationIcon, GithubIcon, GlobeIcon, LinkedInIcon, MailIcon, PhoneIcon, PinIcon } from "./icons";
+import { BULLETS, type BulletKind } from "./iconShapes";
 import type { TemplateTheme } from "./theme";
 
 /** Section + empty forced set — forced item partitions were removed; kept so
@@ -187,7 +188,7 @@ function densityGap(density: TemplateTheme["density"]) {
 
 /** Bullet marks follow the template's heading style so a boxed resume
  * doesn't suddenly look like a disc list. */
-export type BulletKind = "chevron" | "square" | "diamond" | "dash" | "arrow";
+export type { BulletKind };
 
 export function bulletKind(theme: TemplateTheme): BulletKind {
   switch (theme.headingStyle) {
@@ -199,6 +200,15 @@ export function bulletKind(theme: TemplateTheme): BulletKind {
       return "diamond";
     case "rule-full":
       return "arrow";
+    case "tracked-rule":
+      return "dash";
+    case "serif-title":
+    case "centered":
+      return "diamond";
+    case "bar":
+    case "tile":
+      return "square";
+    case "code":
     case "icon":
     case "plain":
     default:
@@ -207,53 +217,25 @@ export function bulletKind(theme: TemplateTheme): BulletKind {
 }
 
 function BulletGlyph({ kind }: { kind: BulletKind }) {
-  const common = "h-2 w-2";
-  switch (kind) {
-    case "square":
-      return (
-        <svg viewBox="0 0 10 10" className={common} aria-hidden="true">
-          <rect x="2" y="2" width="6" height="6" rx="0.6" fill="currentColor" />
-        </svg>
-      );
-    case "diamond":
-      return (
-        <svg viewBox="0 0 10 10" className={common} aria-hidden="true">
-          <path d="M5 1.2 8.8 5 5 8.8 1.2 5Z" fill="currentColor" />
-        </svg>
-      );
-    case "dash":
-      return (
-        <svg viewBox="0 0 10 10" className={common} aria-hidden="true">
-          <path d="M1.2 5h7.6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-        </svg>
-      );
-    case "arrow":
-      return (
-        <svg viewBox="0 0 10 10" className={common} aria-hidden="true">
-          <path
-            d="M1.4 5h6.2M5.2 2.6 8.6 5 5.2 7.4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.4"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      );
-    default:
-      return (
-        <svg viewBox="0 0 10 10" className={common} aria-hidden="true">
-          <path
-            d="M3.2 2.2 7.2 5 3.2 7.8"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      );
-  }
+  const { shape, filled, strokeWidth, roundJoin } = BULLETS[kind];
+  const paint = filled
+    ? { fill: "currentColor" }
+    : {
+        fill: "none",
+        stroke: "currentColor",
+        strokeWidth,
+        strokeLinecap: "round" as const,
+        strokeLinejoin: roundJoin ? ("round" as const) : undefined,
+      };
+  return (
+    <svg viewBox="0 0 10 10" className="h-2 w-2" aria-hidden="true">
+      {shape.tag === "rect" ? (
+        <rect x={shape.x} y={shape.y} width={shape.width} height={shape.height} rx={shape.rx} {...paint} />
+      ) : shape.tag === "path" ? (
+        <path d={shape.d} {...paint} />
+      ) : null}
+    </svg>
+  );
 }
 
 function BulletList({

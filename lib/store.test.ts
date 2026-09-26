@@ -289,8 +289,8 @@ describe("setPhoto", () => {
 
 describe("setTemplateId", () => {
   it("updates the selected template", () => {
-    useBuilderStore.getState().setTemplateId("bre-creative");
-    expect(useBuilderStore.getState().templateId).toBe("bre-creative");
+    useBuilderStore.getState().setTemplateId("ember");
+    expect(useBuilderStore.getState().templateId).toBe("ember");
   });
 });
 
@@ -451,12 +451,22 @@ describe("loadFromData / resetStore", () => {
       photo: "data:image/jpeg;base64,abc123",
       sections: { skills: ["Go"] },
       sectionStatus: { skills: "complete" },
-      templateId: "bre-cool",
+      templateId: "harbor",
     });
     const state = useBuilderStore.getState();
     expect(state.basicInfo.name).toBe("Loaded");
     expect(state.photo).toBe("data:image/jpeg;base64,abc123");
-    expect(state.templateId).toBe("bre-cool");
+    expect(state.templateId).toBe("harbor");
+  });
+
+  it("loadFromData moves a draft saved under a renamed template id onto the current id", () => {
+    useBuilderStore.getState().loadFromData({
+      basicInfo: { name: "Loaded", email: "", phone: "", location: "", links: {} },
+      sections: {},
+      sectionStatus: {},
+      templateId: "bre-creative",
+    });
+    expect(useBuilderStore.getState().templateId).toBe("ember");
   });
 
   it("loadFromData defaults photo to null and pageBreakSections to empty when absent", () => {
@@ -464,7 +474,7 @@ describe("loadFromData / resetStore", () => {
       basicInfo: { name: "Loaded", email: "", phone: "", location: "", links: {} },
       sections: {},
       sectionStatus: {},
-      templateId: "bre-cool",
+      templateId: "harbor",
     });
     expect(useBuilderStore.getState().photo).toBeNull();
     expect(useBuilderStore.getState().pageBreakSections).toEqual([]);
@@ -475,7 +485,7 @@ describe("loadFromData / resetStore", () => {
       basicInfo: { name: "Loaded", email: "", phone: "", location: "", links: {} },
       sections: {},
       sectionStatus: {},
-      templateId: "bre-cool",
+      templateId: "harbor",
       pageBreakSections: ["certifications"],
     });
     expect(useBuilderStore.getState().pageBreakSections).toEqual([]);
@@ -486,7 +496,7 @@ describe("loadFromData / resetStore", () => {
       basicInfo: { name: "Loaded", email: "", phone: "", location: "", links: {} },
       sections: {},
       sectionStatus: {},
-      templateId: "bre-cool",
+      templateId: "harbor",
       sectionOrder: ["skills", "experience"],
     });
     expect(useBuilderStore.getState().sectionOrder).toEqual(["skills", "experience"]);
@@ -495,13 +505,13 @@ describe("loadFromData / resetStore", () => {
       basicInfo: { name: "Loaded", email: "", phone: "", location: "", links: {} },
       sections: {},
       sectionStatus: {},
-      templateId: "bre-cool",
+      templateId: "harbor",
     });
     expect(useBuilderStore.getState().sectionOrder).toBeNull();
   });
 
   it("applyImportedResume fills matching sections and skips the rest", () => {
-    useBuilderStore.getState().setTemplateId("bre-cool");
+    useBuilderStore.getState().setTemplateId("harbor");
     useBuilderStore.getState().applyImportedResume({
       basicInfo: { name: "Jamie", email: "jamie@example.com", phone: "", location: "Austin, TX", links: {} },
       sections: { skills: ["TypeScript"], summary: "Backend engineer." },
@@ -514,7 +524,7 @@ describe("loadFromData / resetStore", () => {
     expect(state.sectionStatus.summary).toBe("complete");
     expect(state.sectionStatus.experience).toBe("skipped");
     expect(state.sectionStatus.photo).toBe("skipped");
-    expect(state.templateId).toBe("bre-cool");
+    expect(state.templateId).toBe("harbor");
   });
 
   it("applyImportedResume keeps an existing photo", () => {
@@ -548,7 +558,7 @@ describe("getResumeData", () => {
   it("assembles the current state into a ResumeData snapshot", () => {
     useBuilderStore.getState().updateBasicInfo({ name: "Jamie" });
     useBuilderStore.getState().setSkills(["TypeScript"]);
-    useBuilderStore.getState().setTemplateId("jsonresume-vitae");
+    useBuilderStore.getState().setTemplateId("nocturne");
 
     const data = useBuilderStore.getState().getResumeData();
     expect(data).toEqual({
@@ -556,7 +566,7 @@ describe("getResumeData", () => {
       photo: undefined,
       sections: { skills: ["TypeScript"] },
       sectionStatus: { skills: "complete" },
-      templateId: "jsonresume-vitae",
+      templateId: "nocturne",
       pageBreakSections: [],
       pageBreakItems: [],
     });

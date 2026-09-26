@@ -1,13 +1,14 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { AdSlot } from "@/components/ads/AdSlot";
 import { Button } from "@/components/ui/Button";
 import { FieldGroup, TextInput } from "@/components/ui/Field";
 import { PreviewPane } from "@/components/builder/PreviewPane";
+import { useResumePdf } from "@/components/builder/useResumePdf";
 import { ADSENSE_SLOTS } from "@/lib/ads";
 import { persistCurrentResume } from "@/lib/persistResume";
-import { hasAnyResumeValue, isBasicInfoComplete, useBuilderStore } from "@/lib/store";
+import { hasAnyResumeValue, isBasicInfoComplete, useBuilderStore, useResumeData } from "@/lib/store";
 import { showToast } from "@/lib/toast";
 import type { BasicInfo } from "@/lib/types";
 
@@ -36,6 +37,19 @@ function PdfIcon() {
   );
 }
 
+/** Saves `blob` as `fileName` through a temporary link. The URL is revoked
+ * on the next tick, after the browser has started the download. */
+function saveBlob(blob: Blob, fileName: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
 function downloadBlockedReason(basicInfo: BasicInfo): string | undefined {
   if (isBasicInfoComplete(basicInfo)) return undefined;
   if (basicInfo.name.trim() && basicInfo.email.trim() && basicInfo.location.trim()) {
@@ -54,27 +68,18 @@ export function ExportSection() {
   // as-is for every download in this session — it doesn't keep resetting
   // itself to match the name field if that changes later.
   const [fileBaseName, setFileBaseName] = useState(() => slugifyName(getResumeData().basicInfo.name));
-  const originalTitle = useRef<string | null>(null);
+  const data = useResumeData();
+  // Every template renders through the PDF engine: the preview below draws
+  // this render, and the download saves the same bytes — so page breaks can't
+  // differ between what's shown and what's saved.
+  const pdf = useResumePdf(data, true);
 
-  function runDownloadPdf() {
+  async function downloadPdf() {
     persistCurrentResume();
-    // Chrome (and most Chromium browsers) suggest document.title as the
-    // filename in the print-to-PDF save dialog — this is the only lever a
-    // page has over that filename, since the dialog itself is native chrome.
-    originalTitle.current = document.title;
-    document.title = slugifyName(fileBaseName);
-    // Park/remesure the print viewport *before* the dialog opens. Relying on
-    // beforeprint alone races Chromium's snapshot, so Move-to-page spacers
-    // never made it into the PDF.
-    window.dispatchEvent(new Event("resume:prepare-print"));
     try {
-      window.print();
+      saveBlob(await pdf.latestBlob(), `${slugifyName(fileBaseName)}.pdf`);
     } catch {
-      showToast("Couldn't open the print dialog. Try again.");
-      window.dispatchEvent(new Event("resume:end-print"));
-    } finally {
-      document.title = originalTitle.current ?? document.title;
-      originalTitle.current = null;
+      showToast("Couldn't build the PDF. Try again.");
     }
   }
 
@@ -84,7 +89,7 @@ export function ExportSection() {
       showToast(blocked);
       return;
     }
-    runDownloadPdf();
+    void downloadPdf();
   }
 
   return (
@@ -112,6 +117,10 @@ export function ExportSection() {
             </div>
           </FieldGroup>
 
+          <p className="mt-3 text-[11.5px] text-[var(--color-ink-faint)]">
+            The preview below is the PDF file itself — page breaks match the download exactly.
+          </p>
+
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <Button variant="primary" onClick={handleDownloadPdf}>
               <PdfIcon />
@@ -127,7 +136,7 @@ export function ExportSection() {
         className="flex flex-col items-center gap-1"
       />
 
-      <PreviewPane printable pickerMobileOnly />
+      <PreviewPane printable pickerMobileOnly pdf={pdf} />
     </div>
   );
 }

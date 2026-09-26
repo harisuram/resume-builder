@@ -71,7 +71,7 @@ const COMPANIES = [
   "Cobalt & Finch Technologies",
   "Meridian Logistics Group",
   "Ardent Payments Corporation",
-  "Northwind Analytics",
+  "Kestrel Point Analytics",
   "Saltmarsh Robotics",
   "Vireo Health Networks",
   "Pinebrook Capital Systems",
@@ -131,7 +131,7 @@ function projects(n: number): Project[] {
   return Array.from({ length: n }, (_, i) => ({
     name: `${TOPICS[i % TOPICS.length].replace(/\b\w/g, (c) => c.toUpperCase())} Toolkit`,
     description: `An open-source toolkit for ${TOPICS[i % TOPICS.length]} that streams change data into Kafka, replays it deterministically for tests, and exposes a typed client used by ${4 + (i % 6)} internal services.`,
-    link: `github.com/alexandra/project-${i + 1}`,
+    link: `github.com/alexandra-mw-sample/project-${i + 1}`,
     technologies: ["TypeScript", "Go", "Kafka", "PostgreSQL", "Terraform"].slice(0, 3 + (i % 3)),
   }));
 }
@@ -155,10 +155,10 @@ function certifications(n: number): Certification[] {
 function patents(n: number): Patent[] {
   return Array.from({ length: n }, (_, i) => ({
     title: `Distributed cache coherency protocol for ${TOPICS[i % TOPICS.length]}`,
-    number: `US 11,2${34 + i},567`,
+    number: `US 99,0${12 + i},345`,
     office: "USPTO",
     date: `${2019 + (i % 6)}-06`,
-    link: `https://patents.google.com/patent/US112${34 + i}567`,
+    link: `https://patents.example.com/US990${12 + i}345`,
   }));
 }
 
@@ -253,9 +253,9 @@ export function makeLongResume(templateId: string): ResumeData {
       phoneCountryCode: "+1",
       location: "San Francisco, California",
       links: {
-        linkedin: "linkedin.com/in/alexandra-montgomery",
-        github: "github.com/alexandra",
-        portfolio: "alexandra.dev",
+        linkedin: "linkedin.com/in/alexandra-mw-sample",
+        github: "github.com/alexandra-mw-sample",
+        portfolio: "alexandra.example.com",
       },
     },
     photo: PLACEHOLDER_PHOTO,

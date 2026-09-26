@@ -11,12 +11,12 @@ import { TEMPLATES } from "@/components/templates/shared/theme";
 describe("sampleResumeForPreview", () => {
   it("keeps the selected template and drops skipped sections", () => {
     const sample = sampleResumeForPreview({
-      templateId: "bre-creative",
+      templateId: "ember",
       sectionStatus: { patents: "skipped", summary: "skipped" },
       sectionOrder: undefined,
       sections: {},
     });
-    expect(sample.templateId).toBe("bre-creative");
+    expect(sample.templateId).toBe("ember");
     expect(sample.basicInfo.name).toBe(SAMPLE_RESUME.basicInfo.name);
     expect(sample.sectionStatus.patents).toBe("skipped");
     expect(sample.sectionStatus.summary).toBe("skipped");
@@ -27,7 +27,7 @@ describe("sampleResumeForPreview", () => {
 
   it("uses a custom additional heading when the user set one", () => {
     const sample = sampleResumeForPreview({
-      templateId: "jakes-resume",
+      templateId: "atlas",
       sectionStatus: {},
       sectionOrder: undefined,
       sections: { additional: { heading: "Volunteer work", items: [] } },
@@ -48,8 +48,8 @@ describe("sampleResumeForTemplate", () => {
    * bottom of one in every layout family — including the two-column ones,
    * which split the same sections over two columns and so run half as far. */
   it("tops the sample up for two-column templates", () => {
-    const twoColumn = sampleResumeForTemplate("deedy-reversed");
-    const singleColumn = sampleResumeForTemplate("jakes-resume");
+    const twoColumn = sampleResumeForTemplate("twin");
+    const singleColumn = sampleResumeForTemplate("atlas");
 
     expect(twoColumn.sections.softSkills).toBeDefined();
     expect(twoColumn.sections.hobbies).toBeDefined();
@@ -63,7 +63,7 @@ describe("sampleResumeForTemplate", () => {
   });
 
   it("fills both halves of a sidebar split", () => {
-    const sample = sampleResumeForTemplate("bre-creative");
+    const sample = sampleResumeForTemplate("ember");
     // Rail sections (NARROW_SECTION_KEYS) and main-column sections both
     // present, or a sidebar tile shows one full column beside an empty rail.
     expect(sample.sections.education).toBeDefined();

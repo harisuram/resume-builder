@@ -1,46 +1,40 @@
+import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
-import { TOUR_DISMISSED_KEY } from "@/lib/builderTour";
 import { PAGE_HEIGHT_PX, PAGE_PAD_Y_PX, PAGE_WIDTH_PX } from "@/lib/page";
 import { makeLongResume } from "./fixtures/longResume";
+import { readPdfPages } from "./helpers/pdfGaps";
+import { seedBuilder } from "./helpers/printCuts";
 
-const STORAGE_KEY = "resumeData";
+/**
+ * Sidebar templates preview and download through the PDF engine, so their
+ * sheets are the PDF's pages. Each must be one A4 page, and every page after
+ * the first must start its content at the 4% top inset — the regression this
+ * guards against was a double-counted inset (PAGE_HEIGHT + PAGE_PAD).
+ */
+test("sidebar pages are one A4 tall with a single top inset (no double gap)", async ({ page }) => {
+  await seedBuilder(page, "pacific", makeLongResume("pacific"));
+  await expect(page.getByTestId("pdf-engine-preview").getByRole("status")).toHaveText(/^\d+ pages?$/, {
+    timeout: 60_000,
+  });
 
-test("sidebar page sheets are one A4 tall (no double top-inset gap)", async ({ page }) => {
-  await page.addInitScript(
-    ([key, json, tourKey]) => {
-      window.localStorage.setItem(key, json);
-      window.localStorage.setItem(tourKey, "1");
-    },
-    [STORAGE_KEY, JSON.stringify(makeLongResume("pacific")), TOUR_DISMISSED_KEY] as const,
-  );
-  await page.goto("/builder?template=pacific");
-  await page.getByRole("button", { name: "Preview & download" }).click();
-  await page.locator("[data-page-sheet]").first().waitFor({ state: "visible" });
-  await page.evaluate(() => document.fonts.ready);
-  await page.waitForTimeout(400);
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("button", { name: "Download PDF" }).click(),
+  ]);
+  const sheets = await readPdfPages(new Uint8Array(await readFile((await download.path())!)));
+  expect(sheets.length).toBeGreaterThan(2);
 
-  const info = await page.evaluate((pageH) => {
-    const sheets = [...document.querySelectorAll<HTMLElement>("[data-page-sheet]")];
-    return sheets.slice(0, 3).map((s, i) => ({
-      i: i + 1,
-      h: s.offsetHeight,
-      topBand: !!s.querySelector("[data-page-top-band]"),
-      bottomBand: !!s.querySelector("[data-page-bottom-band]"),
-      topBandH: (s.querySelector("[data-page-top-band]") as HTMLElement | null)?.offsetHeight ?? 0,
-      bottomBandH: (s.querySelector("[data-page-bottom-band]") as HTMLElement | null)?.offsetHeight ?? 0,
-      pageH,
-    }));
-  }, PAGE_HEIGHT_PX);
+  for (const sheet of sheets) {
+    // Chromium's pdf.js readout rounds to PDF points; allow a pixel.
+    expect(Math.abs(sheet.widthPx - PAGE_WIDTH_PX)).toBeLessThanOrEqual(1);
+    expect(Math.abs(sheet.heightPx - PAGE_HEIGHT_PX)).toBeLessThanOrEqual(1);
+  }
 
-  console.log("SHEETS", JSON.stringify(info));
-  expect(info[0]?.topBand).toBe(false);
-  expect(info[0]?.bottomBand).toBe(true);
-  expect(info[0]?.h).toBe(PAGE_HEIGHT_PX);
-  expect(info[1]?.topBand).toBe(true);
-  expect(info[1]?.bottomBand).toBe(true);
-  // Regression: was PAGE_HEIGHT + PAGE_PAD (double-counted top inset).
-  expect(info[1]?.h).toBe(PAGE_HEIGHT_PX);
-  expect(info[1]?.topBandH).toBe(PAGE_PAD_Y_PX);
-  expect(info[1]?.bottomBandH).toBe(PAGE_PAD_Y_PX);
-  expect(PAGE_WIDTH_PX).toBe(794);
+  // Pages 2+: the first line sits just below the inset (its own half-leading
+  // puts the glyph box a few px lower) — nowhere near a second inset's worth.
+  for (const sheet of sheets.slice(1, -1)) {
+    const firstLine = Math.min(...sheet.boxes.map((box) => box.top));
+    expect(firstLine, `page ${sheet.number} starts too high`).toBeGreaterThanOrEqual(PAGE_PAD_Y_PX - 2);
+    expect(firstLine, `page ${sheet.number} has a double top inset`).toBeLessThan(PAGE_PAD_Y_PX * 1.5);
+  }
 });

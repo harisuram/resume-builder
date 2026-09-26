@@ -54,7 +54,7 @@ export function BasicInfoForm() {
             value={basicInfo.email}
             onChange={(e) => updateBasicInfo({ email: e.target.value })}
             onBlur={touch("email")}
-            placeholder="jordan@email.com"
+            placeholder="you@example.com"
             autoComplete="email"
             maxLength={MAX_FIELD_LENGTH}
             invalid={Boolean(emailError)}
@@ -97,7 +97,7 @@ export function BasicInfoForm() {
               value={basicInfo.links.linkedin ?? ""}
               onChange={(e) => updateLinks({ linkedin: e.target.value })}
               onBlur={touch("linkedin")}
-              placeholder="linkedin.com/in/jordan"
+              placeholder="linkedin.com/in/your-name"
               maxLength={MAX_FIELD_LENGTH}
               invalid={Boolean(linkedinError)}
             />
@@ -107,7 +107,7 @@ export function BasicInfoForm() {
               value={basicInfo.links.github ?? ""}
               onChange={(e) => updateLinks({ github: e.target.value })}
               onBlur={touch("github")}
-              placeholder="github.com/jordan"
+              placeholder="github.com/your-handle"
               maxLength={MAX_FIELD_LENGTH}
               invalid={Boolean(githubError)}
             />
@@ -117,7 +117,7 @@ export function BasicInfoForm() {
               value={basicInfo.links.portfolio ?? ""}
               onChange={(e) => updateLinks({ portfolio: e.target.value })}
               onBlur={touch("portfolio")}
-              placeholder="jordanlee.dev"
+              placeholder="yourname.example.com"
               maxLength={MAX_FIELD_LENGTH}
               invalid={Boolean(portfolioError)}
             />

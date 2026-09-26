@@ -1,5 +1,81 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
+exports[`TemplateSkeleton matches the layout snap for air (Air) 1`] = `
+{
+  "avatarSizes": [],
+  "darkHeaderBg": null,
+  "headings": [
+    {
+      "color": "rgb(74, 111, 165)",
+      "italic": false,
+      "text": "Summary",
+    },
+    {
+      "color": "rgb(74, 111, 165)",
+      "italic": false,
+      "text": "Experience",
+    },
+    {
+      "color": "rgb(74, 111, 165)",
+      "italic": false,
+      "text": "Projects",
+    },
+    {
+      "color": "rgb(74, 111, 165)",
+      "italic": false,
+      "text": "Education",
+    },
+    {
+      "color": "rgb(74, 111, 165)",
+      "italic": false,
+      "text": "Skills",
+    },
+  ],
+  "id": "air",
+  "layout": "single",
+  "railBg": null,
+  "railOnRight": false,
+}
+`;
+
+exports[`TemplateSkeleton matches the layout snap for aisle (Aisle) 1`] = `
+{
+  "avatarSizes": [],
+  "darkHeaderBg": null,
+  "headings": [
+    {
+      "color": "rgb(138, 98, 64)",
+      "italic": false,
+      "text": "Education",
+    },
+    {
+      "color": "rgb(138, 98, 64)",
+      "italic": false,
+      "text": "Skills",
+    },
+    {
+      "color": "rgb(138, 98, 64)",
+      "italic": false,
+      "text": "Summary",
+    },
+    {
+      "color": "rgb(138, 98, 64)",
+      "italic": false,
+      "text": "Experience",
+    },
+    {
+      "color": "rgb(138, 98, 64)",
+      "italic": false,
+      "text": "Projects",
+    },
+  ],
+  "id": "aisle",
+  "layout": "sidebar",
+  "railBg": "color-mix(in srgb, rgb(138, 98, 64) 8%, white)",
+  "railOnRight": true,
+}
+`;
+
 exports[`TemplateSkeleton matches the layout snap for atelier (Atelier) 1`] = `
 {
   "avatarSizes": [
@@ -40,346 +116,154 @@ exports[`TemplateSkeleton matches the layout snap for atelier (Atelier) 1`] = `
 }
 `;
 
-exports[`TemplateSkeleton matches the layout snap for billryan (Glyph) 1`] = `
+exports[`TemplateSkeleton matches the layout snap for atlas (Atlas) 1`] = `
 {
   "avatarSizes": [],
   "darkHeaderBg": null,
   "headings": [
     {
-      "color": "rgb(70, 99, 122)",
+      "color": "rgb(27, 24, 18)",
       "italic": false,
       "text": "Summary",
     },
     {
-      "color": "rgb(70, 99, 122)",
+      "color": "rgb(27, 24, 18)",
       "italic": false,
       "text": "Experience",
     },
     {
-      "color": "rgb(70, 99, 122)",
+      "color": "rgb(27, 24, 18)",
       "italic": false,
       "text": "Projects",
     },
     {
-      "color": "rgb(70, 99, 122)",
+      "color": "rgb(27, 24, 18)",
       "italic": false,
       "text": "Education",
     },
     {
-      "color": "rgb(70, 99, 122)",
+      "color": "rgb(27, 24, 18)",
       "italic": false,
       "text": "Skills",
     },
   ],
-  "id": "billryan",
+  "id": "atlas",
   "layout": "single",
   "railBg": null,
   "railOnRight": false,
 }
 `;
 
-exports[`TemplateSkeleton matches the layout snap for bre-cool (Harbor) 1`] = `
+exports[`TemplateSkeleton matches the layout snap for cameo (Cameo) 1`] = `
 {
   "avatarSizes": [],
   "darkHeaderBg": null,
   "headings": [
     {
-      "color": "rgb(47, 93, 138)",
+      "color": "rgb(154, 79, 91)",
       "italic": false,
       "text": "Summary",
     },
     {
-      "color": "rgb(47, 93, 138)",
+      "color": "rgb(154, 79, 91)",
       "italic": false,
       "text": "Experience",
     },
     {
-      "color": "rgb(47, 93, 138)",
+      "color": "rgb(154, 79, 91)",
       "italic": false,
       "text": "Projects",
     },
     {
-      "color": "rgb(47, 93, 138)",
+      "color": "rgb(154, 79, 91)",
       "italic": false,
       "text": "Education",
     },
     {
-      "color": "rgb(47, 93, 138)",
+      "color": "rgb(154, 79, 91)",
       "italic": false,
       "text": "Skills",
     },
   ],
-  "id": "bre-cool",
+  "id": "cameo",
   "layout": "single",
   "railBg": null,
   "railOnRight": false,
 }
 `;
 
-exports[`TemplateSkeleton matches the layout snap for bre-creative (Ember) 1`] = `
+exports[`TemplateSkeleton matches the layout snap for campus (Campus) 1`] = `
 {
-  "avatarSizes": [
-    "72px",
-  ],
-  "darkHeaderBg": null,
+  "avatarSizes": [],
+  "darkHeaderBg": "rgb(47, 93, 85)",
   "headings": [
     {
-      "color": "rgb(255, 255, 255)",
+      "color": "rgb(47, 93, 85)",
       "italic": false,
       "text": "Education",
     },
     {
-      "color": "rgb(255, 255, 255)",
+      "color": "rgb(47, 93, 85)",
       "italic": false,
       "text": "Skills",
     },
     {
-      "color": "rgb(217, 113, 60)",
+      "color": "rgb(47, 93, 85)",
       "italic": false,
       "text": "Summary",
     },
     {
-      "color": "rgb(217, 113, 60)",
+      "color": "rgb(47, 93, 85)",
       "italic": false,
       "text": "Experience",
     },
     {
-      "color": "rgb(217, 113, 60)",
+      "color": "rgb(47, 93, 85)",
       "italic": false,
       "text": "Projects",
     },
   ],
-  "id": "bre-creative",
+  "id": "campus",
   "layout": "sidebar",
-  "railBg": "rgb(217, 113, 60)",
+  "railBg": "color-mix(in srgb, rgb(47, 93, 85) 8%, white)",
   "railOnRight": false,
 }
 `;
 
-exports[`TemplateSkeleton matches the layout snap for bre-green (Grove) 1`] = `
+exports[`TemplateSkeleton matches the layout snap for civic (Civic) 1`] = `
 {
   "avatarSizes": [],
   "darkHeaderBg": null,
   "headings": [
     {
-      "color": "rgb(63, 107, 79)",
+      "color": "rgb(15, 36, 70)",
       "italic": false,
       "text": "Summary",
     },
     {
-      "color": "rgb(63, 107, 79)",
+      "color": "rgb(15, 36, 70)",
       "italic": false,
       "text": "Experience",
     },
     {
-      "color": "rgb(63, 107, 79)",
+      "color": "rgb(15, 36, 70)",
       "italic": false,
       "text": "Projects",
     },
     {
-      "color": "rgb(63, 107, 79)",
+      "color": "rgb(15, 36, 70)",
       "italic": false,
       "text": "Education",
     },
     {
-      "color": "rgb(63, 107, 79)",
+      "color": "rgb(15, 36, 70)",
       "italic": false,
       "text": "Skills",
     },
   ],
-  "id": "bre-green",
+  "id": "civic",
   "layout": "single",
   "railBg": null,
-  "railOnRight": false,
-}
-`;
-
-exports[`TemplateSkeleton matches the layout snap for bre-leftright (Aisle) 1`] = `
-{
-  "avatarSizes": [],
-  "darkHeaderBg": null,
-  "headings": [
-    {
-      "color": "rgb(138, 98, 64)",
-      "italic": false,
-      "text": "Education",
-    },
-    {
-      "color": "rgb(138, 98, 64)",
-      "italic": false,
-      "text": "Skills",
-    },
-    {
-      "color": "rgb(138, 98, 64)",
-      "italic": false,
-      "text": "Summary",
-    },
-    {
-      "color": "rgb(138, 98, 64)",
-      "italic": false,
-      "text": "Experience",
-    },
-    {
-      "color": "rgb(138, 98, 64)",
-      "italic": false,
-      "text": "Projects",
-    },
-  ],
-  "id": "bre-leftright",
-  "layout": "sidebar",
-  "railBg": "color-mix(in srgb, rgb(138, 98, 64) 8%, white)",
-  "railOnRight": true,
-}
-`;
-
-exports[`TemplateSkeleton matches the layout snap for bre-material-dark (Marquee) 1`] = `
-{
-  "avatarSizes": [],
-  "darkHeaderBg": "rgb(201, 147, 47)",
-  "headings": [
-    {
-      "color": "rgb(201, 147, 47)",
-      "italic": false,
-      "text": "Summary",
-    },
-    {
-      "color": "rgb(201, 147, 47)",
-      "italic": false,
-      "text": "Experience",
-    },
-    {
-      "color": "rgb(201, 147, 47)",
-      "italic": false,
-      "text": "Projects",
-    },
-    {
-      "color": "rgb(201, 147, 47)",
-      "italic": false,
-      "text": "Education",
-    },
-    {
-      "color": "rgb(201, 147, 47)",
-      "italic": false,
-      "text": "Skills",
-    },
-  ],
-  "id": "bre-material-dark",
-  "layout": "single",
-  "railBg": null,
-  "railOnRight": false,
-}
-`;
-
-exports[`TemplateSkeleton matches the layout snap for bre-oblique (Lean) 1`] = `
-{
-  "avatarSizes": [],
-  "darkHeaderBg": null,
-  "headings": [
-    {
-      "color": "rgb(181, 82, 42)",
-      "italic": true,
-      "text": "Summary",
-    },
-    {
-      "color": "rgb(181, 82, 42)",
-      "italic": true,
-      "text": "Experience",
-    },
-    {
-      "color": "rgb(181, 82, 42)",
-      "italic": true,
-      "text": "Projects",
-    },
-    {
-      "color": "rgb(181, 82, 42)",
-      "italic": true,
-      "text": "Education",
-    },
-    {
-      "color": "rgb(181, 82, 42)",
-      "italic": true,
-      "text": "Skills",
-    },
-  ],
-  "id": "bre-oblique",
-  "layout": "single",
-  "railBg": null,
-  "railOnRight": false,
-}
-`;
-
-exports[`TemplateSkeleton matches the layout snap for bre-purple (Violet) 1`] = `
-{
-  "avatarSizes": [],
-  "darkHeaderBg": null,
-  "headings": [
-    {
-      "color": "rgb(106, 76, 147)",
-      "italic": false,
-      "text": "Summary",
-    },
-    {
-      "color": "rgb(106, 76, 147)",
-      "italic": false,
-      "text": "Experience",
-    },
-    {
-      "color": "rgb(106, 76, 147)",
-      "italic": false,
-      "text": "Projects",
-    },
-    {
-      "color": "rgb(106, 76, 147)",
-      "italic": false,
-      "text": "Education",
-    },
-    {
-      "color": "rgb(106, 76, 147)",
-      "italic": false,
-      "text": "Skills",
-    },
-  ],
-  "id": "bre-purple",
-  "layout": "single",
-  "railBg": null,
-  "railOnRight": false,
-}
-`;
-
-exports[`TemplateSkeleton matches the layout snap for bre-sidebar (Slate) 1`] = `
-{
-  "avatarSizes": [],
-  "darkHeaderBg": null,
-  "headings": [
-    {
-      "color": "rgb(255, 255, 255)",
-      "italic": false,
-      "text": "Education",
-    },
-    {
-      "color": "rgb(255, 255, 255)",
-      "italic": false,
-      "text": "Skills",
-    },
-    {
-      "color": "rgb(58, 71, 80)",
-      "italic": false,
-      "text": "Summary",
-    },
-    {
-      "color": "rgb(58, 71, 80)",
-      "italic": false,
-      "text": "Experience",
-    },
-    {
-      "color": "rgb(58, 71, 80)",
-      "italic": false,
-      "text": "Projects",
-    },
-  ],
-  "id": "bre-sidebar",
-  "layout": "sidebar",
-  "railBg": "rgb(58, 71, 80)",
   "railOnRight": false,
 }
 `;
@@ -417,44 +301,6 @@ exports[`TemplateSkeleton matches the layout snap for copper (Copper) 1`] = `
   ],
   "id": "copper",
   "layout": "single",
-  "railBg": null,
-  "railOnRight": false,
-}
-`;
-
-exports[`TemplateSkeleton matches the layout snap for deedy-reversed (Twin) 1`] = `
-{
-  "avatarSizes": [],
-  "darkHeaderBg": null,
-  "headings": [
-    {
-      "color": "rgb(122, 46, 46)",
-      "italic": false,
-      "text": "Education",
-    },
-    {
-      "color": "rgb(122, 46, 46)",
-      "italic": false,
-      "text": "Skills",
-    },
-    {
-      "color": "rgb(122, 46, 46)",
-      "italic": false,
-      "text": "Summary",
-    },
-    {
-      "color": "rgb(122, 46, 46)",
-      "italic": false,
-      "text": "Experience",
-    },
-    {
-      "color": "rgb(122, 46, 46)",
-      "italic": false,
-      "text": "Projects",
-    },
-  ],
-  "id": "deedy-reversed",
-  "layout": "asymmetric",
   "railBg": null,
   "railOnRight": false,
 }
@@ -503,6 +349,46 @@ exports[`TemplateSkeleton matches the layout snap for dossier (Dossier) 1`] = `
 }
 `;
 
+exports[`TemplateSkeleton matches the layout snap for ember (Ember) 1`] = `
+{
+  "avatarSizes": [
+    "72px",
+  ],
+  "darkHeaderBg": null,
+  "headings": [
+    {
+      "color": "rgb(255, 255, 255)",
+      "italic": false,
+      "text": "Education",
+    },
+    {
+      "color": "rgb(255, 255, 255)",
+      "italic": false,
+      "text": "Skills",
+    },
+    {
+      "color": "rgb(217, 113, 60)",
+      "italic": false,
+      "text": "Summary",
+    },
+    {
+      "color": "rgb(217, 113, 60)",
+      "italic": false,
+      "text": "Experience",
+    },
+    {
+      "color": "rgb(217, 113, 60)",
+      "italic": false,
+      "text": "Projects",
+    },
+  ],
+  "id": "ember",
+  "layout": "sidebar",
+  "railBg": "rgb(217, 113, 60)",
+  "railOnRight": false,
+}
+`;
+
 exports[`TemplateSkeleton matches the layout snap for evergreen (Evergreen) 1`] = `
 {
   "avatarSizes": [],
@@ -537,6 +423,272 @@ exports[`TemplateSkeleton matches the layout snap for evergreen (Evergreen) 1`] 
   "id": "evergreen",
   "layout": "sidebar",
   "railBg": "color-mix(in srgb, rgb(31, 61, 54) 8%, white)",
+  "railOnRight": false,
+}
+`;
+
+exports[`TemplateSkeleton matches the layout snap for folio (Folio) 1`] = `
+{
+  "avatarSizes": [],
+  "darkHeaderBg": null,
+  "headings": [
+    {
+      "color": "rgb(34, 51, 59)",
+      "italic": false,
+      "text": "Summary",
+    },
+    {
+      "color": "rgb(34, 51, 59)",
+      "italic": false,
+      "text": "Experience",
+    },
+    {
+      "color": "rgb(34, 51, 59)",
+      "italic": false,
+      "text": "Projects",
+    },
+    {
+      "color": "rgb(34, 51, 59)",
+      "italic": false,
+      "text": "Education",
+    },
+    {
+      "color": "rgb(34, 51, 59)",
+      "italic": false,
+      "text": "Skills",
+    },
+  ],
+  "id": "folio",
+  "layout": "single",
+  "railBg": null,
+  "railOnRight": false,
+}
+`;
+
+exports[`TemplateSkeleton matches the layout snap for gauge (Gauge) 1`] = `
+{
+  "avatarSizes": [],
+  "darkHeaderBg": null,
+  "headings": [
+    {
+      "color": "rgb(65, 69, 76)",
+      "italic": false,
+      "text": "Summary",
+    },
+    {
+      "color": "rgb(65, 69, 76)",
+      "italic": false,
+      "text": "Experience",
+    },
+    {
+      "color": "rgb(65, 69, 76)",
+      "italic": false,
+      "text": "Projects",
+    },
+    {
+      "color": "rgb(65, 69, 76)",
+      "italic": false,
+      "text": "Education",
+    },
+    {
+      "color": "rgb(65, 69, 76)",
+      "italic": false,
+      "text": "Skills",
+    },
+  ],
+  "id": "gauge",
+  "layout": "single",
+  "railBg": null,
+  "railOnRight": false,
+}
+`;
+
+exports[`TemplateSkeleton matches the layout snap for glyph (Glyph) 1`] = `
+{
+  "avatarSizes": [],
+  "darkHeaderBg": null,
+  "headings": [
+    {
+      "color": "rgb(70, 99, 122)",
+      "italic": false,
+      "text": "Summary",
+    },
+    {
+      "color": "rgb(70, 99, 122)",
+      "italic": false,
+      "text": "Experience",
+    },
+    {
+      "color": "rgb(70, 99, 122)",
+      "italic": false,
+      "text": "Projects",
+    },
+    {
+      "color": "rgb(70, 99, 122)",
+      "italic": false,
+      "text": "Education",
+    },
+    {
+      "color": "rgb(70, 99, 122)",
+      "italic": false,
+      "text": "Skills",
+    },
+  ],
+  "id": "glyph",
+  "layout": "single",
+  "railBg": null,
+  "railOnRight": false,
+}
+`;
+
+exports[`TemplateSkeleton matches the layout snap for grove (Grove) 1`] = `
+{
+  "avatarSizes": [],
+  "darkHeaderBg": null,
+  "headings": [
+    {
+      "color": "rgb(63, 107, 79)",
+      "italic": false,
+      "text": "Summary",
+    },
+    {
+      "color": "rgb(63, 107, 79)",
+      "italic": false,
+      "text": "Experience",
+    },
+    {
+      "color": "rgb(63, 107, 79)",
+      "italic": false,
+      "text": "Projects",
+    },
+    {
+      "color": "rgb(63, 107, 79)",
+      "italic": false,
+      "text": "Education",
+    },
+    {
+      "color": "rgb(63, 107, 79)",
+      "italic": false,
+      "text": "Skills",
+    },
+  ],
+  "id": "grove",
+  "layout": "single",
+  "railBg": null,
+  "railOnRight": false,
+}
+`;
+
+exports[`TemplateSkeleton matches the layout snap for harbor (Harbor) 1`] = `
+{
+  "avatarSizes": [],
+  "darkHeaderBg": null,
+  "headings": [
+    {
+      "color": "rgb(47, 93, 138)",
+      "italic": false,
+      "text": "Summary",
+    },
+    {
+      "color": "rgb(47, 93, 138)",
+      "italic": false,
+      "text": "Experience",
+    },
+    {
+      "color": "rgb(47, 93, 138)",
+      "italic": false,
+      "text": "Projects",
+    },
+    {
+      "color": "rgb(47, 93, 138)",
+      "italic": false,
+      "text": "Education",
+    },
+    {
+      "color": "rgb(47, 93, 138)",
+      "italic": false,
+      "text": "Skills",
+    },
+  ],
+  "id": "harbor",
+  "layout": "single",
+  "railBg": null,
+  "railOnRight": false,
+}
+`;
+
+exports[`TemplateSkeleton matches the layout snap for horizon (Horizon) 1`] = `
+{
+  "avatarSizes": [],
+  "darkHeaderBg": null,
+  "headings": [
+    {
+      "color": "rgb(15, 76, 77)",
+      "italic": false,
+      "text": "Summary",
+    },
+    {
+      "color": "rgb(15, 76, 77)",
+      "italic": false,
+      "text": "Experience",
+    },
+    {
+      "color": "rgb(15, 76, 77)",
+      "italic": false,
+      "text": "Projects",
+    },
+    {
+      "color": "rgb(15, 76, 77)",
+      "italic": false,
+      "text": "Education",
+    },
+    {
+      "color": "rgb(15, 76, 77)",
+      "italic": false,
+      "text": "Skills",
+    },
+  ],
+  "id": "horizon",
+  "layout": "single",
+  "railBg": null,
+  "railOnRight": false,
+}
+`;
+
+exports[`TemplateSkeleton matches the layout snap for index (Index) 1`] = `
+{
+  "avatarSizes": [],
+  "darkHeaderBg": null,
+  "headings": [
+    {
+      "color": "rgb(51, 50, 46)",
+      "italic": false,
+      "text": "Summary",
+    },
+    {
+      "color": "rgb(51, 50, 46)",
+      "italic": false,
+      "text": "Experience",
+    },
+    {
+      "color": "rgb(51, 50, 46)",
+      "italic": false,
+      "text": "Projects",
+    },
+    {
+      "color": "rgb(51, 50, 46)",
+      "italic": false,
+      "text": "Education",
+    },
+    {
+      "color": "rgb(51, 50, 46)",
+      "italic": false,
+      "text": "Skills",
+    },
+  ],
+  "id": "index",
+  "layout": "single",
+  "railBg": null,
   "railOnRight": false,
 }
 `;
@@ -579,152 +731,38 @@ exports[`TemplateSkeleton matches the layout snap for inkwell (Inkwell) 1`] = `
 }
 `;
 
-exports[`TemplateSkeleton matches the layout snap for jakes-resume (Atlas) 1`] = `
+exports[`TemplateSkeleton matches the layout snap for kernel (Kernel) 1`] = `
 {
   "avatarSizes": [],
   "darkHeaderBg": null,
   "headings": [
     {
-      "color": "rgb(27, 24, 18)",
+      "color": "rgb(13, 17, 23)",
       "italic": false,
-      "text": "Summary",
+      "text": "~/Summary",
     },
     {
-      "color": "rgb(27, 24, 18)",
+      "color": "rgb(13, 17, 23)",
       "italic": false,
-      "text": "Experience",
+      "text": "~/Experience",
     },
     {
-      "color": "rgb(27, 24, 18)",
+      "color": "rgb(13, 17, 23)",
       "italic": false,
-      "text": "Projects",
+      "text": "~/Projects",
     },
     {
-      "color": "rgb(27, 24, 18)",
+      "color": "rgb(13, 17, 23)",
       "italic": false,
-      "text": "Education",
+      "text": "~/Education",
     },
     {
-      "color": "rgb(27, 24, 18)",
+      "color": "rgb(13, 17, 23)",
       "italic": false,
-      "text": "Skills",
+      "text": "~/Skills",
     },
   ],
-  "id": "jakes-resume",
-  "layout": "single",
-  "railBg": null,
-  "railOnRight": false,
-}
-`;
-
-exports[`TemplateSkeleton matches the layout snap for jsonresume-flat (Air) 1`] = `
-{
-  "avatarSizes": [],
-  "darkHeaderBg": null,
-  "headings": [
-    {
-      "color": "rgb(74, 111, 165)",
-      "italic": false,
-      "text": "Summary",
-    },
-    {
-      "color": "rgb(74, 111, 165)",
-      "italic": false,
-      "text": "Experience",
-    },
-    {
-      "color": "rgb(74, 111, 165)",
-      "italic": false,
-      "text": "Projects",
-    },
-    {
-      "color": "rgb(74, 111, 165)",
-      "italic": false,
-      "text": "Education",
-    },
-    {
-      "color": "rgb(74, 111, 165)",
-      "italic": false,
-      "text": "Skills",
-    },
-  ],
-  "id": "jsonresume-flat",
-  "layout": "single",
-  "railBg": null,
-  "railOnRight": false,
-}
-`;
-
-exports[`TemplateSkeleton matches the layout snap for jsonresume-futura (Nova) 1`] = `
-{
-  "avatarSizes": [],
-  "darkHeaderBg": null,
-  "headings": [
-    {
-      "color": "rgb(166, 124, 0)",
-      "italic": false,
-      "text": "Summary",
-    },
-    {
-      "color": "rgb(166, 124, 0)",
-      "italic": false,
-      "text": "Experience",
-    },
-    {
-      "color": "rgb(166, 124, 0)",
-      "italic": false,
-      "text": "Projects",
-    },
-    {
-      "color": "rgb(166, 124, 0)",
-      "italic": false,
-      "text": "Education",
-    },
-    {
-      "color": "rgb(166, 124, 0)",
-      "italic": false,
-      "text": "Skills",
-    },
-  ],
-  "id": "jsonresume-futura",
-  "layout": "single",
-  "railBg": null,
-  "railOnRight": false,
-}
-`;
-
-exports[`TemplateSkeleton matches the layout snap for jsonresume-vitae (Vitae) 1`] = `
-{
-  "avatarSizes": [],
-  "darkHeaderBg": null,
-  "headings": [
-    {
-      "color": "rgb(74, 74, 74)",
-      "italic": false,
-      "text": "Summary",
-    },
-    {
-      "color": "rgb(74, 74, 74)",
-      "italic": false,
-      "text": "Experience",
-    },
-    {
-      "color": "rgb(74, 74, 74)",
-      "italic": false,
-      "text": "Projects",
-    },
-    {
-      "color": "rgb(74, 74, 74)",
-      "italic": false,
-      "text": "Education",
-    },
-    {
-      "color": "rgb(74, 74, 74)",
-      "italic": false,
-      "text": "Skills",
-    },
-  ],
-  "id": "jsonresume-vitae",
+  "id": "kernel",
   "layout": "single",
   "railBg": null,
   "railOnRight": false,
@@ -769,6 +807,44 @@ exports[`TemplateSkeleton matches the layout snap for lagoon (Lagoon) 1`] = `
 }
 `;
 
+exports[`TemplateSkeleton matches the layout snap for laureate (Laureate) 1`] = `
+{
+  "avatarSizes": [],
+  "darkHeaderBg": null,
+  "headings": [
+    {
+      "color": "rgb(110, 33, 48)",
+      "italic": false,
+      "text": "Summary",
+    },
+    {
+      "color": "rgb(110, 33, 48)",
+      "italic": false,
+      "text": "Experience",
+    },
+    {
+      "color": "rgb(110, 33, 48)",
+      "italic": false,
+      "text": "Projects",
+    },
+    {
+      "color": "rgb(110, 33, 48)",
+      "italic": false,
+      "text": "Education",
+    },
+    {
+      "color": "rgb(110, 33, 48)",
+      "italic": false,
+      "text": "Skills",
+    },
+  ],
+  "id": "laureate",
+  "layout": "single",
+  "railBg": null,
+  "railOnRight": false,
+}
+`;
+
 exports[`TemplateSkeleton matches the layout snap for laurel (Laurel) 1`] = `
 {
   "avatarSizes": [],
@@ -807,6 +883,44 @@ exports[`TemplateSkeleton matches the layout snap for laurel (Laurel) 1`] = `
 }
 `;
 
+exports[`TemplateSkeleton matches the layout snap for lean (Lean) 1`] = `
+{
+  "avatarSizes": [],
+  "darkHeaderBg": null,
+  "headings": [
+    {
+      "color": "rgb(181, 82, 42)",
+      "italic": true,
+      "text": "Summary",
+    },
+    {
+      "color": "rgb(181, 82, 42)",
+      "italic": true,
+      "text": "Experience",
+    },
+    {
+      "color": "rgb(181, 82, 42)",
+      "italic": true,
+      "text": "Projects",
+    },
+    {
+      "color": "rgb(181, 82, 42)",
+      "italic": true,
+      "text": "Education",
+    },
+    {
+      "color": "rgb(181, 82, 42)",
+      "italic": true,
+      "text": "Skills",
+    },
+  ],
+  "id": "lean",
+  "layout": "single",
+  "railBg": null,
+  "railOnRight": false,
+}
+`;
+
 exports[`TemplateSkeleton matches the layout snap for ledger (Ledger) 1`] = `
 {
   "avatarSizes": [],
@@ -839,6 +953,44 @@ exports[`TemplateSkeleton matches the layout snap for ledger (Ledger) 1`] = `
     },
   ],
   "id": "ledger",
+  "layout": "single",
+  "railBg": null,
+  "railOnRight": false,
+}
+`;
+
+exports[`TemplateSkeleton matches the layout snap for marquee (Marquee) 1`] = `
+{
+  "avatarSizes": [],
+  "darkHeaderBg": "rgb(201, 147, 47)",
+  "headings": [
+    {
+      "color": "rgb(201, 147, 47)",
+      "italic": false,
+      "text": "Summary",
+    },
+    {
+      "color": "rgb(201, 147, 47)",
+      "italic": false,
+      "text": "Experience",
+    },
+    {
+      "color": "rgb(201, 147, 47)",
+      "italic": false,
+      "text": "Projects",
+    },
+    {
+      "color": "rgb(201, 147, 47)",
+      "italic": false,
+      "text": "Education",
+    },
+    {
+      "color": "rgb(201, 147, 47)",
+      "italic": false,
+      "text": "Skills",
+    },
+  ],
+  "id": "marquee",
   "layout": "single",
   "railBg": null,
   "railOnRight": false,
@@ -921,38 +1073,116 @@ exports[`TemplateSkeleton matches the layout snap for mulberry (Mulberry) 1`] = 
 }
 `;
 
-exports[`TemplateSkeleton matches the layout snap for online-resume (Folio) 1`] = `
+exports[`TemplateSkeleton matches the layout snap for navy (Navy) 1`] = `
+{
+  "avatarSizes": [
+    "72px",
+  ],
+  "darkHeaderBg": null,
+  "headings": [
+    {
+      "color": "rgb(38, 65, 94)",
+      "italic": false,
+      "text": "Education",
+    },
+    {
+      "color": "rgb(38, 65, 94)",
+      "italic": false,
+      "text": "Skills",
+    },
+    {
+      "color": "rgb(38, 65, 94)",
+      "italic": false,
+      "text": "Summary",
+    },
+    {
+      "color": "rgb(38, 65, 94)",
+      "italic": false,
+      "text": "Experience",
+    },
+    {
+      "color": "rgb(38, 65, 94)",
+      "italic": false,
+      "text": "Projects",
+    },
+  ],
+  "id": "navy",
+  "layout": "sidebar",
+  "railBg": "color-mix(in srgb, rgb(38, 65, 94) 8%, white)",
+  "railOnRight": false,
+}
+`;
+
+exports[`TemplateSkeleton matches the layout snap for nocturne (Nocturne) 1`] = `
 {
   "avatarSizes": [],
   "darkHeaderBg": null,
   "headings": [
     {
-      "color": "rgb(34, 51, 59)",
+      "color": "rgb(74, 74, 74)",
       "italic": false,
       "text": "Summary",
     },
     {
-      "color": "rgb(34, 51, 59)",
+      "color": "rgb(74, 74, 74)",
       "italic": false,
       "text": "Experience",
     },
     {
-      "color": "rgb(34, 51, 59)",
+      "color": "rgb(74, 74, 74)",
       "italic": false,
       "text": "Projects",
     },
     {
-      "color": "rgb(34, 51, 59)",
+      "color": "rgb(74, 74, 74)",
       "italic": false,
       "text": "Education",
     },
     {
-      "color": "rgb(34, 51, 59)",
+      "color": "rgb(74, 74, 74)",
       "italic": false,
       "text": "Skills",
     },
   ],
-  "id": "online-resume",
+  "id": "nocturne",
+  "layout": "single",
+  "railBg": null,
+  "railOnRight": false,
+}
+`;
+
+exports[`TemplateSkeleton matches the layout snap for nova (Nova) 1`] = `
+{
+  "avatarSizes": [],
+  "darkHeaderBg": null,
+  "headings": [
+    {
+      "color": "rgb(166, 124, 0)",
+      "italic": false,
+      "text": "Summary",
+    },
+    {
+      "color": "rgb(166, 124, 0)",
+      "italic": false,
+      "text": "Experience",
+    },
+    {
+      "color": "rgb(166, 124, 0)",
+      "italic": false,
+      "text": "Projects",
+    },
+    {
+      "color": "rgb(166, 124, 0)",
+      "italic": false,
+      "text": "Education",
+    },
+    {
+      "color": "rgb(166, 124, 0)",
+      "italic": false,
+      "text": "Skills",
+    },
+  ],
+  "id": "nova",
   "layout": "single",
   "railBg": null,
   "railOnRight": false,
@@ -1033,6 +1263,44 @@ exports[`TemplateSkeleton matches the layout snap for pacific (Pacific) 1`] = `
   "id": "pacific",
   "layout": "sidebar",
   "railBg": "rgb(10, 107, 124)",
+  "railOnRight": false,
+}
+`;
+
+exports[`TemplateSkeleton matches the layout snap for pivot (Pivot) 1`] = `
+{
+  "avatarSizes": [],
+  "darkHeaderBg": null,
+  "headings": [
+    {
+      "color": "rgb(18, 26, 47)",
+      "italic": false,
+      "text": "Summary",
+    },
+    {
+      "color": "rgb(18, 26, 47)",
+      "italic": false,
+      "text": "Experience",
+    },
+    {
+      "color": "rgb(18, 26, 47)",
+      "italic": false,
+      "text": "Projects",
+    },
+    {
+      "color": "rgb(18, 26, 47)",
+      "italic": false,
+      "text": "Education",
+    },
+    {
+      "color": "rgb(18, 26, 47)",
+      "italic": false,
+      "text": "Skills",
+    },
+  ],
+  "id": "pivot",
+  "layout": "single",
+  "railBg": null,
   "railOnRight": false,
 }
 `;
@@ -1191,158 +1459,6 @@ exports[`TemplateSkeleton matches the layout snap for regent (Regent) 1`] = `
 }
 `;
 
-exports[`TemplateSkeleton matches the layout snap for rendercv-classic (Thesis) 1`] = `
-{
-  "avatarSizes": [],
-  "darkHeaderBg": null,
-  "headings": [
-    {
-      "color": "rgb(29, 53, 87)",
-      "italic": false,
-      "text": "Summary",
-    },
-    {
-      "color": "rgb(29, 53, 87)",
-      "italic": false,
-      "text": "Experience",
-    },
-    {
-      "color": "rgb(29, 53, 87)",
-      "italic": false,
-      "text": "Projects",
-    },
-    {
-      "color": "rgb(29, 53, 87)",
-      "italic": false,
-      "text": "Education",
-    },
-    {
-      "color": "rgb(29, 53, 87)",
-      "italic": false,
-      "text": "Skills",
-    },
-  ],
-  "id": "rendercv-classic",
-  "layout": "single",
-  "railBg": null,
-  "railOnRight": false,
-}
-`;
-
-exports[`TemplateSkeleton matches the layout snap for rendercv-engineering (Gauge) 1`] = `
-{
-  "avatarSizes": [],
-  "darkHeaderBg": null,
-  "headings": [
-    {
-      "color": "rgb(65, 69, 76)",
-      "italic": false,
-      "text": "Summary",
-    },
-    {
-      "color": "rgb(65, 69, 76)",
-      "italic": false,
-      "text": "Experience",
-    },
-    {
-      "color": "rgb(65, 69, 76)",
-      "italic": false,
-      "text": "Projects",
-    },
-    {
-      "color": "rgb(65, 69, 76)",
-      "italic": false,
-      "text": "Education",
-    },
-    {
-      "color": "rgb(65, 69, 76)",
-      "italic": false,
-      "text": "Skills",
-    },
-  ],
-  "id": "rendercv-engineering",
-  "layout": "single",
-  "railBg": null,
-  "railOnRight": false,
-}
-`;
-
-exports[`TemplateSkeleton matches the layout snap for rendercv-moderncv (Campus) 1`] = `
-{
-  "avatarSizes": [],
-  "darkHeaderBg": "rgb(47, 93, 85)",
-  "headings": [
-    {
-      "color": "rgb(47, 93, 85)",
-      "italic": false,
-      "text": "Education",
-    },
-    {
-      "color": "rgb(47, 93, 85)",
-      "italic": false,
-      "text": "Skills",
-    },
-    {
-      "color": "rgb(47, 93, 85)",
-      "italic": false,
-      "text": "Summary",
-    },
-    {
-      "color": "rgb(47, 93, 85)",
-      "italic": false,
-      "text": "Experience",
-    },
-    {
-      "color": "rgb(47, 93, 85)",
-      "italic": false,
-      "text": "Projects",
-    },
-  ],
-  "id": "rendercv-moderncv",
-  "layout": "sidebar",
-  "railBg": "color-mix(in srgb, rgb(47, 93, 85) 8%, white)",
-  "railOnRight": false,
-}
-`;
-
-exports[`TemplateSkeleton matches the layout snap for rendercv-sb2nov (Spine) 1`] = `
-{
-  "avatarSizes": [],
-  "darkHeaderBg": null,
-  "headings": [
-    {
-      "color": "rgb(35, 72, 107)",
-      "italic": false,
-      "text": "Summary",
-    },
-    {
-      "color": "rgb(35, 72, 107)",
-      "italic": false,
-      "text": "Experience",
-    },
-    {
-      "color": "rgb(35, 72, 107)",
-      "italic": false,
-      "text": "Projects",
-    },
-    {
-      "color": "rgb(35, 72, 107)",
-      "italic": false,
-      "text": "Education",
-    },
-    {
-      "color": "rgb(35, 72, 107)",
-      "italic": false,
-      "text": "Skills",
-    },
-  ],
-  "id": "rendercv-sb2nov",
-  "layout": "single",
-  "railBg": null,
-  "railOnRight": false,
-}
-`;
-
 exports[`TemplateSkeleton matches the layout snap for sable (Sable) 1`] = `
 {
   "avatarSizes": [],
@@ -1381,80 +1497,116 @@ exports[`TemplateSkeleton matches the layout snap for sable (Sable) 1`] = `
 }
 `;
 
-exports[`TemplateSkeleton matches the layout snap for simple-cv (Index) 1`] = `
+exports[`TemplateSkeleton matches the layout snap for slate (Slate) 1`] = `
 {
   "avatarSizes": [],
   "darkHeaderBg": null,
   "headings": [
     {
-      "color": "rgb(51, 50, 46)",
-      "italic": false,
-      "text": "Summary",
-    },
-    {
-      "color": "rgb(51, 50, 46)",
-      "italic": false,
-      "text": "Experience",
-    },
-    {
-      "color": "rgb(51, 50, 46)",
-      "italic": false,
-      "text": "Projects",
-    },
-    {
-      "color": "rgb(51, 50, 46)",
+      "color": "rgb(255, 255, 255)",
       "italic": false,
       "text": "Education",
     },
     {
-      "color": "rgb(51, 50, 46)",
+      "color": "rgb(255, 255, 255)",
+      "italic": false,
+      "text": "Skills",
+    },
+    {
+      "color": "rgb(58, 71, 80)",
+      "italic": false,
+      "text": "Summary",
+    },
+    {
+      "color": "rgb(58, 71, 80)",
+      "italic": false,
+      "text": "Experience",
+    },
+    {
+      "color": "rgb(58, 71, 80)",
+      "italic": false,
+      "text": "Projects",
+    },
+  ],
+  "id": "slate",
+  "layout": "sidebar",
+  "railBg": "rgb(58, 71, 80)",
+  "railOnRight": false,
+}
+`;
+
+exports[`TemplateSkeleton matches the layout snap for spine (Spine) 1`] = `
+{
+  "avatarSizes": [],
+  "darkHeaderBg": null,
+  "headings": [
+    {
+      "color": "rgb(35, 72, 107)",
+      "italic": false,
+      "text": "Summary",
+    },
+    {
+      "color": "rgb(35, 72, 107)",
+      "italic": false,
+      "text": "Experience",
+    },
+    {
+      "color": "rgb(35, 72, 107)",
+      "italic": false,
+      "text": "Projects",
+    },
+    {
+      "color": "rgb(35, 72, 107)",
+      "italic": false,
+      "text": "Education",
+    },
+    {
+      "color": "rgb(35, 72, 107)",
       "italic": false,
       "text": "Skills",
     },
   ],
-  "id": "simple-cv",
+  "id": "spine",
   "layout": "single",
   "railBg": null,
   "railOnRight": false,
 }
 `;
 
-exports[`TemplateSkeleton matches the layout snap for start-bootstrap-resume (Navy) 1`] = `
+exports[`TemplateSkeleton matches the layout snap for sterling (Sterling) 1`] = `
 {
-  "avatarSizes": [
-    "72px",
-  ],
+  "avatarSizes": [],
   "darkHeaderBg": null,
   "headings": [
     {
-      "color": "rgb(38, 65, 94)",
-      "italic": false,
-      "text": "Education",
-    },
-    {
-      "color": "rgb(38, 65, 94)",
-      "italic": false,
-      "text": "Skills",
-    },
-    {
-      "color": "rgb(38, 65, 94)",
+      "color": "rgb(138, 109, 51)",
       "italic": false,
       "text": "Summary",
     },
     {
-      "color": "rgb(38, 65, 94)",
+      "color": "rgb(138, 109, 51)",
       "italic": false,
       "text": "Experience",
     },
     {
-      "color": "rgb(38, 65, 94)",
+      "color": "rgb(138, 109, 51)",
       "italic": false,
       "text": "Projects",
     },
+    {
+      "color": "rgb(138, 109, 51)",
+      "italic": false,
+      "text": "Education",
+    },
+    {
+      "color": "rgb(138, 109, 51)",
+      "italic": false,
+      "text": "Skills",
+    },
   ],
-  "id": "start-bootstrap-resume",
-  "layout": "sidebar",
-  "railBg": "color-mix(in srgb, rgb(38, 65, 94) 8%, white)",
+  "id": "sterling",
+  "layout": "single",
+  "railBg": null,
   "railOnRight": false,
 }
 `;
@@ -1497,6 +1649,82 @@ exports[`TemplateSkeleton matches the layout snap for summit (Summit) 1`] = `
 }
 `;
 
+exports[`TemplateSkeleton matches the layout snap for tessera (Tessera) 1`] = `
+{
+  "avatarSizes": [],
+  "darkHeaderBg": null,
+  "headings": [
+    {
+      "color": "rgb(27, 43, 107)",
+      "italic": false,
+      "text": "Summary",
+    },
+    {
+      "color": "rgb(27, 43, 107)",
+      "italic": false,
+      "text": "Experience",
+    },
+    {
+      "color": "rgb(27, 43, 107)",
+      "italic": false,
+      "text": "Projects",
+    },
+    {
+      "color": "rgb(27, 43, 107)",
+      "italic": false,
+      "text": "Education",
+    },
+    {
+      "color": "rgb(27, 43, 107)",
+      "italic": false,
+      "text": "Skills",
+    },
+  ],
+  "id": "tessera",
+  "layout": "single",
+  "railBg": null,
+  "railOnRight": false,
+}
+`;
+
+exports[`TemplateSkeleton matches the layout snap for thesis (Thesis) 1`] = `
+{
+  "avatarSizes": [],
+  "darkHeaderBg": null,
+  "headings": [
+    {
+      "color": "rgb(29, 53, 87)",
+      "italic": false,
+      "text": "Summary",
+    },
+    {
+      "color": "rgb(29, 53, 87)",
+      "italic": false,
+      "text": "Experience",
+    },
+    {
+      "color": "rgb(29, 53, 87)",
+      "italic": false,
+      "text": "Projects",
+    },
+    {
+      "color": "rgb(29, 53, 87)",
+      "italic": false,
+      "text": "Education",
+    },
+    {
+      "color": "rgb(29, 53, 87)",
+      "italic": false,
+      "text": "Skills",
+    },
+  ],
+  "id": "thesis",
+  "layout": "single",
+  "railBg": null,
+  "railOnRight": false,
+}
+`;
+
 exports[`TemplateSkeleton matches the layout snap for tidewater (Tidewater) 1`] = `
 {
   "avatarSizes": [],
@@ -1531,6 +1759,82 @@ exports[`TemplateSkeleton matches the layout snap for tidewater (Tidewater) 1`] 
   "id": "tidewater",
   "layout": "sidebar",
   "railBg": "color-mix(in srgb, rgb(15, 42, 68) 8%, white)",
+  "railOnRight": false,
+}
+`;
+
+exports[`TemplateSkeleton matches the layout snap for twin (Twin) 1`] = `
+{
+  "avatarSizes": [],
+  "darkHeaderBg": null,
+  "headings": [
+    {
+      "color": "rgb(122, 46, 46)",
+      "italic": false,
+      "text": "Education",
+    },
+    {
+      "color": "rgb(122, 46, 46)",
+      "italic": false,
+      "text": "Skills",
+    },
+    {
+      "color": "rgb(122, 46, 46)",
+      "italic": false,
+      "text": "Summary",
+    },
+    {
+      "color": "rgb(122, 46, 46)",
+      "italic": false,
+      "text": "Experience",
+    },
+    {
+      "color": "rgb(122, 46, 46)",
+      "italic": false,
+      "text": "Projects",
+    },
+  ],
+  "id": "twin",
+  "layout": "asymmetric",
+  "railBg": null,
+  "railOnRight": false,
+}
+`;
+
+exports[`TemplateSkeleton matches the layout snap for violet (Violet) 1`] = `
+{
+  "avatarSizes": [],
+  "darkHeaderBg": null,
+  "headings": [
+    {
+      "color": "rgb(106, 76, 147)",
+      "italic": false,
+      "text": "Summary",
+    },
+    {
+      "color": "rgb(106, 76, 147)",
+      "italic": false,
+      "text": "Experience",
+    },
+    {
+      "color": "rgb(106, 76, 147)",
+      "italic": false,
+      "text": "Projects",
+    },
+    {
+      "color": "rgb(106, 76, 147)",
+      "italic": false,
+      "text": "Education",
+    },
+    {
+      "color": "rgb(106, 76, 147)",
+      "italic": false,
+      "text": "Skills",
+    },
+  ],
+  "id": "violet",
+  "layout": "single",
+  "railBg": null,
   "railOnRight": false,
 }
 `;

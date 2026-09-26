@@ -5,18 +5,18 @@ import { makeFullResumeData } from "@/test-utils/fixtures";
 
 describe("bulletKind", () => {
   it("picks a distinct mark from the template heading style, never a plain disc", () => {
-    expect(bulletKind(getTheme("jakes-resume"))).toBe("arrow");
-    expect(bulletKind(getTheme("bre-purple"))).toBe("square");
-    expect(bulletKind(getTheme("bre-cool"))).toBe("dash");
-    expect(bulletKind(getTheme("bre-green"))).toBe("diamond");
-    expect(bulletKind(getTheme("bre-creative"))).toBe("chevron");
+    expect(bulletKind(getTheme("atlas"))).toBe("arrow");
+    expect(bulletKind(getTheme("violet"))).toBe("square");
+    expect(bulletKind(getTheme("harbor"))).toBe("dash");
+    expect(bulletKind(getTheme("grove"))).toBe("diamond");
+    expect(bulletKind(getTheme("ember"))).toBe("chevron");
   });
 });
 
 describe("BulletList", () => {
   it("renders achievement and experience lines with the template's bullet mark, not list-disc", () => {
     const data = makeFullResumeData();
-    const theme = getTheme("jakes-resume");
+    const theme = getTheme("atlas");
     const { container } = render(
       <>
         <KeyAchievementsList items={data.sections.keyAchievements!} theme={theme} breaks={itemBreaks(data, "keyAchievements")} />
@@ -43,7 +43,7 @@ describe("BulletList", () => {
   });
 
   it("prints Present for an explicitly current role and a real end date otherwise", () => {
-    const theme = getTheme("jakes-resume");
+    const theme = getTheme("atlas");
     const breaks = itemBreaks(makeFullResumeData(), "experience");
     const { rerender, container } = render(
       <ExperienceList
@@ -81,7 +81,7 @@ describe("visiblePhoto / hasAvatar", () => {
 
   it("hides a skipped photo even on templates with an avatar slot", () => {
     const data = makeFullResumeData({ photo, sectionStatus: { photo: "skipped" } });
-    const theme = getTheme("bre-creative");
+    const theme = getTheme("ember");
     expect(hasAvatar(data, theme)).toBe(Boolean(theme.showAvatar));
     expect(visiblePhoto(data)).toBeUndefined();
   });

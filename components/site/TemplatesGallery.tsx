@@ -132,7 +132,7 @@ export function TemplatesGallery() {
                 </div>
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/45 to-transparent opacity-0 transition duration-300 group-hover:opacity-100 group-focus-within:opacity-100" />
                 {/* An overlay rather than a button wrapped around the sheet:
-                    Vitae draws its own light/dark toggle, and a button inside a
+                    Nocturne draws its own light/dark toggle, and a button inside a
                     button is invalid HTML that breaks hydration. Opening the
                     preview is all this does — only the link below navigates, so
                     a mis-aimed tap while scanning the grid can't drop someone

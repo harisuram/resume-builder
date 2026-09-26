@@ -47,7 +47,7 @@ describe("templates gallery", () => {
         `/builder?template=${encodeURIComponent(template.id)}`,
       );
     }
-    expect(document.querySelector('[data-sample-resume="jakes-resume"]')).not.toBeNull();
+    expect(document.querySelector('[data-sample-resume="atlas"]')).not.toBeNull();
     expect(document.querySelector('[data-template-skeleton]')).toBeNull();
     expect(document.querySelector('[data-layout="single"]')).not.toBeNull();
     expect(screen.getByText(/use template to open it in the builder/i)).toBeInTheDocument();
@@ -94,7 +94,7 @@ describe("templates gallery", () => {
     expect(within(dialog).getByText("Skills")).toBeInTheDocument();
     expect(within(dialog).getByRole("link", { name: "Use this template" })).toHaveAttribute(
       "href",
-      "/builder?template=jakes-resume",
+      "/builder?template=atlas",
     );
 
     await userEvent.keyboard("{Escape}");
@@ -109,7 +109,7 @@ describe("templates gallery", () => {
     expect(dialog.querySelector('[data-resume-column="rail"]')).not.toBeNull();
     expect(within(dialog).getByRole("link", { name: "Use this template" })).toHaveAttribute(
       "href",
-      "/builder?template=bre-creative",
+      "/builder?template=ember",
     );
   });
 

@@ -1021,7 +1021,7 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
 /* Only the live preview should ever hit paper — resume documents render on
    white regardless of the app's own theme, light or dark. A resume-scoped
    token set (rather than the app's own --color-* tokens above) is what lets
-   a single template (JSON Resume Vitae) offer its own light/dark toggle
+   a single template (Nocturne) offer its own light/dark toggle
    without dragging the builder chrome's theme along with it. */
 .resume-surface {
   --r-bg: #ffffff;
@@ -1039,6 +1039,109 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
   --r-ink-soft: #cfc8b8;
   --r-ink-faint: #948d7d;
   --r-border: #3a352a;
+}
+
+/* Bespoke single-column templates (VariantLayout). Only section treatments
+ * live here; headers are drawn in the component. The PDF engine mirrors each
+ * rule in components/pdf/variantPages.tsx. */
+
+/* Horizon: dates move into a left rail along a line with a ring per entry. */
+.resume-surface[data-variant="horizon"]
+  :is([data-section-key="experience"], [data-section-key="internships"], [data-section-key="partTime"], [data-section-key="education"])
+  > div {
+  position: relative;
+}
+.resume-surface[data-variant="horizon"]
+  :is([data-section-key="experience"], [data-section-key="internships"], [data-section-key="partTime"], [data-section-key="education"])
+  > div::before {
+  content: "";
+  position: absolute;
+  left: 104px;
+  top: 6px;
+  bottom: 6px;
+  width: 1px;
+  background: var(--variant-second);
+  opacity: 0.45;
+}
+.resume-surface[data-variant="horizon"]
+  :is([data-section-key="experience"], [data-section-key="internships"], [data-section-key="partTime"], [data-section-key="education"])
+  [data-item-key] {
+  position: relative;
+  padding-left: 124px;
+}
+.resume-surface[data-variant="horizon"]
+  :is([data-section-key="experience"], [data-section-key="internships"], [data-section-key="partTime"], [data-section-key="education"])
+  [data-item-key]::before {
+  content: "";
+  position: absolute;
+  left: 100px;
+  top: 5px;
+  width: 9px;
+  height: 9px;
+  border-radius: 9999px;
+  background: #ffffff;
+  box-shadow: 0 0 0 1.5px var(--variant-second);
+}
+.resume-surface[data-variant="horizon"]
+  :is([data-section-key="experience"], [data-section-key="internships"], [data-section-key="partTime"], [data-section-key="education"])
+  [data-item-key]
+  > div:first-child
+  > p:last-child {
+  position: absolute;
+  left: 0;
+  top: 1px;
+  width: 88px;
+  text-align: right;
+  font-weight: 700;
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: var(--variant-second);
+}
+
+/* Pivot: key achievements as a two-column grid of accent-barred results. */
+.resume-surface[data-variant="pivot"] [data-section-key="keyAchievements"] ul {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 24px;
+}
+.resume-surface[data-variant="pivot"] [data-section-key="keyAchievements"] li {
+  border-left: 3px solid var(--variant-accent);
+  padding-left: 10px;
+}
+.resume-surface[data-variant="pivot"] [data-section-key="keyAchievements"] li > span:first-child {
+  display: none;
+}
+
+/* Sterling: skills as a ruled three-column list of competencies. */
+.resume-surface[data-variant="sterling"] [data-section-key="skills"] > div {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0 20px;
+  border-top: 1px solid var(--variant-rule);
+}
+.resume-surface[data-variant="sterling"] [data-section-key="skills"] > div > span {
+  background: none !important;
+  color: var(--r-ink) !important;
+  border-radius: 0;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--variant-rule);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+/* Kernel: stack chips in monospace. */
+.resume-surface[data-variant="kernel"] [data-section-key="skills"] > div > span {
+  font-family: var(--font-jetbrains-mono), ui-monospace, Menlo, monospace;
+  border-radius: 4px;
+}
+
+/* Tessera: every section on its own white card. */
+.resume-surface[data-variant="tessera"] .resume-page-body > section {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 /* Sidebar templates: rail is full-bleed via ::before (not a floating patch).

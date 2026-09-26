@@ -5,7 +5,7 @@ import { TemplateRail } from "./TemplateRail";
 
 describe("TemplateRail", () => {
   it("lists every template, including the two-tone additions", () => {
-    render(<TemplateRail value="jakes-resume" onChange={() => {}} />);
+    render(<TemplateRail value="atlas" onChange={() => {}} />);
     const list = screen.getByRole("list", { name: "Templates" });
     expect(within(list).getAllByRole("listitem")).toHaveLength(TEMPLATE_LIST.length);
     for (const name of ["Tidewater", "Evergreen", "Plum", "Lagoon", "Oxford", "Laurel", "Regent", "Mulberry"]) {
@@ -23,13 +23,13 @@ describe("TemplateRail", () => {
 
   it("reports the clicked template", async () => {
     const onChange = jest.fn();
-    render(<TemplateRail value="jakes-resume" onChange={onChange} />);
+    render(<TemplateRail value="atlas" onChange={onChange} />);
     await userEvent.click(screen.getByRole("button", { name: "Use Regent template" }));
     expect(onChange).toHaveBeenCalledWith("regent");
   });
 
   it("keeps the thumbnails out of the tab order and print", () => {
-    const { container } = render(<TemplateRail value="jakes-resume" onChange={() => {}} />);
+    const { container } = render(<TemplateRail value="atlas" onChange={() => {}} />);
     expect(container.firstElementChild).toHaveClass("no-print");
     for (const preview of container.querySelectorAll("[data-sample-resume]")) {
       expect(preview.closest("[inert]")).not.toBeNull();

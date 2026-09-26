@@ -15,7 +15,7 @@ function makeData(overrides: Partial<ResumeData> = {}): ResumeData {
     basicInfo: { name: "", email: "", phone: "", location: "", links: {} },
     sections: {},
     sectionStatus: {},
-    templateId: "jakes-resume",
+    templateId: "atlas",
     ...overrides,
   };
 }

@@ -48,7 +48,7 @@ export function TemplateRail({ value, onChange }: { value: string; onChange: (id
                   <ScaledTemplatePreview theme={template} compact fullPage framed={false} fillParent />
                 </div>
                 {/* An overlay rather than a button wrapped around the sheet:
-                    Vitae draws its own toggle button, and nested buttons are
+                    Nocturne draws its own toggle button, and nested buttons are
                     invalid HTML. */}
                 <button
                   type="button"

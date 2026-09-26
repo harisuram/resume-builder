@@ -16,7 +16,8 @@ describe("TEMPLATE_COMPONENTS", () => {
       const Template = TEMPLATE_COMPONENTS[id];
       const data = makeFullResumeData({ templateId: id });
       render(<Template data={data} />);
-      expect(screen.getByText("Alexandra Montgomery-Whitfield")).toBeInTheDocument();
+      // By accessible name: Horizon sets the surname in its own italic span.
+      expect(screen.getByRole("heading", { level: 1, name: "Alexandra Montgomery-Whitfield" })).toBeInTheDocument();
       expect(screen.getByText(/alexandra@example\.com/)).toBeInTheDocument();
       expect(screen.getByText(data.sections.keyAchievements![0])).toBeInTheDocument();
       expect(screen.getByText("Patents")).toBeInTheDocument();
@@ -91,9 +92,9 @@ describe("TEMPLATE_COMPONENTS", () => {
     }
   });
 
-  it("Vitae toggles between its light and dark surface", async () => {
-    const Template = TEMPLATE_COMPONENTS["jsonresume-vitae"];
-    render(<Template data={makeFullResumeData({ templateId: "jsonresume-vitae" })} />);
+  it("Nocturne toggles between its light and dark surface", async () => {
+    const Template = TEMPLATE_COMPONENTS["nocturne"];
+    render(<Template data={makeFullResumeData({ templateId: "nocturne" })} />);
 
     const toggle = screen.getByRole("button", { name: "Dark mode" });
     expect(document.querySelector('[data-resume-theme="dark"]')).not.toBeInTheDocument();
@@ -109,7 +110,7 @@ describe("TEMPLATE_COMPONENTS", () => {
   it("falls back to the default template placeholder name for an unknown id", () => {
     const Template = getTemplateComponent("unknown-id");
     render(<Template data={makeFullResumeData({ templateId: "unknown-id" })} />);
-    // Falls back to the first registered template (Jake's Resume) rather than crashing.
+    // Falls back to the first registered template (Atlas) rather than crashing.
     expect(screen.getByText("Alexandra Montgomery-Whitfield")).toBeInTheDocument();
   });
 });

@@ -11,7 +11,7 @@ describe("ScaledTemplatePreview", () => {
   /* Without the print layout model, the sidebar colgroup squeezes the whole
    * sample into the 34% rail column and the tile shows a third of a page
    * beside two thirds of blank paper. */
-  it.each(["bre-creative", "bre-leftright", "deedy-reversed"])(
+  it.each(["ember", "aisle", "twin"])(
     "renders %s with the column model print uses",
     (id) => {
       const { container } = render(<ScaledTemplatePreview theme={getTheme(id)} />);
@@ -20,7 +20,7 @@ describe("ScaledTemplatePreview", () => {
   );
 
   it("leaves single-column templates on the normal screen layout", () => {
-    const { container } = render(<ScaledTemplatePreview theme={getTheme("jakes-resume")} />);
+    const { container } = render(<ScaledTemplatePreview theme={getTheme("atlas")} />);
     expect(pageEl(container)).not.toHaveClass(PRINT_LAYOUT_SIM_CLASS);
   });
 });

@@ -6,6 +6,7 @@ import { Avatar, ContactLine, hasAvatar, SummaryText, visiblePhoto } from "../sh
 import { ResumeSection } from "../shared/ResumeSection";
 import { SectionHeading } from "../shared/SectionHeading";
 import { headerColor, type TemplateTheme } from "../shared/theme";
+import { VariantLayout } from "./VariantLayout";
 
 export function SingleColumnLayout({
   data,
@@ -16,13 +17,16 @@ export function SingleColumnLayout({
   data: ResumeData;
   theme: TemplateTheme;
   /** Overrides the resume's own light/dark surface — used only by templates
-   * that expose a dark-mode toggle (e.g. JSON Resume Vitae). */
+   * that expose a dark-mode toggle (Nocturne). */
   resumeTheme?: "light" | "dark";
   /** "h1" for the real document (builder pane, PDF export); "p" for
    * decorative marketing-site thumbnails so a page never gets more than
    * one real `<h1>`. */
   headingLevel?: NameHeadingLevel;
 }) {
+  if (theme.variant) {
+    return <VariantLayout data={data} theme={{ ...theme, variant: theme.variant }} headingLevel={headingLevel} />;
+  }
   const NameHeading = headingLevel;
   const sections = getRenderableSections(data);
   const fontClass = theme.fontDisplay === "serif" ? "font-serif" : "font-sans";

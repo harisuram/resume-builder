@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Inter, Source_Serif_4 } from "next/font/google";
+import { Cormorant_Garamond, Fraunces, Geist, Inter, JetBrains_Mono, Playfair_Display, Source_Serif_4, Syne } from "next/font/google";
 import Script from "next/script";
 import {
   ADSENSE_CLIENT_ID,
@@ -32,6 +32,53 @@ const sourceSerif = Source_Serif_4({
   subsets: ["latin"],
   display: "swap",
 });
+
+/* Display faces for the names and titles of a few templates. Not preloaded:
+ * only a page that renders one of those templates downloads the file. The
+ * PDF engine embeds the same families (components/pdf/fonts.ts). */
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  weight: "300",
+  style: ["normal", "italic"],
+  display: "swap",
+  preload: false,
+});
+
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
+  subsets: ["latin"],
+  weight: "600",
+  display: "swap",
+  preload: false,
+});
+
+const cormorant = Cormorant_Garamond({
+  variable: "--font-cormorant",
+  subsets: ["latin"],
+  weight: "500",
+  style: ["normal", "italic"],
+  display: "swap",
+  preload: false,
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
+  subsets: ["latin"],
+  weight: ["400", "600"],
+  display: "swap",
+  preload: false,
+});
+
+const syne = Syne({
+  variable: "--font-syne",
+  subsets: ["latin"],
+  weight: "700",
+  display: "swap",
+  preload: false,
+});
+
+const DISPLAY_FONT_VARIABLES = [fraunces, playfair, cormorant, jetbrainsMono, syne].map((f) => f.variable).join(" ");
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -77,7 +124,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${inter.variable} ${geist.variable} ${sourceSerif.variable} h-full`} data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${geist.variable} ${sourceSerif.variable} ${DISPLAY_FONT_VARIABLES} h-full`} data-scroll-behavior="smooth" suppressHydrationWarning>
       {/* Native <script>, not next/script: Google’s snippet crawler looks for
           adsbygoogle.js on a real src= tag in the HTML. next/script rewrites
           that to a preload + __next_s inject, which Google reports as “no ad

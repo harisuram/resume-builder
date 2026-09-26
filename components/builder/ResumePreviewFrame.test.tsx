@@ -23,20 +23,20 @@ function carriesNoPadding(value: string): boolean {
 
 describe("ResumePreviewFrame", () => {
   it("renders the template matching the resume's templateId", () => {
-    const data = makeFullResumeData({ templateId: "jakes-resume" });
+    const data = makeFullResumeData({ templateId: "atlas" });
     render(<ResumePreviewFrame data={data} />);
     expect(screen.getAllByText("Alexandra Montgomery-Whitfield").length).toBeGreaterThan(0);
   });
 
   it("re-renders the correct template when templateId changes", () => {
-    const data = makeFullResumeData({ templateId: "jakes-resume" });
+    const data = makeFullResumeData({ templateId: "atlas" });
     const { rerender } = render(<ResumePreviewFrame data={data} />);
-    rerender(<ResumePreviewFrame data={{ ...data, templateId: "deedy-reversed" }} />);
+    rerender(<ResumePreviewFrame data={{ ...data, templateId: "twin" }} />);
     expect(screen.getAllByText("Alexandra Montgomery-Whitfield").length).toBeGreaterThan(0);
   });
 
   it("paints sheet 1's top band in a single-column colour header's accent", () => {
-    const data = makeFullResumeData({ templateId: "bre-material-dark" });
+    const data = makeFullResumeData({ templateId: "marquee" });
     const { container } = render(<ResumePreviewFrame data={data} />);
     const band = container.querySelector<HTMLElement>('[data-page-sheet="1"] [data-page-top-band="true"]');
     expect(band).not.toBeNull();
@@ -52,7 +52,7 @@ describe("ResumePreviewFrame", () => {
   });
 
   it("keeps sheet 1's top band white for templates without a colour header", () => {
-    const data = makeFullResumeData({ templateId: "jakes-resume" });
+    const data = makeFullResumeData({ templateId: "atlas" });
     const { container } = render(<ResumePreviewFrame data={data} />);
     const band = container.querySelector<HTMLElement>('[data-page-sheet="1"] [data-page-top-band="true"]');
     expect(band!.style.backgroundColor).toBe("");
@@ -70,7 +70,7 @@ describe("ResumePreviewFrame", () => {
   });
 
   it("fits a sidebar surface to content height without inventing a blank trailing page", () => {
-    const data = makeFullResumeData({ templateId: "bre-sidebar" });
+    const data = makeFullResumeData({ templateId: "slate" });
     const { container, rerender } = render(<ResumePreviewFrame data={data} />);
     const page = container.querySelector(".resume-sidebar-page") as HTMLElement;
     const main = container.querySelector(".resume-main-column") as HTMLElement;
@@ -131,7 +131,7 @@ describe("ResumePreviewFrame", () => {
   });
 
   it("printable sidebar does not grow a blank trailing page from padding slack", () => {
-    const data = makeFullResumeData({ templateId: "bre-creative" });
+    const data = makeFullResumeData({ templateId: "ember" });
     const { container, rerender } = render(<ResumePreviewFrame data={data} printable />);
     const page = container.querySelector(".resume-sidebar-page") as HTMLElement;
     const main = container.querySelector(".resume-main-column") as HTMLElement;
@@ -159,7 +159,7 @@ describe("ResumePreviewFrame", () => {
   });
 
   it("never inserts page-gap spacers (forced partitions removed)", () => {
-    const data = makeFullResumeData({ templateId: "bre-sidebar", pageBreakSections: ["education"] });
+    const data = makeFullResumeData({ templateId: "slate", pageBreakSections: ["education"] });
     const { container, rerender } = render(<ResumePreviewFrame data={data} />);
     const edu = container.querySelector('[data-section-key="education"]') as HTMLElement;
     setBox(edu, { top: 200, height: 80 });
@@ -209,7 +209,7 @@ describe("ResumePreviewFrame", () => {
     it("gives non-sidebar sheets the same paper margins print reserves", () => {
       mockContentHeight(2500);
       const { container } = render(
-        <ResumePreviewFrame data={makeFullResumeData({ templateId: "jakes-resume" })} />,
+        <ResumePreviewFrame data={makeFullResumeData({ templateId: "atlas" })} />,
       );
       const sheets = container.querySelectorAll<HTMLElement>(".resume-page-sheet");
       expect(sheets.length).toBeGreaterThanOrEqual(2);
@@ -234,7 +234,7 @@ describe("ResumePreviewFrame", () => {
     it("keeps sidebar sheets full-bleed with a rail fill under leftover bands", () => {
       mockContentHeight(2500);
       const { container } = render(
-        <ResumePreviewFrame data={makeFullResumeData({ templateId: "bre-sidebar" })} />,
+        <ResumePreviewFrame data={makeFullResumeData({ templateId: "slate" })} />,
       );
       const sheets = container.querySelectorAll<HTMLElement>(".resume-page-sheet");
       expect(sheets.length).toBeGreaterThanOrEqual(2);

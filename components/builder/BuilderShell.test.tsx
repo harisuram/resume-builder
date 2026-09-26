@@ -7,6 +7,12 @@ import { useToastStore } from "@/lib/toast";
 import { makeFullResumeData } from "@/test-utils/fixtures";
 import { BuilderShell } from "./BuilderShell";
 
+// The PDF engine is ESM-only (react-pdf); the shell's previews and download
+// only need a rendered blob here.
+jest.mock("../pdf/renderResumePdf", () => ({
+  renderResumePdf: async () => new Blob(["%PDF-shell"], { type: "application/pdf" }),
+}));
+
 beforeEach(() => {
   localStorage.clear();
   dismissBuilderTour();
@@ -244,7 +250,7 @@ describe("BuilderShell", () => {
     const rail = screen.getByRole("list", { name: "Templates" });
     const option = within(rail).getByRole("button", { name: "Use Harbor template" });
     await userEvent.click(option);
-    expect(useBuilderStore.getState().templateId).toBe("bre-cool");
+    expect(useBuilderStore.getState().templateId).toBe("harbor");
     expect(option).toHaveAttribute("aria-pressed", "true");
   });
 
@@ -411,18 +417,18 @@ describe("BuilderShell", () => {
   });
 
   it("selects a gallery template from ?template= after hydrating", async () => {
-    window.history.replaceState({}, "", "/builder?template=bre-creative");
+    window.history.replaceState({}, "", "/builder?template=ember");
     render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
-    expect(useBuilderStore.getState().templateId).toBe("bre-creative");
+    expect(useBuilderStore.getState().templateId).toBe("ember");
   });
 
   it("lets a gallery pick override the template on a saved resume", async () => {
-    saveResumeData(makeFullResumeData({ templateId: "jakes-resume" }));
-    window.history.replaceState({}, "", "/builder?template=deedy-reversed");
+    saveResumeData(makeFullResumeData({ templateId: "atlas" }));
+    window.history.replaceState({}, "", "/builder?template=twin");
     render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
-    expect(useBuilderStore.getState().templateId).toBe("deedy-reversed");
+    expect(useBuilderStore.getState().templateId).toBe("twin");
     expect(useBuilderStore.getState().basicInfo.name).toBe("Alexandra Montgomery-Whitfield");
   });
 
@@ -430,7 +436,7 @@ describe("BuilderShell", () => {
     window.history.replaceState({}, "", "/builder?template=not-a-theme");
     render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
-    expect(useBuilderStore.getState().templateId).toBe("jakes-resume");
+    expect(useBuilderStore.getState().templateId).toBe("atlas");
   });
 
   it("writes a draft on Basic info Next without asking to save", async () => {
@@ -493,6 +499,8 @@ describe("BuilderShell", () => {
 
   it("saves a copy on download without asking, even if Next was skipped", async () => {
     (window.print as jest.Mock).mockClear();
+    const click = jest.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    Object.assign(URL, { createObjectURL: jest.fn(() => "blob:resume"), revokeObjectURL: jest.fn() });
     render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
     act(() =>
@@ -504,6 +512,9 @@ describe("BuilderShell", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(JSON.parse(localStorage.getItem("resumeData")!).basicInfo.name).toBe("Jamie");
     expect(useBuilderStore.getState().hasSavedCopy).toBe(true);
-    expect(window.print).toHaveBeenCalledTimes(1);
+    // Downloads straight from the PDF engine — no print dialog.
+    await waitFor(() => expect(click).toHaveBeenCalledTimes(1));
+    expect(window.print).not.toHaveBeenCalled();
+    click.mockRestore();
   });
 });

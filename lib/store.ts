@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { create } from "zustand";
+import { canonicalTemplateId } from "@/components/templates/shared/theme";
 import { type ImportedResume } from "./resumeImport/normalize";
 import { getNavSectionOrder, placeSectionAt, resolveSectionOrder, SECTION_ORDER } from "./persona";
 import { itemBreakKey, parseItemBreakKey } from "./resume";
@@ -189,7 +190,7 @@ interface BuilderState {
   getResumeData: () => ResumeData;
 }
 
-const DEFAULT_TEMPLATE: TemplateId = "jakes-resume";
+const DEFAULT_TEMPLATE: TemplateId = "atlas";
 
 export const useBuilderStore = create<BuilderState>((set, get) => ({
   basicInfo: EMPTY_BASIC_INFO,
@@ -438,7 +439,8 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       photo: data.photo ?? null,
       sections: data.sections,
       sectionStatus: data.sectionStatus,
-      templateId: data.templateId,
+      // Drafts saved before a template was renamed carry its old id.
+      templateId: canonicalTemplateId(data.templateId),
       // Forced Move/Undo partitions removed — ignore any saved break lists.
       pageBreakSections: [],
       pageBreakItems: [],

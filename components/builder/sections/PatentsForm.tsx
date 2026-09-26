@@ -56,7 +56,7 @@ export function PatentsForm() {
                       value={patent.number ?? ""}
                       onChange={(e) => updateListItem("patents", i, { number: e.target.value })}
                       onBlur={touch(`${i}.number`)}
-                      placeholder="US 11,234,567"
+                      placeholder="US 99,012,345"
                       maxLength={MAX_FIELD_LENGTH}
                       invalid={Boolean(numberError)}
                     />

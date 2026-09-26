@@ -37,7 +37,7 @@ const PHONE_MAX_DIGITS = 15;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** Domain(.tld) optionally followed by a path — covers bare domains
- * ("jordanlee.dev") and full URLs ("https://linkedin.com/in/jordan") alike. */
+ * ("yourname.example.com") and full URLs ("https://linkedin.com/in/jordan") alike. */
 const URL_PATTERN = /^(https?:\/\/)?([a-z0-9-]+\.)+[a-z]{2,}(\/\S*)?$/i;
 
 const GPA_PATTERN = /^\d+(\.\d+)?(\s*\/\s*\d+(\.\d+)?)?$/;

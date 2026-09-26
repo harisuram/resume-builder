@@ -52,9 +52,9 @@ describe("section / item tags across every template", () => {
 
 describe("narrow vs wide split", () => {
   it("keeps compact sections in the rail", () => {
-    const Template = TEMPLATE_COMPONENTS["bre-creative"];
+    const Template = TEMPLATE_COMPONENTS["ember"];
     const { container } = render(
-      <Template data={makeFullResumeData({ templateId: "bre-creative" })} />,
+      <Template data={makeFullResumeData({ templateId: "ember" })} />,
     );
     const rail = container.querySelector(".resume-sidebar-rail")!;
     const main = container.querySelector(".resume-main-column")!;

@@ -76,8 +76,12 @@ export function LabeledLayout({
 const labeledRowClass =
   "grid grid-cols-1 gap-2 sm:grid-cols-[minmax(7.5rem,22%)_minmax(0,1fr)] sm:gap-x-6 sm:gap-y-0";
 
+/* `self-start`: a grid item stretches to its row by default, so the label of a
+ * long section became a box as tall as the whole section. Glued to its content
+ * by `break-after-avoid`, that read as one unbreakable ~page-tall block. Sized
+ * to its own text it sits in the same place and the row fragments freely. */
 const labeledTitleClass =
-  "text-[13px] font-semibold leading-snug text-[var(--r-ink)] break-after-avoid sm:pt-0.5";
+  "self-start text-[13px] font-semibold leading-snug text-[var(--r-ink)] break-after-avoid sm:pt-0.5";
 
 /** Matches the reference hairline (~#8a8377). */
 const RULE = "border-t border-[var(--r-ink-faint)]";

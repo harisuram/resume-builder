@@ -1,21 +1,51 @@
+import { readFile } from "node:fs/promises";
 import { expect, test, type TestInfo } from "@playwright/test";
-import { TEMPLATES } from "@/components/templates/shared/theme";
-import { PAGE_HEIGHT_PX, PAGE_INSET_PX, PAGE_PAD_Y_PX, PAGE_WIDTH_PX } from "@/lib/page";
-import { TARGET_PAGES } from "./fixtures/longResume";
+import { TEMPLATES, type TemplateTheme } from "@/components/templates/shared/theme";
+import { PAGE_HEIGHT_PX, PAGE_PAD_Y_PX, PAGE_WIDTH_PX } from "@/lib/page";
+import { TARGET_PAGES, makeLongResume } from "./fixtures/longResume";
 import { describePx, gapBudget, MIN_PAGES } from "./helpers/gapBudget";
 import { measureGaps, readPdfPages, type PageGaps, type Region } from "./helpers/pdfGaps";
-import { measurePrintLayout, openPrintableResume, printToPdf } from "./helpers/printResume";
+import { seedBuilder } from "./helpers/printCuts";
 
 /**
- * Every template, printed as a real ~10-page PDF through the same `@page`
- * rules the Download button uses, then read back sheet by sheet: any sheet
- * that stops further above the bottom than the layout can explain fails.
+ * Every template, downloaded as a real ~10-page PDF from the PDF engine, then
+ * read back sheet by sheet: any sheet that stops further above the bottom
+ * than the layout can explain fails.
  *
- * A gap is "anticipated" when it is no taller than the tallest run of
- * content the print engine is not allowed to split (see helpers/gapBudget.ts).
- * Everything past that is whitespace nothing asked for — the half-empty
- * sheet a user sees in the middle of their downloaded resume.
+ * A gap is "anticipated" when it is no taller than the tallest block the
+ * engine is told not to split (see helpers/gapBudget.ts). Everything past
+ * that is whitespace nothing asked for — the half-empty sheet a user sees in
+ * the middle of their downloaded resume.
  */
+
+/** Tallest block the engine keeps whole in the long fixture: an education
+ * entry (institution, degree, three lines of coursework), or a section
+ * heading held with the first ~40pt below it. Measured on the fixture;
+ * generous rather than tight, since the budget also carries line slack. */
+const TALLEST_UNSPLIT_PX = 150;
+
+/** Space each layout holds back at the foot of every page on purpose. */
+function reservedBottomPx(theme: TemplateTheme): number {
+  return theme.layout === "asymmetric" ? 56 : PAGE_PAD_Y_PX;
+}
+
+/** Where the main column sits, for layouts whose other column can hide a
+ * main column that stops halfway down the page. */
+function mainColumn(theme: TemplateTheme): Region[] {
+  if (theme.layout === "sidebar") {
+    const rail = PAGE_WIDTH_PX * 0.34;
+    return [
+      theme.sidebarSide === "right"
+        ? { name: "main column", left: 0, right: PAGE_WIDTH_PX - rail }
+        : { name: "main column", left: rail, right: PAGE_WIDTH_PX },
+    ];
+  }
+  if (theme.layout === "asymmetric") {
+    const start = 32 + (PAGE_WIDTH_PX - 64) * 0.32;
+    return [{ name: "main column", left: start, right: PAGE_WIDTH_PX }];
+  }
+  return [];
+}
 
 /** Sheets are compared against the budget except the last one, which is
  * short because the resume ended there. */
@@ -32,47 +62,32 @@ async function attachEvidence(testInfo: TestInfo, id: string, pdf: Uint8Array, r
   });
 }
 
-test.describe(`printed PDF gaps (~${TARGET_PAGES}-page resume)`, () => {
+test.describe(`downloaded PDF gaps (~${TARGET_PAGES}-page resume)`, () => {
   for (const theme of TEMPLATES) {
     test(`${theme.name} — ${theme.id} (${theme.layout})`, async ({ page }, testInfo) => {
-      await openPrintableResume(page, theme.id);
-      const layout = await measurePrintLayout(page);
-      // Preview and print share PAGE_WIDTH_PX (A4 @ 96dpi). If the parked
-      // root is any other width, lines wrap differently than the preview.
-      expect(layout.rootWidthPx, "print root width must match A4 design width").toBeCloseTo(PAGE_WIDTH_PX, 0);
-      const pdf = await printToPdf(page);
+      await seedBuilder(page, theme.id, makeLongResume(theme.id));
+      await expect(page.getByTestId("pdf-engine-preview").getByRole("status")).toHaveText(/^\d+ pages?$/, {
+        timeout: 60_000,
+      });
+      const [download] = await Promise.all([
+        page.waitForEvent("download"),
+        page.getByRole("button", { name: "Download PDF" }).click(),
+      ]);
+      const pdf = new Uint8Array(await readFile((await download.path())!));
       const sheets = await readPdfPages(pdf);
-      expect(sheets[0]?.widthPx, "PDF page width should match A4 @ 96dpi").toBeCloseTo(PAGE_WIDTH_PX, 0);
-      expect(sheets[0]?.heightPx, "PDF page height should match A4 @ 96dpi").toBeCloseTo(PAGE_HEIGHT_PX, 0);
 
-      expect(sheets.length, "printed no pages at all").toBeGreaterThan(0);
-      const sheetHeight = sheets[0].heightPx;
-      // Space the layout reserves at the bottom of every sheet on purpose:
-      // the sidebar's repeating tfoot band, or the `@page resume-flow` margin.
-      const reservedBottom = theme.layout === "sidebar" ? PAGE_PAD_Y_PX : PAGE_INSET_PX;
-      const budget = gapBudget(sheetHeight, layout.tallestAtomicPx, reservedBottom);
+      expect(sheets.length, "downloaded no pages at all").toBeGreaterThan(0);
+      expect(Math.abs(sheets[0]!.widthPx - PAGE_WIDTH_PX), "PDF page width should be A4").toBeLessThanOrEqual(1);
+      expect(Math.abs(sheets[0]!.heightPx - PAGE_HEIGHT_PX), "PDF page height should be A4").toBeLessThanOrEqual(1);
 
-      // Two-column templates hide gaps: the rail paints to the paper edge
-      // and the main column can stop halfway up with the whole-sheet
-      // measurement none the wiser. Measure that column on its own too.
-      const main = layout.columns.find((column) => column.name === "main");
-      const regions: Region[] = main
-        ? [
-            {
-              name: "main column",
-              left: main.leftFraction * layout.rootWidthPx,
-              right: main.rightFraction * layout.rootWidthPx,
-            },
-          ]
-        : [];
-      const gaps = measureGaps(sheets, regions);
+      const budget = gapBudget(sheets[0].heightPx, TALLEST_UNSPLIT_PX, reservedBottomPx(theme));
+      const gaps = measureGaps(sheets, mainColumn(theme));
       const interior = interiorSheets(gaps);
 
       // The fixture is sized for a long resume; a short PDF means the suite
-      // stopped testing what it claims to and the thresholds below are
-      // measuring a one-page document.
+      // stopped testing what it claims to.
       expect
-        .soft(sheets.length, `fixture should print at least ${MIN_PAGES} pages on every template`)
+        .soft(sheets.length, `fixture should run to at least ${MIN_PAGES} pages on every template`)
         .toBeGreaterThanOrEqual(MIN_PAGES);
 
       // A sheet with no text is a blank page in someone's download.
@@ -83,25 +98,11 @@ test.describe(`printed PDF gaps (~${TARGET_PAGES}-page resume)`, () => {
         )
         .toEqual([]);
 
-      // The budget below is derived from this number, so an absurd value
-      // has to fail on its own or it would quietly license its own gap.
-      expect
-        .soft(
-          layout.tallestAtomicPx,
-          `tallest unbreakable block is ${describePx(layout.tallestAtomicPx)} — ${layout.tallestAtomicLabel}. ` +
-            `Nothing that tall can be placed without stranding space; it needs to fragment.`,
-        )
-        .toBeLessThanOrEqual(budget.maxAtomicPx);
-
       const tooShort = interior
         .filter((sheet) => sheet.bottomGapPx > budget.maxBottomGapPx)
         .map((sheet) => `page ${sheet.number}: ${describePx(sheet.bottomGapPx)} empty below the last line`);
       expect
-        .soft(
-          tooShort,
-          `sheets ending early by more than the ${describePx(budget.maxBottomGapPx)} this layout can explain ` +
-            `(tallest unbreakable block: ${describePx(layout.tallestAtomicPx)} — ${layout.tallestAtomicLabel})`,
-        )
+        .soft(tooShort, `sheets ending early by more than the ${describePx(budget.maxBottomGapPx)} this layout can explain`)
         .toEqual([]);
 
       const columnTooShort = interior.flatMap((sheet) =>
@@ -113,8 +114,8 @@ test.describe(`printed PDF gaps (~${TARGET_PAGES}-page resume)`, () => {
         .soft(columnTooShort, `main column ending early by more than ${describePx(budget.maxBottomGapPx)}`)
         .toEqual([]);
 
-      // Page 1 starts below the template's own top padding; only the sheets
-      // that begin at an internal break are expected to start at the edge.
+      // Page 1 starts below the template's own header; the sheets that begin
+      // at an internal break should start near the top inset.
       const startsLate = interior
         .slice(1)
         .filter((sheet) => sheet.hasText && sheet.topGapPx > budget.maxTopGapPx)
@@ -128,8 +129,6 @@ test.describe(`printed PDF gaps (~${TARGET_PAGES}-page resume)`, () => {
         layout: theme.layout,
         pages: sheets.length,
         budget,
-        tallestAtomicPx: layout.tallestAtomicPx,
-        tallestAtomicLabel: layout.tallestAtomicLabel,
         sheets: gaps.map((sheet) => ({
           page: sheet.number,
           bottomGapPx: Math.round(sheet.bottomGapPx),

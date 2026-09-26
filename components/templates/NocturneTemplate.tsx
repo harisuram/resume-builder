@@ -7,12 +7,12 @@ import type { NameHeadingLevel } from "./registry";
 import { visiblePhoto } from "./shared/atoms";
 import { getTheme } from "./shared/theme";
 
-/** JSON Resume Vitae's one distinguishing feature per spec: a built-in
- * light/dark toggle scoped to the resume surface only. The only template
+/** Nocturne's one distinguishing feature: a built-in light/dark toggle
+ * scoped to the resume surface only. The only template
  * with any client-side state — kept in its own file so the other templates
  * (and the layouts/atoms they share) don't carry a "use client" boundary
  * they don't need. */
-export function VitaeTemplate({
+export function NocturneTemplate({
   data,
   headingLevel,
 }: {
@@ -20,7 +20,7 @@ export function VitaeTemplate({
   headingLevel?: NameHeadingLevel;
 }) {
   const [dark, setDark] = useState(false);
-  const theme = getTheme("jsonresume-vitae");
+  const theme = getTheme("nocturne");
   // The header photo sits in the top-right corner, so the toggle drops to the
   // bottom-right rather than covering it.
   const togglePosition = visiblePhoto(data) ? "bottom-3" : "top-3";

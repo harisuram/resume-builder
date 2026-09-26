@@ -88,7 +88,7 @@ describe("sidebar pagination regressions", () => {
 
   it("applies the same even side content padding on rail and main", () => {
     const { container } = render(
-      <SidebarLayout data={makeFullResumeData({ templateId: "bre-creative" })} theme={getTheme("bre-creative")} />,
+      <SidebarLayout data={makeFullResumeData({ templateId: "ember" })} theme={getTheme("ember")} />,
     );
     const pads = container.querySelectorAll<HTMLElement>(".resume-col-pad");
     expect(pads.length).toBe(2);
@@ -104,7 +104,7 @@ describe("sidebar pagination regressions", () => {
   it("mirrors the same padding and rail-fill rules for a right-hand sidebar", () => {
     jest.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(2500);
     const { container } = render(
-      <ResumePreviewFrame data={makeFullResumeData({ templateId: "bre-leftright" })} />,
+      <ResumePreviewFrame data={makeFullResumeData({ templateId: "aisle" })} />,
     );
     const pads = container.querySelectorAll<HTMLElement>(".resume-col-pad");
     for (const pad of pads) {
@@ -142,7 +142,7 @@ describe("sidebar pagination regressions", () => {
         }) as DOMRect;
     }
 
-    for (const id of ["bre-creative", "bre-leftright"] as const) {
+    for (const id of ["ember", "aisle"] as const) {
       const data = makeFullResumeData({ templateId: id });
       const { container, unmount } = render(
         <SidebarLayout data={data} theme={getTheme(id)} />,
@@ -181,7 +181,7 @@ describe("sidebar pagination regressions", () => {
   it("does not round a short sidebar overflow into an empty third sheet", () => {
     jest.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(PAGE_HEIGHT_PX + 80);
     const { container } = render(
-      <ResumePreviewFrame data={makeFullResumeData({ templateId: "start-bootstrap-resume" })} />,
+      <ResumePreviewFrame data={makeFullResumeData({ templateId: "navy" })} />,
     );
     const sheets = container.querySelectorAll(".resume-page-sheet");
     // One page of content + small overflow → at most 2 sheets, never 3.

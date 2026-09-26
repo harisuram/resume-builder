@@ -65,8 +65,8 @@ describe("BasicInfoForm", () => {
 
   it("updates links independently of each other", async () => {
     render(<BasicInfoForm />);
-    await userEvent.type(screen.getByPlaceholderText("linkedin.com/in/jordan"), "linkedin.com/in/jamie");
-    await userEvent.type(screen.getByPlaceholderText("github.com/jordan"), "github.com/jamie");
+    await userEvent.type(screen.getByPlaceholderText("linkedin.com/in/your-name"), "linkedin.com/in/jamie");
+    await userEvent.type(screen.getByPlaceholderText("github.com/your-handle"), "github.com/jamie");
 
     const { links } = useBuilderStore.getState().basicInfo;
     expect(links.linkedin).toBe("linkedin.com/in/jamie");
@@ -117,7 +117,7 @@ describe("BasicInfoForm", () => {
 
     it("flags a link that doesn't look like a URL once blurred", async () => {
       render(<BasicInfoForm />);
-      const linkedin = screen.getByPlaceholderText("linkedin.com/in/jordan");
+      const linkedin = screen.getByPlaceholderText("linkedin.com/in/your-name");
       await userEvent.type(linkedin, "not a url");
       await userEvent.tab();
       expect(screen.getByText(/Enter a valid LinkedIn link/)).toBeInTheDocument();

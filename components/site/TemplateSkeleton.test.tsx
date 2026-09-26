@@ -28,7 +28,7 @@ function skeletonSnap(theme: TemplateTheme) {
 
 describe("TemplateSkeleton", () => {
   it("keeps section titles and omits resume copy", () => {
-    const { container } = render(<TemplateSkeleton theme={getTheme("jakes-resume")} />);
+    const { container } = render(<TemplateSkeleton theme={getTheme("atlas")} />);
     expect(container.textContent).toContain("Summary");
     expect(container.textContent).toContain("Experience");
     expect(container.textContent).toContain("Projects");
@@ -39,7 +39,7 @@ describe("TemplateSkeleton", () => {
   });
 
   it("puts compact sections in the sidebar rail", () => {
-    const { container } = render(<TemplateSkeleton theme={getTheme("bre-creative")} />);
+    const { container } = render(<TemplateSkeleton theme={getTheme("ember")} />);
     const rail = container.querySelector("[data-resume-column='rail']");
     const main = container.querySelector("[data-resume-column='main']");
     expect(rail?.querySelector("[data-preview-section='education']")).not.toBeNull();
@@ -52,7 +52,7 @@ describe("TemplateSkeleton", () => {
   it("renders only the sections it is given, including a custom additional title", () => {
     const { container } = render(
       <TemplateSkeleton
-        theme={getTheme("jakes-resume")}
+        theme={getTheme("atlas")}
         sections={["summary", "additional"]}
         additionalTitle="Publications"
       />,

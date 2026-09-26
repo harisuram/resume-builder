@@ -1,7 +1,7 @@
 import { parseResumeText } from "./heuristic";
 
 const SAMPLE = `JORDAN LEE
-jordan@email.com | +1 555-010-0199 | Austin, TX
+you@example.com | +1 555-010-0199 | Austin, TX
 linkedin.com/in/jordan | github.com/jordan
 
 PROFESSIONAL SUMMARY
@@ -40,7 +40,7 @@ describe("parseResumeText", () => {
   it("fills matching sections from synonym headings", () => {
     const parsed = parseResumeText(SAMPLE);
     expect(parsed.basicInfo.name).toMatch(/jordan lee/i);
-    expect(parsed.basicInfo.email).toBe("jordan@email.com");
+    expect(parsed.basicInfo.email).toBe("you@example.com");
     expect(parsed.basicInfo.location).toMatch(/Austin/);
     expect(parsed.basicInfo.links.linkedin).toMatch(/linkedin.com\/in\/jordan/i);
     expect(parsed.sections.summary).toMatch(/Backend engineer/);

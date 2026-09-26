@@ -43,9 +43,9 @@ function stubStage(stage: HTMLElement, height = 2500) {
 }
 
 const FAMILIES = [
-  ["jakes-resume", "single"],
-  ["bre-creative", "sidebar"],
-  ["deedy-reversed", "asymmetric"],
+  ["atlas", "single"],
+  ["ember", "sidebar"],
+  ["twin", "asymmetric"],
   ["dossier", "labeled"],
 ] as const;
 
@@ -71,7 +71,7 @@ describe("natural page guides (no forced partitions)", () => {
     expect(parkedRoot).not.toBeNull();
     expect(parkedRoot!.querySelector("[data-page-gap-spacer]")).toBeNull();
     const parkedStage = parkedRoot!.closest(".resume-scale-stage");
-    if (id === "deedy-reversed" || id === "bre-creative") {
+    if (id === "twin" || id === "ember") {
       expect(parkedStage?.classList.contains(PRINT_LAYOUT_SIM_CLASS)).toBe(true);
     }
     window.dispatchEvent(new Event("resume:end-print"));

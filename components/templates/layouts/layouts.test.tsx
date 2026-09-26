@@ -2,7 +2,7 @@ import { render } from "@testing-library/react";
 import { getRenderableSections } from "@/lib/resume";
 import { makeFullResumeData } from "@/test-utils/fixtures";
 import { NARROW_SECTION_KEYS } from "../shared/ResumeSection";
-import { getTheme, railBackground, TEMPLATES, tint } from "../shared/theme";
+import { getTheme, railBackground, TEMPLATES, TESSERA_GROUND, tint } from "../shared/theme";
 import { AsymmetricLayout } from "./AsymmetricLayout";
 import { LabeledLayout } from "./LabeledLayout";
 import { SidebarLayout } from "./SidebarLayout";
@@ -29,14 +29,14 @@ describe("template layouts share the same section split", () => {
 
   it("SingleColumnLayout keeps the default order, including the five new sections at the end", () => {
     const data = makeFullResumeData();
-    const { container } = render(<SingleColumnLayout data={data} theme={getTheme("jakes-resume")} />);
+    const { container } = render(<SingleColumnLayout data={data} theme={getTheme("atlas")} />);
     expect(sectionKeys(container)).toEqual(["summary", ...getRenderableSections(data)]);
     expect(sectionKeys(container).slice(-5)).toEqual(["patents", "languages", "hobbies", "softSkills", "additional"]);
   });
 
   it("Marquee keeps the accent header band out of the flowing page body", () => {
     const data = makeFullResumeData();
-    const { container } = render(<SingleColumnLayout data={data} theme={getTheme("bre-material-dark")} />);
+    const { container } = render(<SingleColumnLayout data={data} theme={getTheme("marquee")} />);
     const header = container.querySelector(".resume-dark-header");
     const body = container.querySelector(".resume-page-body");
     expect(header).not.toBeNull();
@@ -47,7 +47,7 @@ describe("template layouts share the same section split", () => {
 
   it("SidebarLayout puts compact lists in the rail and patents/additional in the main column", () => {
     const data = makeFullResumeData();
-    const { container } = render(<SidebarLayout data={data} theme={getTheme("bre-creative")} />);
+    const { container } = render(<SidebarLayout data={data} theme={getTheme("ember")} />);
     const rail = container.querySelector(".resume-sidebar-rail");
     const main = container.querySelector(".resume-main-column");
     expect(sectionKeys(rail)).toEqual([...NARROW]);
@@ -60,7 +60,7 @@ describe("template layouts share the same section split", () => {
 
   it("AsymmetricLayout puts compact lists in the 32% column and patents/additional in the wide column", () => {
     const data = makeFullResumeData();
-    const { container } = render(<AsymmetricLayout data={data} theme={getTheme("deedy-reversed")} />);
+    const { container } = render(<AsymmetricLayout data={data} theme={getTheme("twin")} />);
     const narrow = container.querySelector(".resume-split-narrow");
     const wide = container.querySelector(".resume-split-wide");
     expect(sectionKeys(narrow)).toEqual([...NARROW]);
@@ -133,7 +133,8 @@ describe("template layouts share the same section split", () => {
 });
 
 describe("two-tone templates", () => {
-  const TWO_TONE = TEMPLATES.filter((theme) => theme.headerColor);
+  // The bespoke variants carry a second colour too; they're covered below.
+  const TWO_TONE = TEMPLATES.filter((theme) => theme.headerColor && !theme.variant);
 
   function headingColors(root: Element): string[] {
     return Array.from(root.querySelectorAll<HTMLElement>("h3")).map((h) => h.style.color);
@@ -196,7 +197,7 @@ describe("two-tone templates", () => {
   });
 
   it("leaves single-accent templates on the accent for band and rail", () => {
-    const marquee = getTheme("bre-material-dark");
+    const marquee = getTheme("marquee");
     const { container, unmount } = render(<SingleColumnLayout data={makeFullResumeData()} theme={marquee} />);
     expect(container.querySelector<HTMLElement>(".resume-dark-header")!.style.background).toBe(cssRgb(marquee.accent));
     unmount();
@@ -207,5 +208,75 @@ describe("two-tone templates", () => {
       cssRgb(inkwell.accent),
     );
     expect(railBackground(inkwell)).toBe(tint(inkwell.accent, 8));
+  });
+});
+
+describe("LabeledLayout row labels", () => {
+  /* A stretched grid label as tall as its section, glued to the content by
+   * break-after-avoid, printed as one unbreakable page-tall block. */
+  it("sizes each section label to its text instead of stretching to the row", () => {
+    const { container } = render(<LabeledLayout data={makeFullResumeData()} theme={getTheme("dossier")} />);
+    const labels = container.querySelectorAll("[data-section-key] > h3");
+    expect(labels.length).toBeGreaterThan(0);
+    for (const label of labels) expect(label).toHaveClass("self-start", "break-after-avoid");
+  });
+});
+
+describe("bespoke single-column templates (VariantLayout)", () => {
+  const VARIANT_IDS = ["horizon", "pivot", "laureate", "sterling", "cameo", "civic", "kernel", "tessera"] as const;
+
+  it.each(VARIANT_IDS)("%s draws its own surface, the name as the one h1, and every section", (id) => {
+    const data = makeFullResumeData();
+    const { container } = render(<SingleColumnLayout data={data} theme={getTheme(id)} />);
+    const surface = container.querySelector<HTMLElement>(".resume-surface")!;
+    expect(surface.dataset.variant).toBe(id);
+    expect(surface.dataset.layout).toBe("single");
+    expect(container.querySelectorAll("h1")).toHaveLength(1);
+    expect(container.querySelector("h1")!.textContent).toContain(data.basicInfo.name);
+    expect(sectionKeys(container)).toEqual(["summary", ...getRenderableSections(data)]);
+  });
+
+  it("Horizon sets the surname in italic in the second colour", () => {
+    const theme = getTheme("horizon");
+    const { container } = render(<SingleColumnLayout data={makeFullResumeData()} theme={theme} />);
+    const em = container.querySelector("h1 em") as HTMLElement;
+    expect(em.textContent).toBe("Montgomery-Whitfield");
+    expect(em.style.color).toBe(cssRgb(theme.headerColor!));
+  });
+
+  it("Cameo shows initials in the ring when there's no photo, and the photo when there is", () => {
+    const theme = getTheme("cameo");
+    const noPhoto = render(<SingleColumnLayout data={makeFullResumeData({ photo: undefined })} theme={theme} />);
+    expect(noPhoto.container.textContent).toContain("AM");
+    noPhoto.unmount();
+    const withPhoto = render(<SingleColumnLayout data={makeFullResumeData({ photo: "data:image/png;base64,AAAA" })} theme={theme} />);
+    expect(withPhoto.container.querySelector('img[src^="data:image/png"]')).not.toBeNull();
+  });
+
+  it("Pivot and Civic put the name on a band in the second colour", () => {
+    for (const id of ["pivot", "civic"] as const) {
+      const theme = getTheme(id);
+      const { container, unmount } = render(<SingleColumnLayout data={makeFullResumeData()} theme={theme} />);
+      const band = container.querySelector("h1")!.closest<HTMLElement>("[style*='background']")!;
+      expect(band.style.background).toBe(cssRgb(theme.headerColor!));
+      unmount();
+    }
+  });
+
+  it("Tessera paints its grey ground behind the section cards", () => {
+    const { container } = render(<SingleColumnLayout data={makeFullResumeData()} theme={getTheme("tessera")} />);
+    expect(container.querySelector<HTMLElement>(".resume-surface")!.style.background).toBe(cssRgb(TESSERA_GROUND));
+  });
+
+  it("Laureate sets its body in the serif", () => {
+    const { container } = render(<SingleColumnLayout data={makeFullResumeData()} theme={getTheme("laureate")} />);
+    expect(container.querySelector(".resume-surface")).toHaveClass("font-serif");
+  });
+
+  it("Kernel titles sections as ~/path in lowercase", () => {
+    const { container } = render(<SingleColumnLayout data={makeFullResumeData()} theme={getTheme("kernel")} />);
+    const heading = container.querySelector('[data-section-key="experience"] h3')!;
+    expect(heading.textContent).toMatch(/^~\//);
+    expect(heading).toHaveClass("lowercase");
   });
 });

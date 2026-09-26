@@ -7,7 +7,7 @@ import { PRINT_LAYOUT_SIM_CLASS } from "@/lib/pagination";
 import { makeFullResumeData } from "@/test-utils/fixtures";
 import { ResumePreviewFrame } from "@/components/builder/ResumePreviewFrame";
 
-const TWIN = "deedy-reversed";
+const TWIN = "twin";
 
 function setBox(el: Element, box: { top: number; height: number }) {
   Object.defineProperty(el, "offsetTop", { configurable: true, value: box.top });

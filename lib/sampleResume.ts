@@ -11,9 +11,11 @@ export const SAMPLE_RESUME: ResumeData = {
     phoneCountryCode: "+1",
     location: "San Francisco, CA",
     links: {
-      linkedin: "linkedin.com/in/alexandra",
-      github: "github.com/alexandra",
-      portfolio: "alexandra.dev",
+      // Handles checked unregistered, and a reserved example domain for the
+      // site: a sample link must never point at a real person's profile.
+      linkedin: "linkedin.com/in/alexandra-mw-sample",
+      github: "github.com/alexandra-mw-sample",
+      portfolio: "alexandra.example.com",
     },
   },
   sections: {
@@ -63,7 +65,7 @@ export const SAMPLE_RESUME: ResumeData = {
       {
         name: "Open-source Kafka connector",
         description: "A CDC connector bridging mainframe DB2 change streams into Kafka topics.",
-        link: "github.com/alexandra/kafka-connector",
+        link: "github.com/alexandra-mw-sample/kafka-connector",
         technologies: ["Kafka", "Java"],
       },
     ],
@@ -72,10 +74,10 @@ export const SAMPLE_RESUME: ResumeData = {
     patents: [
       {
         title: "Distributed cache coherency protocol",
-        number: "US 11,234,567",
+        // Far past any issued US number, so it can't name someone's real patent.
+        number: "US 99,012,345",
         office: "USPTO",
         date: "2022-06",
-        link: "https://patents.google.com/patent/US11234567",
       },
     ],
     languages: [
@@ -89,7 +91,7 @@ export const SAMPLE_RESUME: ResumeData = {
       items: [
         {
           title: "Scaling ledger writes",
-          subtitle: "ACM Queue",
+          subtitle: "Northfield Systems Review",
           date: "2021",
           bullets: ["Surveyed consensus tradeoffs for payment systems"],
         },
@@ -112,7 +114,7 @@ export const SAMPLE_RESUME: ResumeData = {
     softSkills: "complete",
     additional: "complete",
   },
-  templateId: "jakes-resume",
+  templateId: "atlas",
 };
 
 /** Demo for gallery tiles. Every tile is a whole A4 sheet, so the sample has

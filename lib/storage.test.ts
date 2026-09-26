@@ -5,7 +5,7 @@ const SAMPLE: ResumeData = {
   basicInfo: { name: "Jamie Rivera", email: "jamie@example.com", phone: "", location: "Austin, TX", links: {} },
   sections: { skills: ["TypeScript"] },
   sectionStatus: { skills: "complete" },
-  templateId: "jakes-resume",
+  templateId: "atlas",
 };
 
 describe("localStorage helpers", () => {

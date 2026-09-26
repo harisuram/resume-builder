@@ -58,7 +58,9 @@ export async function seedBuilder(page: Page, id: string, data: ResumeData): Pro
   );
   await page.goto(`/builder?template=${encodeURIComponent(id)}`);
   await page.getByRole("button", { name: "Preview & download" }).click();
-  await page.locator("#resume-print-root").waitFor({ state: "attached" });
+  // Browser-print templates mount the HTML print root; PDF-engine-only
+  // templates (the multi-column families) mount the PDF preview instead.
+  await page.locator("#resume-print-root, [data-testid='pdf-engine-preview']").first().waitFor({ state: "attached" });
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(700);
 }

@@ -21,7 +21,7 @@ export function makeEmptyResumeData(overrides: Partial<ResumeData> = {}): Resume
     basicInfo: { name: "", email: "", phone: "", location: "", links: {} },
     sections: {},
     sectionStatus: {},
-    templateId: "jakes-resume",
+    templateId: "atlas",
     ...overrides,
   };
 }

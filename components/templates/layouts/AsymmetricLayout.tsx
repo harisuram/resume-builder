@@ -7,7 +7,7 @@ import { NARROW_SECTION_KEYS, ResumeSection } from "../shared/ResumeSection";
 import { SectionHeading } from "../shared/SectionHeading";
 import { headerColor, type TemplateTheme } from "../shared/theme";
 
-/** Deedy-style dense two-column CV: a brief narrow column (education, skills,
+/** Dense two-column CV: a brief narrow column (education, skills,
  * languages, and other compact lists) beside a dominant wide column carrying
  * the career narrative (summary, experience, projects, patents). */
 export function AsymmetricLayout({

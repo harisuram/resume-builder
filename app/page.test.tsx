@@ -66,7 +66,7 @@ describe("homepage", () => {
     expect(within(dialog).getByText("Summary")).toBeInTheDocument();
     expect(within(dialog).getByRole("link", { name: "Use this template" })).toHaveAttribute(
       "href",
-      "/builder?template=jakes-resume",
+      "/builder?template=atlas",
     );
   });
 });

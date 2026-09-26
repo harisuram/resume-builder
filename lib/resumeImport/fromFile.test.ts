@@ -30,7 +30,7 @@ const FILE = new File(["Jordan Lee\nWork History\nEngineer"], "resume.txt", { ty
 const HEURISTIC = {
   basicInfo: {
     name: "Jordan Lee",
-    email: "jordan@email.com",
+    email: "you@example.com",
     phone: "",
     location: "Austin, TX",
     links: {},
@@ -52,7 +52,7 @@ describe("importResumeFromFile", () => {
       status: 200,
       json: async () => ({
         resume: {
-          basicInfo: { name: "Jordan Lee", email: "jordan@email.com", location: "Austin, TX" },
+          basicInfo: { name: "Jordan Lee", email: "you@example.com", location: "Austin, TX" },
           experience: [{ company: "Acme", role: "Engineer", bullets: ["Shipped"] }],
         },
       }),
