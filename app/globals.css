@@ -219,6 +219,62 @@ input[type="month"]::-webkit-calendar-picker-indicator {
   }
 }
 
+/* Import summary card: rises in from the corner. */
+@keyframes import-result-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .import-result-card {
+    animation: import-result-in 220ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
+  }
+}
+
+/* Template picker panel: grows down from the trigger on open, lifts away on
+ * close (CLOSE_MS in TemplatePicker.tsx matches the out duration). */
+@keyframes template-picker-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes template-picker-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+.template-picker-panel {
+  transform-origin: top center;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .template-picker-panel[data-state="open"] {
+    animation: template-picker-in 170ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
+  }
+  .template-picker-panel[data-state="closed"] {
+    animation: template-picker-out 120ms ease-in both;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .template-picker-panel[data-state="closed"] {
+    opacity: 0;
+  }
+}
+
 @keyframes template-dock-in {
   from {
     opacity: 0;

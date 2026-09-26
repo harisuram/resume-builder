@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  createContext,
   useCallback,
+  useContext,
   useEffect,
   useRef,
   useState,
@@ -17,6 +19,18 @@ import type { ImportedResume } from "@/lib/resumeImport/normalize";
 import { persistCurrentResume } from "@/lib/persistResume";
 import { hasAnyResumeValue, useBuilderStore } from "@/lib/store";
 import { showToast } from "@/lib/toast";
+
+/** Lets any control inside the builder open the file picker. */
+interface ResumeImportApi {
+  openPicker: () => void;
+  busy: boolean;
+}
+
+const ResumeImportContext = createContext<ResumeImportApi | null>(null);
+
+export function useResumeImport(): ResumeImportApi | null {
+  return useContext(ResumeImportContext);
+}
 
 const PROGRESS_COPY: Record<ImportProgress, string> = {
   reading: "Opening the file",
@@ -47,10 +61,21 @@ export function ResumeImportProvider({
   children,
   onImported,
   onReviewSection,
+  prompt = false,
+  onPromptClose,
+  initialFile = null,
 }: {
   children?: ReactNode;
   onImported?: () => void;
   onReviewSection?: (key: ImportedResume["filled"][number]) => void;
+  /** Ask straight away whether to start from a file (from the home page's
+   * "Import my resume"). The picker still opens only on a click: browsers
+   * don't allow it without one. */
+  prompt?: boolean;
+  onPromptClose?: () => void;
+  /** A file already chosen (on the home page) — imported as soon as the
+   * builder is up, with the usual replace-draft check. */
+  initialFile?: File | null;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const dragDepth = useRef(0);
@@ -108,6 +133,13 @@ export function ResumeImportProvider({
     [getResumeData, progress, runImport],
   );
 
+  const handledInitial = useRef<File | null>(null);
+  useEffect(() => {
+    if (!initialFile || handledInitial.current === initialFile) return;
+    handledInitial.current = initialFile;
+    queueFile(initialFile);
+  }, [initialFile, queueFile]);
+
   const openPicker = useCallback(() => {
     inputRef.current?.click();
   }, []);
@@ -152,8 +184,10 @@ export function ResumeImportProvider({
     };
   }, [queueFile]);
 
+  const api: ResumeImportApi = { openPicker, busy: Boolean(progress) };
+
   return (
-    <>
+    <ResumeImportContext.Provider value={api}>
       {children}
       <input
         ref={inputRef}
@@ -167,9 +201,22 @@ export function ResumeImportProvider({
         }}
       />
       <ConfirmDialog
+        open={prompt && !confirming && !progress}
+        title="Start from your own resume"
+        description="Choose a PDF, Word (.docx), or text file. We'll fill in every section we can read, even when your headings say things like Work History or Career Objective. You can also drop the file anywhere on this page."
+        confirmLabel="Choose a file"
+        cancelLabel="Start from scratch"
+        confirmVariant="primary"
+        onConfirm={() => {
+          openPicker();
+          onPromptClose?.();
+        }}
+        onCancel={() => onPromptClose?.()}
+      />
+      <ConfirmDialog
         open={confirming}
         title="Replace the current draft with this file?"
-        description="We'll fill every section we can read from the resume. Empty sections will be skipped — you can turn them back on in the list."
+        description="We'll fill every section we can read from the resume. Sections the file doesn't have stay on, empty and ready to fill in."
         confirmLabel="Replace and import"
         cancelLabel="Keep what I have"
         confirmVariant="primary"
@@ -262,8 +309,38 @@ export function ResumeImportProvider({
             document.body,
           )
         : null}
-    </>
+    </ResumeImportContext.Provider>
   );
+}
+
+/** How long the import summary stays up before it closes itself. */
+export const IMPORT_RESULT_MS = 10_000;
+
+/** Counts down `ms`, pausing while `paused` — hover or keyboard focus on the
+ * card, so nobody loses it mid-read. Returns the fraction left (1 → 0). */
+function useAutoDismiss(ms: number, paused: boolean, onDone: () => void): number {
+  const [left, setLeft] = useState(ms);
+  const onDoneRef = useRef(onDone);
+  useEffect(() => {
+    onDoneRef.current = onDone;
+  }, [onDone]);
+  useEffect(() => {
+    if (paused) return;
+    const started = Date.now();
+    const from = left;
+    const tick = window.setInterval(() => {
+      const next = Math.max(0, from - (Date.now() - started));
+      setLeft(next);
+      if (next === 0) {
+        window.clearInterval(tick);
+        onDoneRef.current();
+      }
+    }, 100);
+    return () => window.clearInterval(tick);
+    // `left` is read only as the starting point when the timer (re)starts.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paused, ms]);
+  return left / ms;
 }
 
 export function ResumeImportResult({
@@ -279,19 +356,57 @@ export function ResumeImportResult({
   onAgain: () => void;
   onReview?: (key: ImportedResume["filled"][number]) => void;
 }) {
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const left = useAutoDismiss(IMPORT_RESULT_MS, hovered || focused, onDismiss);
+  const seconds = Math.ceil(left * (IMPORT_RESULT_MS / 1000));
+
   return (
-    <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-4 shadow-card sm:px-5">
-      <div className="flex items-start gap-3">
-        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-accent-tint)] text-[var(--color-accent)]">
+    <div
+      role="status"
+      aria-live="polite"
+      aria-label="Resume imported"
+      data-import-result
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocus={() => setFocused(true)}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false);
+      }}
+      className="import-result-card relative overflow-hidden rounded-2xl border border-[var(--color-accent)]/35 bg-[var(--color-surface)] shadow-[0_24px_60px_-18px_color-mix(in_srgb,var(--color-ink)_45%,transparent),0_2px_6px_color-mix(in_srgb,var(--color-ink)_12%,transparent)] ring-1 ring-[var(--color-ink)]/5"
+    >
+      <div className="h-1 w-full bg-[var(--color-accent-tint)]" aria-hidden="true">
+        <div
+          className="h-full bg-[var(--color-accent)] transition-[width] duration-100 ease-linear"
+          style={{ width: `${left * 100}%` }}
+          data-import-result-timer
+        />
+      </div>
+      <div className="flex items-start gap-3 px-4 pb-4 pt-3.5 sm:px-5">
+        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-accent)] text-[var(--color-accent-ink)] shadow-cta">
           <CheckIcon className="h-4 w-4" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="font-display text-[15px] font-semibold tracking-tight text-[var(--color-ink)]">
-            Filled {result.filled.length} {result.filled.length === 1 ? "section" : "sections"}
-            {fileName ? ` from ${fileName}` : ""}
-          </p>
-          <p className="mt-1 text-[12.5px] text-[var(--color-ink-soft)]">
-            Empty sections were skipped — turn them back on in the list if you need them. Tap a section to review it.
+          <div className="flex items-start justify-between gap-2">
+            <p className="font-display text-[15.5px] font-semibold leading-snug tracking-tight text-[var(--color-ink)]">
+              Filled {result.filled.length} {result.filled.length === 1 ? "section" : "sections"}
+              {fileName ? (
+                <span className="block truncate text-[12.5px] font-medium text-[var(--color-ink-soft)]">from {fileName}</span>
+              ) : null}
+            </p>
+            <button
+              type="button"
+              onClick={onDismiss}
+              aria-label="Close import summary"
+              className="-mr-1.5 -mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[var(--color-ink-faint)] transition hover:bg-[var(--color-accent-tint)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-focus)]"
+            >
+              <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" aria-hidden="true">
+                <path d="m4 4 8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
+          <p className="mt-1.5 text-[12.5px] leading-snug text-[var(--color-ink-soft)]">
+            Tap a section to check it. Sections the file didn’t have are still on, empty and ready to fill in.
           </p>
           {result.filled.length > 0 ? (
             <ul className="mt-3 flex flex-wrap gap-1.5">
@@ -302,7 +417,7 @@ export function ResumeImportResult({
                     <button
                       type="button"
                       onClick={() => onReview?.(key)}
-                      className="min-h-8 rounded-full bg-[var(--color-accent-tint)] px-3 py-1 text-[11.5px] font-medium text-[var(--color-accent)] transition hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]"
+                      className="min-h-8 rounded-full border border-[var(--color-accent)]/30 bg-[var(--color-accent-tint)] px-3 py-1 text-[12px] font-semibold text-[var(--color-accent)] transition hover:border-[var(--color-accent)]/60 hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]"
                     >
                       {label}
                     </button>
@@ -311,16 +426,44 @@ export function ResumeImportResult({
               })}
             </ul>
           ) : null}
-          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <div className="mt-3.5 flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-between">
             <Button type="button" variant="secondary" size="sm" className="min-h-11 w-full sm:min-h-0 sm:w-auto" onClick={onAgain}>
               Import another
             </Button>
-            <Button type="button" variant="ghost" size="sm" className="min-h-11 w-full sm:min-h-0 sm:w-auto" onClick={onDismiss}>
-              Dismiss
-            </Button>
+            <p className="text-center text-[11px] text-[var(--color-ink-faint)] sm:text-right" aria-hidden="true">
+              {hovered || focused ? "Paused" : `Closes in ${seconds}s`}
+            </p>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+/** Header control: opens the file picker. The same import also runs when a
+ * file is dropped anywhere on the builder. */
+export function ImportResumeButton() {
+  const api = useResumeImport();
+  if (!api) return null;
+  return (
+    // The accent fill sets it apart from the plain "Start new resume" beside
+    // it: starting from an existing resume is the quickest way in.
+    <Button
+      variant="primary"
+      size="sm"
+      onClick={api.openPicker}
+      disabled={api.busy}
+      aria-label="Import resume"
+      title="Fill the builder from a PDF, Word or text resume"
+      data-tour="resume-import"
+    >
+      <DocumentIcon className="h-3.5 w-3.5 shrink-0" />
+      <span className="hidden sm:inline" aria-hidden="true">
+        Import resume
+      </span>
+      <span className="sm:hidden" aria-hidden="true">
+        Import
+      </span>
+    </Button>
   );
 }

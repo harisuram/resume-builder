@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { FieldGroup, TextArea } from "@/components/ui/Field";
-import { AI_BACKOFF_MS, AI_LIMITED_UNTIL_KEY, AiLimitError, optimizeSummary } from "@/lib/ai";
+import { AI_BACKOFF_MS, AI_LIMITED_UNTIL_KEY, AI_MESSAGES, AiLimitError, optimizeSummary } from "@/lib/ai";
 import { SUMMARY_COPY } from "@/lib/persona";
 import { useBuilderStore } from "@/lib/store";
 import { showToast } from "@/lib/toast";
@@ -39,7 +39,7 @@ export function SummaryForm() {
         localStorage.setItem(AI_LIMITED_UNTIL_KEY, String(Date.now() + AI_BACKOFF_MS));
         setAiAvailable(false);
       }
-      showToast(err instanceof Error ? err.message : "AI optimization failed. Try again later.");
+      showToast(err instanceof Error ? err.message : AI_MESSAGES.unavailable);
     } finally {
       setOptimizing(false);
     }

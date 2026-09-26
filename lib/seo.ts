@@ -91,6 +91,11 @@ export interface FaqItem {
 
 export const HOME_FAQS: FaqItem[] = [
   {
+    question: "Can I start from my existing resume?",
+    answer:
+      "Yes. Choose Import my resume (or Import in the builder) and pick a PDF, Word (.docx), or text file. Each section fills in automatically, even when your headings use different words like Work History, Career Objective, or Core Competencies. Check each section, then pick a template and download.",
+  },
+  {
     question: "Is this resume builder free?",
     answer:
       "Yes. This is a free resume builder, resume maker, and resume creator. You can make a resume or a free curriculum vitae without paying, and you never have to create an account.",

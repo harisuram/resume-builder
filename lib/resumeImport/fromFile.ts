@@ -1,4 +1,4 @@
-import { AI_BACKOFF_MS, AI_LIMITED_UNTIL_KEY, AI_LIMIT_MESSAGE, AiLimitError } from "../ai";
+import { AI_BACKOFF_MS, AI_LIMITED_UNTIL_KEY, AI_LIMIT_MESSAGE, AiLimitError, aiErrorFromResponse } from "../ai";
 import { extractResumeText, ResumeFileError, validateResumeFile } from "./extractText";
 import { parseResumeText } from "./heuristic";
 import { MAX_RESUME_CHARS, MIN_RESUME_CHARS } from "./limits";
@@ -25,7 +25,12 @@ export async function importResumeFromFile(
   try {
     overlay = await parseResumeWithAi(text);
   } catch (err) {
-    if (err instanceof AiLimitError && heuristic.filled.length === 0) throw err;
+    // Only worth stopping for when the file couldn't be read without the AI.
+    if (err instanceof AiLimitError && heuristic.filled.length === 0) {
+      throw new AiLimitError(
+        "The free AI limit is used up, and this file couldn't be read without it. Try a PDF or Word export with clear section headings, or fill in the sections yourself.",
+      );
+    }
   }
 
   const merged = overlay ? mergeImportedResumes(heuristic, overlay) : heuristic;
@@ -52,10 +57,13 @@ async function parseResumeWithAi(text: string): Promise<ImportedResume> {
   });
 
   if (res.status === 429) {
-    if (typeof localStorage !== "undefined") {
+    // Only the shared quota backs the feature off for hours; the per-minute
+    // throttle is a short pause (the file is still read without AI).
+    const err = await aiErrorFromResponse(res);
+    if (err instanceof AiLimitError && typeof localStorage !== "undefined") {
       localStorage.setItem(AI_LIMITED_UNTIL_KEY, String(Date.now() + AI_BACKOFF_MS));
     }
-    throw new AiLimitError(AI_LIMIT_MESSAGE);
+    throw err;
   }
   if (!res.ok) {
     const body = (await res.json().catch(() => null)) as { error?: string } | null;

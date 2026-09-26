@@ -1,6 +1,12 @@
 import { unzipSync } from "fflate";
 
 export const MAX_IMPORT_BYTES = 6 * 1024 * 1024;
+/** `?import=1` on /builder: arrived from "Import my resume" on the home page. */
+export function wantsImportPrompt(search: string): boolean {
+  const value = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search).get("import");
+  return value !== null && value !== "0" && value !== "false";
+}
+
 export const ACCEPT_RESUME_FILES = ".pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown";
 
 export type ResumeFileKind = "pdf" | "docx" | "txt";
@@ -101,7 +107,7 @@ function wordXmlToText(xml: string): string {
     .trim();
 }
 
-type PdfTextItem = { str?: string; transform?: number[]; hasEOL?: boolean };
+type PdfTextItem = { str?: string; transform?: number[]; width?: number; hasEOL?: boolean };
 
 async function extractPdfText(data: Uint8Array): Promise<string> {
   const pdfjs = await import("pdfjs-dist");
@@ -131,18 +137,88 @@ async function extractPdfText(data: Uint8Array): Promise<string> {
   }
 }
 
-function pdfItemsToText(items: PdfTextItem[]): string {
+/** Rebuilds a page's text in reading order. A two-column page is read one
+ * column at a time (full-width lines above the columns first) — joined line
+ * by line across the page, a sidebar's "Skills" landed in the middle of the
+ * experience entries and the import lost both. */
+export function pdfItemsToText(items: PdfTextItem[]): string {
+  const boxes = items
+    .filter((item) => item?.str && item.str.trim())
+    .map((item) => ({
+      str: item.str as string,
+      x: item.transform?.[4] ?? 0,
+      y: Math.round((item.transform?.[5] ?? 0) * 2) / 2,
+      w: item.width ?? 0,
+    }));
+  const gutter = findColumnGutter(boxes);
+  if (gutter === null) return boxesToLines(boxes);
+
+  const sameLine = (a: number, b: number) => Math.abs(a - b) < 2.5;
+  const crossingYs = boxes.filter((b) => b.x < gutter && b.x + b.w > gutter).map((b) => b.y);
+  // The columns start at the first right-hand line no text crosses; anything
+  // above that (name, contact line, a link wrapped under it) is the header.
+  const columnTop = Math.max(
+    ...boxes.filter((b) => b.x >= gutter && !crossingYs.some((y) => sameLine(y, b.y))).map((b) => b.y),
+  );
+  const top = boxes.filter((b) => b.y > columnTop + 2.5);
+  const rest = boxes.filter((b) => b.y <= columnTop + 2.5);
+  return [
+    boxesToLines(top),
+    boxesToLines(rest.filter((b) => b.x + b.w / 2 < gutter)),
+    boxesToLines(rest.filter((b) => b.x + b.w / 2 >= gutter)),
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+type TextBox = { str: string; x: number; y: number; w: number };
+
+/** The x of a vertical gap no text crosses, with a real share of the page's
+ * text on each side — or null for a single-column page. Right-aligned dates
+ * in a one-column resume don't qualify: they're a small share, and the body
+ * lines between them cross the middle. */
+function findColumnGutter(boxes: TextBox[]): number | null {
+  if (boxes.length < 20) return null;
+  const minX = Math.min(...boxes.map((b) => b.x));
+  const maxX = Math.max(...boxes.map((b) => b.x + b.w));
+  const span = maxX - minX;
+  if (span <= 0) return null;
+  let best: { g: number; crossing: number; balance: number } | null = null;
+  for (let step = 20; step <= 80; step++) {
+    const g = minX + (span * step) / 100;
+    let crossing = 0;
+    let left = 0;
+    let right = 0;
+    for (const b of boxes) {
+      if (b.x < g && b.x + b.w > g) crossing++;
+      else if (b.x + b.w <= g) left++;
+      else right++;
+    }
+    if (left < boxes.length * 0.2 || right < boxes.length * 0.2) continue;
+    const balance = Math.min(left, right);
+    if (!best || crossing < best.crossing || (crossing === best.crossing && balance > best.balance)) {
+      best = { g, crossing, balance };
+    }
+  }
+  // A few header lines may cross it; the columns themselves must not.
+  if (!best || best.crossing > Math.max(3, boxes.length * 0.06)) return null;
+  // Both sides have to run down the page together, not one above the other.
+  const leftYs = boxes.filter((b) => b.x + b.w <= best.g).map((b) => b.y);
+  const rightYs = boxes.filter((b) => b.x >= best.g).map((b) => b.y);
+  const overlap = Math.min(Math.max(...leftYs), Math.max(...rightYs)) - Math.max(Math.min(...leftYs), Math.min(...rightYs));
+  const height = Math.max(...boxes.map((b) => b.y)) - Math.min(...boxes.map((b) => b.y));
+  return overlap > height * 0.3 ? best.g : null;
+}
+
+function boxesToLines(boxes: TextBox[]): string {
   const lines: { y: number; parts: { x: number; str: string }[] }[] = [];
-  for (const item of items) {
-    if (!item?.str) continue;
-    const x = item.transform?.[4] ?? 0;
-    const y = Math.round((item.transform?.[5] ?? 0) * 2) / 2;
-    let line = lines.find((l) => Math.abs(l.y - y) < 2.5);
+  for (const box of boxes) {
+    let line = lines.find((l) => Math.abs(l.y - box.y) < 2.5);
     if (!line) {
-      line = { y, parts: [] };
+      line = { y: box.y, parts: [] };
       lines.push(line);
     }
-    line.parts.push({ x, str: item.str });
+    line.parts.push({ x: box.x, str: box.str });
   }
   lines.sort((a, b) => b.y - a.y);
   return lines

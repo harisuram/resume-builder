@@ -34,6 +34,8 @@ import { AdditionalForm } from "./sections/AdditionalForm";
 import { SummaryForm } from "./sections/SummaryForm";
 import { Navbar } from "./Navbar";
 import { BuilderTour } from "./BuilderTour";
+import { wantsImportPrompt } from "@/lib/resumeImport/extractText";
+import { takePendingImport } from "@/lib/resumeImport/pendingImport";
 import { ResumeImportProvider } from "./ResumeImport";
 import { adjacentUnskippedStep, getWizardOrder, type NavKey } from "./nav";
 import { MobilePreviewSheet } from "./MobilePreviewSheet";
@@ -179,6 +181,10 @@ export function BuilderShell() {
   const [hydrated, setHydrated] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [importPrompt, setImportPrompt] = useState(false);
+  const importFirstRef = useRef<boolean | null>(null);
+  const pendingFileRef = useRef<File | null>(null);
+  const [initialFile, setInitialFile] = useState<File | null>(null);
   const formPaneRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -195,9 +201,26 @@ export function BuilderShell() {
     }
     const fromGallery = requestedTemplateId(window.location.search);
     if (fromGallery) useBuilderStore.getState().setTemplateId(fromGallery);
+    // From "Import my resume" on the home page: ask for the file first, and
+    // leave the tour for another visit so the two don't stack. Drop the
+    // flag from the address so a refresh doesn't ask again.
+    // Read once and kept in a ref: this effect can run twice on mount (React
+    // dev), and the second run would no longer see the flag we strip below.
+    importFirstRef.current ??= wantsImportPrompt(window.location.search);
+    const importFirst = importFirstRef.current;
+    // A file picked on the home page comes along in memory: import it now
+    // rather than asking for it again.
+    pendingFileRef.current ??= takePendingImport();
+    if (importFirst) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("import");
+      window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+    }
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setHydrated(true);
-    if (shouldOfferBuilderTour() && isBuilderTourViewport()) setTourOpen(true);
+    if (pendingFileRef.current) setInitialFile(pendingFileRef.current);
+    else if (importFirst) setImportPrompt(true);
+    else if (shouldOfferBuilderTour() && isBuilderTourViewport()) setTourOpen(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -319,6 +342,9 @@ export function BuilderShell() {
         selectSection("basicInfo");
       }}
       onReviewSection={(key) => selectSection(key)}
+      prompt={importPrompt}
+      onPromptClose={() => setImportPrompt(false)}
+      initialFile={initialFile}
     >
     <div className="print-unclip flex h-[100dvh] flex-col overflow-hidden">
       <div

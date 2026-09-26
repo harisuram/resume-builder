@@ -1,5 +1,7 @@
 import {
   getEducationErrors,
+  getLanguageErrors,
+  languageKey,
   getExperienceErrors,
   getProjectErrors,
   isBasicInfoValid,
@@ -118,5 +120,31 @@ describe("isSectionValid", () => {
         experience: [{ company: "Acme", role: "Eng", startDate: "2020-01", endDate: "2019-01", bullets: [""] }],
       }),
     ).toBe(false);
+  });
+});
+
+
+describe("duplicate languages", () => {
+  const en = { name: "English", level: "Native" as const };
+
+  it("treats case and spacing as the same language", () => {
+    expect(languageKey("  English ")).toBe(languageKey("ENGLISH"));
+    expect(languageKey("Brazilian  Portuguese")).toBe("brazilian portuguese");
+  });
+
+  it("flags only the repeat, never the first mention", () => {
+    expect(getLanguageErrors(en, [])).toEqual({});
+    expect(getLanguageErrors({ name: " english", level: "Fluent" }, [en]).name).toBe(
+      "english is already in your list. Pick another language or remove this one.",
+    );
+  });
+
+  it("keeps the missing-name error for an empty entry", () => {
+    expect(getLanguageErrors({ name: " ", level: "Fluent" }, [en]).name).toBe("Enter the language.");
+  });
+
+  it("blocks the section while a language is listed twice", () => {
+    expect(isSectionValid("languages", { languages: [en, { name: "Spanish", level: "Fluent" }] })).toBe(true);
+    expect(isSectionValid("languages", { languages: [en, { name: "english", level: "Fluent" }] })).toBe(false);
   });
 });

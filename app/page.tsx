@@ -4,6 +4,7 @@ import { BuilderCta } from "@/components/site/BuilderCta";
 import { FaqAccordion } from "@/components/site/FaqAccordion";
 import { FeatureCards } from "@/components/site/FeatureCards";
 import { MarketingPage } from "@/components/site/MarketingPage";
+import { HomeImportCallout } from "@/components/site/HomeImportCallout";
 import { TemplatePreviewStrip } from "@/components/site/TemplatePreviewStrip";
 import { ctaGhost } from "@/components/ui/cta";
 import { ADSENSE_SLOTS } from "@/lib/ads";
@@ -70,6 +71,8 @@ export default function Home() {
               See all templates
             </Link>
           </div>
+
+          <HomeImportCallout />
         </section>
 
         <TemplatePreviewStrip />

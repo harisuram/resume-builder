@@ -1,4 +1,4 @@
-import { callGroqChat, extractJsonObject, jsonResponse, type OptimizeEnv } from "./optimizeServer";
+import { callGroqChat, extractJsonObject, failureResponse, jsonResponse, type OptimizeEnv } from "./optimizeServer";
 import { MAX_RESUME_CHARS, MIN_RESUME_CHARS } from "./resumeImport/limits";
 import { normalizeParsedResume, type ImportedResume } from "./resumeImport/normalize";
 
@@ -86,9 +86,9 @@ export async function handleImportPost(request: Request, env: OptimizeEnv): Prom
     missingKeyError:
       "Resume import isn't configured. Add GROQ_API_KEY to .env.local (local) or as a Cloudflare Worker secret (production).",
   });
-  if ("error" in result) return jsonResponse({ error: result.error }, result.status);
+  if ("error" in result) return failureResponse(result);
 
   const resume = parseImportedResumeContent(result.content);
-  if (!resume) return jsonResponse({ error: "AI response was malformed. Try again." }, 502);
+  if (!resume) return jsonResponse({ error: "Couldn't read that resume with AI. Try again.", code: "malformed" }, 502);
   return jsonResponse({ resume }, 200);
 }

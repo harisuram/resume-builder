@@ -4,7 +4,17 @@ import Home from "@/app/page";
 import { TEMPLATES } from "@/components/templates/shared/theme";
 import { HOME_FAQS, TEMPLATE_COUNT_WORDS } from "@/lib/seo";
 
+jest.mock("next/navigation", () => ({ useRouter: () => ({ push: jest.fn() }) }));
+
 describe("homepage", () => {
+  it("tells visitors they can start from their own resume", () => {
+    render(<Home />);
+    expect(screen.getByText("Already have a resume?")).toBeInTheDocument();
+    expect(screen.getByText(/Upload your PDF or Word file/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Import my resume/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Can I start from my existing resume?" })).toBeInTheDocument();
+  });
+
   it("shows the live template count in the strip and the feature copy", () => {
     render(<Home />);
     expect(screen.getByText(`${TEMPLATES.length} templates`)).toBeInTheDocument();

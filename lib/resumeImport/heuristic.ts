@@ -16,6 +16,7 @@ const EMAIL_RE = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i;
 const LINKEDIN_RE = /(?:https?:\/\/)?(?:www\.)?linkedin\.com\/in\/[A-Za-z0-9_-]+\/?/i;
 const GITHUB_RE = /(?:https?:\/\/)?(?:www\.)?github\.com\/[A-Za-z0-9_-]+\/?/i;
 const URL_RE = /(?:https?:\/\/)?(?:www\.)?([a-z0-9-]+\.)+[a-z]{2,}(?:\/[^\s|]*)?/i;
+const SCHOOL_RE = /\b(?:university|college|institute|school|academy|polytechnic|conservatoire|iit|nit)\b/i;
 const LOCATION_RE = /\b([A-Z][A-Za-z.]+(?:,?\s+[A-Z][A-Za-z.]+){0,2},\s*(?:[A-Z]{2}|[A-Z][A-Za-z]+))\b/;
 
 function linesOf(text: string): string[] {
@@ -65,14 +66,38 @@ function splitIntoSections(text: string): { header: string; blocks: SectionBlock
   return { header, blocks };
 }
 
-function extractContact(header: string): ImportedResume["basicInfo"] {
+/** A link the PDF wrapped at a hyphen or slash ("linkedin.com/in/jane-" then
+ * "doe" on the next line) is one link again. */
+function joinWrappedLinks(text: string): string {
+  return text.replace(/((?:linkedin\.com\/in\/|github\.com\/|https?:\/\/)\S*[-/_])\n(?=[A-Za-z0-9])/gi, "$1");
+}
+
+/** A short contact-line piece that's plain words — "Singapore", "Leeds, UK" —
+ * for locations LOCATION_RE's "City, Region" shape misses. */
+function fallbackLocation(pieces: string[], name: string): string {
+  for (const piece of pieces) {
+    const text = piece.trim();
+    if (!text || text === name || text.length > 40) continue;
+    if (EMAIL_RE.test(text) || URL_RE.test(text) || findPhone(text) || /\d/.test(text)) continue;
+    if (resolveSectionHeading(text)) continue;
+    if (/^[A-Z][A-Za-z.' -]*(?:,\s*[A-Z][A-Za-z.' -]*)*$/.test(text)) return text;
+  }
+  return "";
+}
+
+function extractContact(rawHeader: string): ImportedResume["basicInfo"] {
+  const header = joinWrappedLinks(rawHeader);
   const emailMatch = header.match(EMAIL_RE);
   const linkedinMatch = header.match(LINKEDIN_RE);
   const githubMatch = header.match(GITHUB_RE);
+  // Emails out first: "jane.doe@example.com" otherwise reads as the website
+  // "jane.doe". Then the first remaining URL that isn't LinkedIn/GitHub.
+  const withoutEmails = header.replace(new RegExp(EMAIL_RE.source, "gi"), " ");
   let portfolio: string | undefined;
-  const urlMatch = header.match(URL_RE);
-  if (urlMatch && !LINKEDIN_RE.test(urlMatch[0]) && !GITHUB_RE.test(urlMatch[0]) && !EMAIL_RE.test(urlMatch[0])) {
-    portfolio = urlMatch[0].replace(/[.,;]+$/, "");
+  for (const match of withoutEmails.matchAll(new RegExp(URL_RE.source, "gi"))) {
+    if (LINKEDIN_RE.test(match[0]) || GITHUB_RE.test(match[0])) continue;
+    portfolio = match[0].replace(/[.,;]+$/, "");
+    break;
   }
 
   const phoneMatch = findPhone(header);
@@ -94,7 +119,9 @@ function extractContact(header: string): ImportedResume["basicInfo"] {
     name,
     email: emailMatch ? emailMatch[0] : "",
     ...splitPhone(phoneMatch ?? ""),
-    location: locationMatch ? locationMatch[1] : "",
+    location: locationMatch
+      ? locationMatch[1]
+      : fallbackLocation(headerLines.flatMap((line) => line.split(/\s*[|•·]\s*/)), name),
     links: {
       linkedin: linkedinMatch?.[0],
       github: githubMatch?.[0],
@@ -118,6 +145,13 @@ function bodyLines(body: string): string[] {
 
 function splitEntries(body: string): string[] {
   const lines = linesOf(body);
+  // Word bullets come from list numbering, so the text has no "•" — and
+  // plenty of PDFs are the same. Without markers, group around the dated
+  // lines instead of treating every line as its own entry.
+  if (!lines.some(isBullet)) {
+    const grouped = splitEntriesByDates(lines.filter(Boolean));
+    if (grouped) return grouped;
+  }
   const chunks: string[][] = [[]];
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -134,6 +168,41 @@ function splitEntries(body: string): string[] {
     else prev.push(line);
   }
   return chunks.map((c) => c.join("\n")).filter(Boolean);
+}
+
+/** A dated line that already names the role and the company ("Engineer |
+ * Acme | 2020 – 2022", "Engineer at Acme, 2020") heads its own entry; one
+ * that only carries a company or school and the dates ("Acme, 2020 – 2022")
+ * belongs with the title line just above it. */
+function datedLineIsFullHeader(line: string): boolean {
+  const rest = extractDateRangeFromLine(line)?.rest ?? line;
+  const parts = rest.split(/\s*[|•·]\s*|\s+(?:at|@)\s+/i).map((p) => p.replace(/[,;–—-]+$/, "").trim()).filter(Boolean);
+  return parts.length >= 2;
+}
+
+/** Entries from unmarked lines: each dated line anchors one entry, with its
+ * title line above it and the lines after it as bullets. Null when there are
+ * no dates to anchor on. */
+function splitEntriesByDates(lines: string[]): string[] | null {
+  const dated = lines.map((line, i) => (extractDateRangeFromLine(line) ? i : -1)).filter((i) => i >= 0);
+  if (dated.length === 0) return null;
+  const starts = dated.map((d, k) => {
+    const floor = k === 0 ? 0 : dated[k - 1] + 1;
+    if (datedLineIsFullHeader(lines[d]) || d - 1 < floor) return d;
+    const above = lines[d - 1];
+    // A long sentence above the dates is the previous entry's bullet.
+    return above.length <= 80 && !/[.!?]$/.test(above) ? d - 1 : d;
+  });
+  // Anything before the first entry (rare) joins it.
+  starts[0] = 0;
+  return starts.map((start, k) => {
+    const end = k + 1 < starts.length ? starts[k + 1] : lines.length;
+    const anchor = dated[k];
+    return lines
+      .slice(start, end)
+      .map((line, j) => (start + j > anchor ? `• ${line}` : line))
+      .join("\n");
+  });
 }
 
 const DATE_RANGE_STRIP =
@@ -181,8 +250,8 @@ function parseExperienceBlock(block: string): Experience | null {
       role = parts[0];
     }
   }
-  role = clip(role, 200);
-  company = clip(company, 200);
+  role = clip(role.replace(/[,;–—-]+$/, "").trim(), 200);
+  company = clip(company.replace(/[,;–—-]+$/, "").trim(), 200);
   if (!role && !company) return null;
   return {
     company: company || role,
@@ -210,7 +279,19 @@ function parseEducationBlock(block: string): Education | null {
   let institution = "";
   let degree = "";
   let fieldOfStudy: string | undefined;
-  if (parts.length >= 2) {
+  // Whichever part names a school is the institution, wherever it sits —
+  // "University of X | B.Sc." and "B.Sc., University of X" both occur.
+  const schoolAt = parts.findIndex((p) => SCHOOL_RE.test(p));
+  if (parts.length >= 2 && schoolAt > 0) {
+    institution = parts[schoolAt];
+    const others = parts.filter((_, i) => i !== schoolAt);
+    degree = others[0];
+    fieldOfStudy = others[1];
+  } else if (parts.length >= 2 && schoolAt === 0) {
+    institution = parts[0];
+    degree = parts[1];
+    fieldOfStudy = parts[2];
+  } else if (parts.length >= 2) {
     degree = parts[0];
     institution = parts[1];
     fieldOfStudy = parts[2];
@@ -261,11 +342,16 @@ function parseAdditionalBlock(heading: string, body: string): AdditionalItem[] {
     const lines = bodyLines(entry);
     const bullets = lines.filter(isBullet).map((l) => stripBullet(l));
     const headers = lines.filter((l) => !isBullet(l));
-    const dates = headers.map(extractDateRangeFromLine).find(Boolean);
-    const title = clip(dates?.rest || headers[0] || heading, 200);
+    const datedAt = headers.findIndex((h) => extractDateRangeFromLine(h));
+    const dates = datedAt >= 0 ? extractDateRangeFromLine(headers[datedAt]) : null;
+    const clean = (text: string) => text.replace(/[,;–—-]+$/, "").trim();
+    // "Volunteer\nFood Bank, 2018 – 2020": the first line is the title and the
+    // dated line (without its dates) the subtitle.
+    const title = clip(clean(datedAt > 0 ? headers[0] : dates?.rest || headers[0] || heading), 200);
+    const subtitle = datedAt > 0 ? clean(dates?.rest ?? "") : headers[1] && headers[1] !== headers[0] ? headers[1] : "";
     return {
       title,
-      subtitle: headers[1] && headers[1] !== headers[0] ? clip(headers[1], 200) : undefined,
+      subtitle: subtitle ? clip(subtitle, 200) : undefined,
       date: dates?.startDate ?? parseResumeMonth(headers.find((h) => parseResumeMonth(h) || "") ?? ""),
       bullets: bullets.map((b) => clip(b, 400)),
     };

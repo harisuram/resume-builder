@@ -1,3 +1,4 @@
+import { AI_MESSAGES } from "../lib/ai";
 import { handleImportPost } from "../lib/importServer";
 import { handleOptimizePost, jsonResponse } from "../lib/optimizeServer";
 import { isThrottled } from "../lib/optimizeThrottle";
@@ -20,7 +21,12 @@ export default {
 
     const ip = request.headers.get("cf-connecting-ip") ?? "unknown";
     if (isThrottled(ip)) {
-      return jsonResponse({ error: "Too many requests. Wait a moment and try again." }, 429);
+      // `code: "throttled"` tells the browser this is a per-minute pause, not
+      // the shared quota running out, so it doesn't hide the AI button.
+      return new Response(JSON.stringify({ error: AI_MESSAGES.throttled, code: "throttled" }), {
+        status: 429,
+        headers: { "content-type": "application/json", "retry-after": "60" },
+      });
     }
 
     return handler(request, {

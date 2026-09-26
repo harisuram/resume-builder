@@ -37,3 +37,19 @@ describe("optimize Worker", () => {
     expect(res.status).toBe(503);
   });
 });
+
+describe("per-minute throttle", () => {
+  it("answers 429 with code 'throttled' so the browser doesn't mistake it for the used-up quota", async () => {
+    resetThrottleForTests();
+    const call = () =>
+      worker.fetch(
+        new Request("https://example.com/api/optimize", { method: "POST", headers: { "cf-connecting-ip": "203.0.113.9" }, body: "{}" }),
+        env,
+      );
+    for (let i = 0; i < 5; i++) await call();
+    const res = await call();
+    expect(res.status).toBe(429);
+    expect(res.headers.get("retry-after")).toBe("60");
+    await expect(res.json()).resolves.toMatchObject({ code: "throttled" });
+  });
+});

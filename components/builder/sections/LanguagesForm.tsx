@@ -7,7 +7,13 @@ import { LANGUAGE_CATALOG } from "@/lib/catalogs";
 import { useBuilderStore } from "@/lib/store";
 import { LANGUAGE_LEVELS, type Language, type LanguageLevel } from "@/lib/types";
 import { useTouchedFields } from "@/lib/useTouchedFields";
-import { getLanguageErrors, MAX_FIELD_LENGTH } from "@/lib/validation";
+import {
+  duplicateLanguageMessage,
+  findDuplicateLanguage,
+  getLanguageErrors,
+  languageKey,
+  MAX_FIELD_LENGTH,
+} from "@/lib/validation";
 import { ItemCard, useFocusNewIndex } from "./ItemCard";
 import { SectionFormHeader } from "./SectionFormHeader";
 import { SkippedNotice } from "./SkippedNotice";
@@ -33,7 +39,15 @@ export function LanguagesForm() {
         <>
           <div className="flex flex-col gap-3">
             {items.map((lang, i) => {
-              const nameError = errorFor(`${i}.name`, getLanguageErrors(lang).name);
+              // A repeat shows straight away, not only after the field is
+              // left: picking a suggestion doesn't blur the input.
+              const duplicate = findDuplicateLanguage(lang, items.slice(0, i));
+              const nameError = duplicate
+                ? duplicateLanguageMessage(lang.name)
+                : errorFor(`${i}.name`, getLanguageErrors(lang).name);
+              // Suggest only languages not already added in another entry.
+              const taken = new Set(items.filter((_, j) => j !== i).map((other) => languageKey(other.name)));
+              const suggestions = LANGUAGE_CATALOG.filter((name) => !taken.has(languageKey(name)));
               return (
               <ItemCard key={i} autoFocus={i === focusIndex} onRemove={() => removeListItem("languages", i)}>
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -46,7 +60,7 @@ export function LanguagesForm() {
                       placeholder="Spanish"
                       maxLength={MAX_FIELD_LENGTH}
                       invalid={Boolean(nameError)}
-                      suggestions={LANGUAGE_CATALOG}
+                      suggestions={suggestions}
                       suggestionLabel="Suggested languages"
                     />
                   </FieldGroup>

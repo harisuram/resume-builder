@@ -449,13 +449,16 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
 
   applyImportedResume: (imported) =>
     set((state) => {
+      // Every section stays on: one the file didn't have is left empty and
+      // ready to fill in rather than switched off (the switch is still one
+      // tap away for anything that doesn't belong).
       const sectionStatus: Record<string, SectionStatus> = {
-        photo: state.photo ? (state.sectionStatus.photo === "skipped" ? "skipped" : "complete") : "skipped",
+        photo: state.photo ? (state.sectionStatus.photo === "skipped" ? "skipped" : "complete") : "not_started",
       };
       for (const key of CONTENT_KEYS) {
         sectionStatus[key] = hasSectionContent(key, imported.sections)
           ? deriveStatus(key, imported.sections)
-          : "skipped";
+          : "not_started";
       }
       return {
         basicInfo: imported.basicInfo,

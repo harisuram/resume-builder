@@ -21,6 +21,7 @@ import {
   MAX_BULLET_LENGTH,
   MAX_CHIP_LENGTH,
   MAX_DESCRIPTION_LENGTH,
+  languageKey,
   MAX_FIELD_LENGTH,
   MAX_SUMMARY_LENGTH,
   sanitizePhoneDigits,
@@ -386,17 +387,26 @@ function normalizePatents(value: unknown): Patent[] {
 function normalizeLanguages(value: unknown): Language[] {
   if (!Array.isArray(value)) return [];
   const out: Language[] = [];
+  // A resume that lists a language twice imports it once (first mention wins),
+  // so the section doesn't open with a duplicate error.
+  const seen = new Set<string>();
+  const add = (lang: Language) => {
+    const key = languageKey(lang.name);
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push(lang);
+  };
   for (const raw of value) {
     if (typeof raw === "string") {
       const parsed = parseLanguageLine(raw);
-      if (parsed) out.push(parsed);
+      if (parsed) add(parsed);
       continue;
     }
     if (!raw || typeof raw !== "object") continue;
     const item = raw as Record<string, unknown>;
     const name = clip(asString(item.name ?? item.language), MAX_FIELD_LENGTH);
     if (!name) continue;
-    out.push({ name, level: parseLanguageLevel(asString(item.level ?? item.proficiency)) });
+    add({ name, level: parseLanguageLevel(asString(item.level ?? item.proficiency)) });
     if (out.length >= 12) break;
   }
   return out;

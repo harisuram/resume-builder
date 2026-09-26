@@ -294,12 +294,32 @@ export interface LanguageErrors {
   name?: string;
 }
 
-export function getLanguageErrors(item: Language): LanguageErrors {
-  return { name: required(item.name, "Enter the language.").message };
+/** Case- and space-insensitive: "English", " english " and "ENGLISH" are one language. */
+export function languageKey(name: string): string {
+  return name.trim().replace(/\s+/g, " ").toLocaleLowerCase();
 }
 
-export function isLanguageItemValid(item: Language): boolean {
-  return !hasAnyError(getLanguageErrors(item));
+/** Same language listed earlier in the section, if any. */
+export function findDuplicateLanguage(item: Language, earlier: readonly Language[]): Language | undefined {
+  const key = languageKey(item.name);
+  return key ? earlier.find((other) => languageKey(other.name) === key) : undefined;
+}
+
+export function duplicateLanguageMessage(name: string): string {
+  return `${name.trim()} is already in your list. Pick another language or remove this one.`;
+}
+
+/** `earlier` is the entries above this one: only a repeat is flagged, so the
+ * first mention of a language stays valid. */
+export function getLanguageErrors(item: Language, earlier: readonly Language[] = []): LanguageErrors {
+  const missing = required(item.name, "Enter the language.").message;
+  if (missing) return { name: missing };
+  return findDuplicateLanguage(item, earlier) ? { name: duplicateLanguageMessage(item.name) } : {};
+}
+
+/** Shaped for `Array.prototype.every`, which passes the index and list. */
+export function isLanguageItemValid(item: Language, index = 0, list: readonly Language[] = []): boolean {
+  return !hasAnyError(getLanguageErrors(item, list.slice(0, index)));
 }
 
 export interface AdditionalItemErrors {

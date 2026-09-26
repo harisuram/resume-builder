@@ -14,6 +14,7 @@ describe("Navbar", () => {
   it("always shows the brand and a 'Start new resume' button", () => {
     render(<Navbar />);
     expect(screen.getByText("Free Resume Builder")).toBeInTheDocument();
+    // Outside the builder's import provider there's nothing for it to open.
     expect(screen.queryByRole("button", { name: "Import resume" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Start new resume" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /switch to (dark|light) mode/i })).toBeInTheDocument();

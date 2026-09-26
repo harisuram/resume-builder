@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { DeleteIconButton } from "@/components/ui/DeleteIconButton";
 import { FieldGroup, TextInput } from "@/components/ui/Field";
 import { SuggestInput } from "@/components/ui/SuggestInput";
-import { AI_BACKOFF_MS, AI_LIMITED_UNTIL_KEY, AiLimitError, optimizeExperienceBullets } from "@/lib/ai";
+import { AI_BACKOFF_MS, AI_LIMITED_UNTIL_KEY, AI_MESSAGES, AiLimitError, optimizeExperienceBullets } from "@/lib/ai";
 import { ROLE_CATALOG } from "@/lib/catalogs";
 import { isCurrentExperience, PRESENT_LABEL } from "@/lib/date";
 import { useBuilderStore } from "@/lib/store";
@@ -66,7 +66,7 @@ export function ExperienceForm({
         localStorage.setItem(AI_LIMITED_UNTIL_KEY, String(Date.now() + AI_BACKOFF_MS));
         setAiAvailable(false);
       }
-      showToast(err instanceof Error ? err.message : "AI optimization failed. Try again later.");
+      showToast(err instanceof Error ? err.message : AI_MESSAGES.unavailable);
     } finally {
       setOptimizingIndex(null);
     }

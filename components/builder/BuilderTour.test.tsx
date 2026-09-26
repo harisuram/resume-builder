@@ -60,6 +60,33 @@ describe("BuilderShell first-run tour", () => {
     expect(await screen.findByRole("dialog", { name: /skip what this resume/i })).toBeInTheDocument();
   });
 
+  it("asks for a resume file instead of touring when arriving from Import my resume", async () => {
+    window.history.replaceState({}, "", "/builder?import=1");
+    render(<BuilderShell />);
+    const prompt = await screen.findByRole("dialog", { name: "Start from your own resume" });
+    expect(prompt).toHaveTextContent(/PDF, Word/);
+    expect(screen.queryByRole("dialog", { name: /skip what this resume/i })).not.toBeInTheDocument();
+    // A refresh won't ask again.
+    expect(window.location.search).toBe("");
+
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const click = jest.spyOn(input, "click");
+    await userEvent.click(screen.getByRole("button", { name: "Choose a file" }));
+    expect(click).toHaveBeenCalled();
+    expect(screen.queryByRole("dialog", { name: "Start from your own resume" })).not.toBeInTheDocument();
+    window.history.replaceState({}, "", "/");
+  });
+
+  it("lets the visitor start from scratch instead", async () => {
+    window.history.replaceState({}, "", "/builder?import=1");
+    render(<BuilderShell />);
+    await screen.findByRole("dialog", { name: "Start from your own resume" });
+    await userEvent.click(screen.getByRole("button", { name: "Start from scratch" }));
+    expect(screen.queryByRole("dialog", { name: "Start from your own resume" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Basic info" })).toBeInTheDocument();
+    window.history.replaceState({}, "", "/");
+  });
+
   it("does not show the tour on a mobile viewport", async () => {
     window.matchMedia = jest.fn().mockImplementation((query: string) => ({
       matches: false,

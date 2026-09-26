@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ChipInput } from "@/components/ui/ChipInput";
 import { FieldGroup, TextArea, TextInput } from "@/components/ui/Field";
-import { AI_BACKOFF_MS, AI_LIMITED_UNTIL_KEY, AiLimitError, optimizeProjectDescription } from "@/lib/ai";
+import { AI_BACKOFF_MS, AI_LIMITED_UNTIL_KEY, AI_MESSAGES, AiLimitError, optimizeProjectDescription } from "@/lib/ai";
 import { SKILL_CATALOG } from "@/lib/catalogs";
 import { useBuilderStore } from "@/lib/store";
 import { showToast } from "@/lib/toast";
@@ -52,7 +52,7 @@ export function ProjectsForm() {
         localStorage.setItem(AI_LIMITED_UNTIL_KEY, String(Date.now() + AI_BACKOFF_MS));
         setAiAvailable(false);
       }
-      showToast(err instanceof Error ? err.message : "AI optimization failed. Try again later.");
+      showToast(err instanceof Error ? err.message : AI_MESSAGES.unavailable);
     } finally {
       setOptimizingIndex(null);
     }

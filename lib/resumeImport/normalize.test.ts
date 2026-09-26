@@ -79,3 +79,19 @@ describe("mergeImportedResumes", () => {
     expect(merged.sections.experience?.[0].company).toBe("Acme");
   });
 });
+
+
+describe("imported languages", () => {
+  it("keeps the first mention when a resume lists a language twice", () => {
+    const parsed = normalizeParsedResume({
+      languages: [
+        { name: "English", level: "Native" },
+        "Spanish (Fluent)",
+        { name: "english", level: "Basic" },
+        "SPANISH - Basic",
+      ],
+    });
+    expect(parsed.sections.languages?.map((l) => l.name)).toEqual(["English", "Spanish"]);
+    expect(parsed.sections.languages?.[0].level).toBe("Native");
+  });
+});

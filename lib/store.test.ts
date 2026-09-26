@@ -510,7 +510,7 @@ describe("loadFromData / resetStore", () => {
     expect(useBuilderStore.getState().sectionOrder).toBeNull();
   });
 
-  it("applyImportedResume fills matching sections and skips the rest", () => {
+  it("applyImportedResume fills matching sections and leaves every other section on", () => {
     useBuilderStore.getState().setTemplateId("harbor");
     useBuilderStore.getState().applyImportedResume({
       basicInfo: { name: "Jamie", email: "jamie@example.com", phone: "", location: "Austin, TX", links: {} },
@@ -522,8 +522,10 @@ describe("loadFromData / resetStore", () => {
     expect(state.sections.skills).toEqual(["TypeScript"]);
     expect(state.sectionStatus.skills).toBe("complete");
     expect(state.sectionStatus.summary).toBe("complete");
-    expect(state.sectionStatus.experience).toBe("skipped");
-    expect(state.sectionStatus.photo).toBe("skipped");
+    // Not in the file, but still on — empty and ready to fill in.
+    expect(state.sectionStatus.experience).toBe("not_started");
+    expect(state.sectionStatus.photo).toBe("not_started");
+    expect(Object.values(state.sectionStatus)).not.toContain("skipped");
     expect(state.templateId).toBe("harbor");
   });
 

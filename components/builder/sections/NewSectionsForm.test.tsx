@@ -45,6 +45,39 @@ describe("LanguagesForm", () => {
     await userEvent.tab();
     expect(screen.getByText("Enter the language.")).toBeInTheDocument();
   });
+
+  it("flags a language added twice right away, ignoring case and spaces", async () => {
+    act(() => useBuilderStore.getState().addListItem("languages", { name: "English", level: "Native" }));
+    render(<LanguagesForm />);
+    await userEvent.click(screen.getByText("+ Add language"));
+    const inputs = screen.getAllByPlaceholderText("Spanish");
+    await userEvent.type(inputs[1], "  english ");
+    expect(screen.getByText("english is already in your list. Pick another language or remove this one.")).toBeInTheDocument();
+    expect(inputs[1]).toHaveAttribute("aria-invalid", "true");
+    // The first mention stays valid.
+    expect(inputs[0]).not.toHaveAttribute("aria-invalid", "true");
+  });
+
+  it("clears the duplicate error once the language is changed", async () => {
+    act(() => {
+      useBuilderStore.getState().addListItem("languages", { name: "English", level: "Native" });
+      useBuilderStore.getState().addListItem("languages", { name: "English", level: "Fluent" });
+    });
+    render(<LanguagesForm />);
+    expect(screen.getByText(/English is already in your list/)).toBeInTheDocument();
+    const second = screen.getAllByPlaceholderText("Spanish")[1];
+    await userEvent.clear(second);
+    await userEvent.type(second, "German");
+    expect(screen.queryByText(/is already in your list/)).not.toBeInTheDocument();
+  });
+
+  it("doesn't suggest a language that's already been added", async () => {
+    act(() => useBuilderStore.getState().addListItem("languages", { name: "Spanish", level: "Fluent" }));
+    render(<LanguagesForm />);
+    await userEvent.click(screen.getByText("+ Add language"));
+    await userEvent.type(screen.getAllByPlaceholderText("Spanish")[1], "Spa");
+    expect(screen.queryByRole("option", { name: "Spanish" })).not.toBeInTheDocument();
+  });
 });
 
 describe("HobbiesForm", () => {
