@@ -14,7 +14,9 @@ import { useResumePdf, type ResumePdfState } from "./useResumePdf";
 /** Quiet period before the live preview re-renders its PDF. Longer than the
  * export step's: react-pdf lays the document out on the main thread, so a
  * render that starts mid-sentence would stall the next keystrokes. */
-export const LIVE_PDF_DEBOUNCE_MS = 800;
+// Layout runs in a Web Worker, so a render no longer freezes typing and the
+// preview can follow edits sooner.
+export const LIVE_PDF_DEBOUNCE_MS = 350;
 
 export function PreviewPane({
   printable = false,

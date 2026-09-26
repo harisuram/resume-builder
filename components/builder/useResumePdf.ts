@@ -17,8 +17,8 @@ export const PDF_RENDER_DEBOUNCE_MS = 350;
 async function render(data: ResumeData): Promise<Blob> {
   // Loaded on demand (next/dist/docs: lazy-loading → external libraries), so
   // react-pdf and its layout engine never ship in the builder's first load.
-  const { renderResumePdf } = await import("@/components/pdf/renderResumePdf");
-  return renderResumePdf(data);
+  const { renderResumePdfOffThread } = await import("@/components/pdf/renderInWorker");
+  return renderResumePdfOffThread(data);
 }
 
 /** Keeps a PDF of `data` rendered in the background. `latestBlob()` resolves

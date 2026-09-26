@@ -34,7 +34,13 @@ export async function pdfSafeImage(src: string | undefined): Promise<string | un
 /** Renders the resume to a PDF blob. The builder previews this exact blob
  * and downloads the same bytes, so what's on screen is what's saved. */
 export async function renderResumePdf(data: ResumeData, fontBaseUrl = PDF_FONT_BASE_URL): Promise<Blob> {
-  registerPdfFonts(fontBaseUrl);
   const photo = await pdfSafeImage(data.photo);
-  return pdf(<ResumePdfDocument data={{ ...data, photo }} />).toBlob();
+  return renderPreparedResumePdf({ ...data, photo }, fontBaseUrl);
+}
+
+/** The layout step alone, for data whose photo is already JPEG/PNG. Safe to
+ * run in a Web Worker (no DOM) — see renderResumePdf.worker.tsx. */
+export function renderPreparedResumePdf(data: ResumeData, fontBaseUrl = PDF_FONT_BASE_URL): Promise<Blob> {
+  registerPdfFonts(fontBaseUrl);
+  return pdf(<ResumePdfDocument data={data} />).toBlob();
 }
