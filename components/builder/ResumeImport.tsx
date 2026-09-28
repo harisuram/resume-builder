@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type ReactNode,
@@ -90,9 +91,11 @@ export function ResumeImportProvider({
   const [result, setResult] = useState<ImportedResume | null>(null);
 
   const onImportedRef = useRef(onImported);
-  onImportedRef.current = onImported;
   const onReviewSectionRef = useRef(onReviewSection);
-  onReviewSectionRef.current = onReviewSection;
+  useLayoutEffect(() => {
+    onImportedRef.current = onImported;
+    onReviewSectionRef.current = onReviewSection;
+  });
 
   const runImport = useCallback(
     async (file: File) => {

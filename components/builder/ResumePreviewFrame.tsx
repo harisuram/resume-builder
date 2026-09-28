@@ -309,7 +309,6 @@ export function ResumePreviewFrame({
                       ["--resume-page-inset" as string]: `${PAGE_INSET}px`,
                     }}
                   >
-                    {/* eslint-disable-next-line react-hooks/static-components -- stable registry lookup */}
                     <Template data={data} />
                   </div>
                 </div>

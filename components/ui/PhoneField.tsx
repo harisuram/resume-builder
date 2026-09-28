@@ -70,7 +70,6 @@ export function PhoneField({
 
   useLayoutEffect(() => {
     if (!open) return;
-    setHighlight(selectedIndex);
     updateMenuPos();
     window.addEventListener("resize", updateMenuPos);
     window.addEventListener("scroll", updateMenuPos, true);
@@ -78,7 +77,7 @@ export function PhoneField({
       window.removeEventListener("resize", updateMenuPos);
       window.removeEventListener("scroll", updateMenuPos, true);
     };
-  }, [open, selectedIndex, updateMenuPos]);
+  }, [open, updateMenuPos]);
 
   useEffect(() => {
     if (!open) return;
@@ -100,6 +99,12 @@ export function PhoneField({
   useEffect(() => {
     return () => clearTimeout(typeaheadTimer.current);
   }, []);
+
+  /** Opening always starts the highlight on the selected country. */
+  function openMenu() {
+    setHighlight(selectedIndex);
+    setOpen(true);
+  }
 
   function selectCountry(iso2: string) {
     onCountryIso2Change(iso2);
@@ -132,7 +137,7 @@ export function PhoneField({
     if (!open) {
       if (event.key === "ArrowDown" || event.key === "ArrowUp" || event.key === "Enter" || event.key === " ") {
         event.preventDefault();
-        setOpen(true);
+        openMenu();
       }
       return;
     }
@@ -189,7 +194,7 @@ export function PhoneField({
           aria-haspopup="listbox"
           aria-expanded={open}
           aria-controls={open ? listboxId : undefined}
-          onClick={() => setOpen((value) => !value)}
+          onClick={() => (open ? setOpen(false) : openMenu())}
           onKeyDown={onTriggerKeyDown}
           className="flex h-full w-[6.25rem] items-center justify-between gap-0.5 bg-transparent py-2 pl-2 pr-1.5 text-left text-[13px] text-[var(--color-ink)] outline-none"
         >

@@ -1,6 +1,5 @@
 import { pageGapHeightCss, writePageGap, getGapSpacer, hasPageGap } from "./gaps";
 import { straddlesPage, inRailColumn } from "./geometry";
-import { promoteFirstEntryOffer } from "./markers";
 import { avoidOrphanSectionTitle, avoidSplitBlocks, computePageOffsets, snapToLineBoundary } from "./orphans";
 import { PRINT_LAYOUT_SIM_CLASS, setPrintLayoutSimulation } from "./printLayout";
 import { isMultiColumnSurface } from "./surface";

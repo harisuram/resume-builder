@@ -84,6 +84,9 @@ export function PhotoCropModal({
     if (!natural) return;
     const nextScale = coverScale(natural, frame) * zoom;
     if (zoom === 1) {
+      // The offset depends on the frame size, which is only known from the
+      // DOM (ResizeObserver), so it's reconciled here before paint.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setOffset({
         x: (frame - natural.w * nextScale) / 2,
         y: (frame - natural.h * nextScale) / 2,

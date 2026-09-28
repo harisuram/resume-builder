@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useId, useLayoutEffect, useRef, useState } from "react";
 import { TEMPLATE_LIST } from "@/components/templates/registry";
 import { getTheme, layoutLabel } from "@/components/templates/shared/theme";
 
@@ -90,11 +90,13 @@ export function TemplatePicker({
   }, [closing]);
 
   const results = TEMPLATE_LIST.filter((option) => matchesTemplateQuery(option, query));
+  // Read the latest setOpen (it closes over props) from the listeners below.
+  const closeList = useEffectEvent(() => setOpen(false));
 
   useEffect(() => {
     if (!open) return;
     function onPointer(event: MouseEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+      if (!rootRef.current?.contains(event.target as Node)) closeList();
     }
     function onKey(event: KeyboardEvent) {
       if (event.key !== "Escape") return;
@@ -103,7 +105,7 @@ export function TemplatePicker({
         setQuery("");
         return;
       }
-      setOpen(false);
+      closeList();
       triggerRef.current?.focus();
     }
     document.addEventListener("mousedown", onPointer);

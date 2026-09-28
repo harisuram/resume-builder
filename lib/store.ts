@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { create } from "zustand";
 import { canonicalTemplateId } from "@/components/templates/shared/theme";
 import { type ImportedResume } from "./resumeImport/normalize";
-import { getNavSectionOrder, placeSectionAt, resolveSectionOrder, SECTION_ORDER } from "./persona";
+import { placeSectionAt, resolveSectionOrder, SECTION_ORDER } from "./persona";
 import { itemBreakKey, parseItemBreakKey } from "./resume";
 import { isBasicInfoValid, isSectionValid } from "./validation";
 import type {

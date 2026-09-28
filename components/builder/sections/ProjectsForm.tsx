@@ -15,6 +15,11 @@ import { ItemCard, useFocusNewIndex } from "./ItemCard";
 import { SectionFormHeader } from "./SectionFormHeader";
 import { SkippedNotice } from "./SkippedNotice";
 
+/** When the AI rate-limit backoff ends, as stored in localStorage. */
+function aiLimitedUntil(): string {
+  return String(Date.now() + AI_BACKOFF_MS);
+}
+
 const EMPTY: Project = { name: "", description: "" };
 
 export function ProjectsForm() {
@@ -49,7 +54,7 @@ export function ProjectsForm() {
       updateListItem("projects", index, { description: optimized });
     } catch (err) {
       if (err instanceof AiLimitError) {
-        localStorage.setItem(AI_LIMITED_UNTIL_KEY, String(Date.now() + AI_BACKOFF_MS));
+        localStorage.setItem(AI_LIMITED_UNTIL_KEY, aiLimitedUntil());
         setAiAvailable(false);
       }
       showToast(err instanceof Error ? err.message : AI_MESSAGES.unavailable);

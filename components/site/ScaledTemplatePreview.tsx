@@ -83,6 +83,7 @@ export function ScaledTemplatePreview({
       {/* Decorative preview, not the document itself — the candidate name
           renders as `p`, not `h1`, so a gallery of these never produces more
           than the page's own single `<h1>`. */}
+      {/* eslint-disable-next-line react-hooks/static-components -- stable registry lookup */}
       <Template data={sample} headingLevel="p" />
     </div>
   );

@@ -74,6 +74,7 @@ export function EmptyResumePreview({
           data-sample-resume={theme.id}
           style={{ width: PAGE_WIDTH_PX, transform: `scale(${scale})` }}
         >
+          {/* eslint-disable-next-line react-hooks/static-components -- stable registry lookup */}
           <Template data={sample} />
         </div>
       </div>

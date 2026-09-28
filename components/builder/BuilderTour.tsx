@@ -105,7 +105,14 @@ function cardPosition(rect: DOMRect | null, placement: TourStep["placement"]): C
 export function BuilderTour({ open, onDismiss }: { open: boolean; onDismiss: () => void }) {
   const titleId = useId();
   const [step, setStep] = useState(0);
+  const [wasOpen, setWasOpen] = useState(open);
   const [rect, setRect] = useState<DOMRect | null>(null);
+  // Every reopen starts from the first step (adjusted during render rather
+  // than in an effect, so there's no extra pass on the old step).
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setStep(0);
+  }
   const current = STEPS[step];
 
   const measure = useCallback(() => {
@@ -121,6 +128,9 @@ export function BuilderTour({ open, onDismiss }: { open: boolean; onDismiss: () 
 
   useLayoutEffect(() => {
     if (!open) return;
+    // Measuring the target before paint is the point of this layout effect:
+    // the spotlight lands on the first frame instead of flashing in a frame later.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     measure();
     const frame = window.requestAnimationFrame(measure);
     window.addEventListener("resize", measure);
@@ -150,10 +160,6 @@ export function BuilderTour({ open, onDismiss }: { open: boolean; onDismiss: () 
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onDismiss, step]);
-
-  useEffect(() => {
-    if (open) setStep(0);
-  }, [open]);
 
   if (!open) return null;
 

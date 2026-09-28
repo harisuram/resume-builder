@@ -173,7 +173,7 @@ function AdditionalIcon({ filled }: IconProps) {
   );
 }
 
-function ExportIcon(_props: IconProps) {
+function ExportIcon() {
   // Always stroke-only — a filled tray/arrow reads as a blob on the active
   // accent-tint row, and the shared `.nav-icon-arrow` active rule would paint
   // the arrow in accent-tint (invisible on that same background).

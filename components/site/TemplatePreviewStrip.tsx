@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { TEMPLATES, type TemplateTheme } from "@/components/templates/shared/theme";
 import { ScaledTemplatePreview } from "./ScaledTemplatePreview";
@@ -18,10 +18,10 @@ export function TemplatePreviewStrip() {
     setPreviewId(template.id);
   }
 
-  const closePreview = useCallback(() => {
+  function closePreview() {
     setPreviewId(null);
     openerRef.current?.focus();
-  }, []);
+  }
 
   return (
     <div className="mt-16 w-full min-w-0 max-w-4xl">

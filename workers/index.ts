@@ -5,7 +5,7 @@ import { isThrottled } from "../lib/optimizeThrottle";
 
 /** Only `/api/*` reaches this Worker (`run_worker_first` in wrangler.jsonc).
  * Everything else is a static asset on the free CDN. */
-export default {
+const worker = {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     const handler = url.pathname === "/api/optimize" ? handleOptimizePost : url.pathname === "/api/import" ? handleImportPost : null;
@@ -35,3 +35,5 @@ export default {
     });
   },
 };
+
+export default worker;

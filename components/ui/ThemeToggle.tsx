@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { resolvedTheme, toggleTheme } from "@/lib/theme";
 
 function SunIcon() {
@@ -20,19 +20,33 @@ function MoonIcon() {
   );
 }
 
-export function ThemeToggle() {
-  const [dark, setDark] = useState(false);
+// Every toggle on the page stays in sync, and the stored theme is read on
+// the client only (the server render always says light, as before).
+const listeners = new Set<() => void>();
 
-  useEffect(() => {
-    setDark(resolvedTheme() === "dark");
-  }, []);
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function flipTheme() {
+  toggleTheme();
+  for (const listener of listeners) listener();
+}
+
+export function ThemeToggle() {
+  const dark = useSyncExternalStore(
+    subscribe,
+    () => resolvedTheme() === "dark",
+    () => false,
+  );
 
   return (
     <button
       type="button"
       aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
       aria-pressed={dark}
-      onClick={() => setDark(toggleTheme() === "dark")}
+      onClick={flipTheme}
       className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--color-ink-soft)] transition duration-200 ease-out hover:bg-[var(--color-accent-tint)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]"
     >
       <SunIcon />
