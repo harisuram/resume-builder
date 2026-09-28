@@ -19,7 +19,7 @@ beforeEach(() => {
 });
 
 describe("BuilderTour", () => {
-  it("walks through switches, page order, and the page separator", async () => {
+  it("walks through switches and page order", async () => {
     const onDismiss = jest.fn();
     render(<BuilderTour open onDismiss={onDismiss} />);
 
@@ -30,9 +30,6 @@ describe("BuilderTour", () => {
     expect(screen.getByRole("heading", { name: /drag a section to set the page order/i })).toBeInTheDocument();
     expect(screen.getByText(/grab the dotted handle/i)).toBeInTheDocument();
     expect(screen.getByText(/drag the handle to reorder/i)).toBeInTheDocument();
-
-    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(screen.getByRole("heading", { name: /keep a section from splitting/i })).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "Start building" }));
     expect(onDismiss).toHaveBeenCalledTimes(1);

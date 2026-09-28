@@ -1,9 +1,22 @@
 "use client";
 
-import { useId, useMemo, useState } from "react";
+import { useId, useMemo, useState, useSyncExternalStore } from "react";
 import { filterCatalog } from "@/lib/catalogs";
 import { DeleteIconButton } from "./DeleteIconButton";
 import { SuggestionList } from "./SuggestionList";
+
+const PHONE_MEDIA = "(max-width: 767px)";
+
+function subscribePhone(onChange: () => void) {
+  if (typeof window.matchMedia !== "function") return () => {};
+  const media = window.matchMedia(PHONE_MEDIA);
+  media.addEventListener("change", onChange);
+  return () => media.removeEventListener("change", onChange);
+}
+
+function isPhone() {
+  return typeof window.matchMedia === "function" && window.matchMedia(PHONE_MEDIA).matches;
+}
 
 export function ChipInput({
   values,
@@ -27,6 +40,10 @@ export function ChipInput({
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState<number | null>(null);
   const listboxId = useId();
+  // Phones get the Add pill instead of a hardware Enter key, so the
+  // "…, press Enter" hint is dropped from the placeholder there.
+  const phone = useSyncExternalStore(subscribePhone, isPhone, () => false);
+  const shownPlaceholder = phone ? placeholder?.replace(/,\s*press Enter\.?$/i, "") : placeholder;
 
   const matches = useMemo(
     () => (suggestions ? filterCatalog(suggestions, draft, values) : []),
@@ -94,7 +111,16 @@ export function ChipInput({
                 />
               </span>
             ))}
+            {/* The input sizes to what's typed on phones (via the hidden
+                mirror), so the Add pill sits right after the text. */}
+            <span className={`grid min-w-0 flex-1 sm:min-w-[8ch] ${draft.trim() ? "max-md:max-w-full max-md:flex-none" : ""}`}>
+            <span
+              data-value={draft || " "}
+              className="invisible col-start-1 row-start-1 h-0 overflow-hidden whitespace-pre px-1 text-[13.5px] after:content-[attr(data-value)]"
+              aria-hidden="true"
+            />
             <input
+              size={1}
               value={draft}
               onChange={(e) => {
                 setDraft(e.target.value);
@@ -133,16 +159,31 @@ export function ChipInput({
                 setHighlight(null);
                 commitDraft();
               }}
-              placeholder={placeholder}
-              aria-label={placeholder}
+              placeholder={shownPlaceholder}
+              aria-label={shownPlaceholder}
               aria-invalid={Boolean(error) || undefined}
               aria-expanded={showList || undefined}
               aria-controls={showList ? listboxId : undefined}
               aria-autocomplete={suggestions ? "list" : undefined}
               role={suggestions ? "combobox" : undefined}
               maxLength={maxLength}
-              className="min-w-0 flex-1 bg-transparent px-1 py-0.5 text-[13.5px] text-[var(--color-ink)] outline-none placeholder:text-[var(--color-ink-faint)] sm:min-w-[8ch]"
+              className="col-start-1 row-start-1 w-full min-w-0 bg-transparent px-1 py-0.5 text-[13.5px] text-[var(--color-ink)] outline-none placeholder:text-[var(--color-ink-faint)] sm:min-w-[8ch]"
             />
+            </span>
+            {/* Phones have no obvious Enter for this, so a faint Add pill
+                shows up once something is typed. Pointer-down is held so
+                the input keeps focus and the keyboard stays open. */}
+            {draft.trim() ? (
+              <button
+                type="button"
+                onPointerDown={(e) => e.preventDefault()}
+                onClick={commitFromKeys}
+                aria-label={`Add ${itemLabel}`}
+                className="animate-pop-in flex shrink-0 items-center gap-1 self-center whitespace-nowrap rounded-full bg-[color-mix(in_srgb,var(--color-ink)_5%,transparent)] px-2 py-0.5 text-[12px] text-[var(--color-ink-faint)] transition duration-150 active:scale-95 active:text-[var(--color-ink-soft)] md:hidden"
+              >
+                Add
+              </button>
+            ) : null}
           </div>
         </div>
         {showList && (

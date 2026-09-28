@@ -145,14 +145,11 @@ export function MobilePreviewSheet({ onClose }: { onClose: () => void }) {
           <div className="flex justify-center pt-2.5 pb-1" aria-hidden="true">
             <div className="h-1 w-10 rounded-full bg-[var(--color-border)]" />
           </div>
-          <div className="flex items-start justify-between gap-3 px-4 pt-1 pb-3">
+          <div className="flex items-center justify-between gap-3 px-4 pt-1 pb-3">
             <div className="min-w-0">
               <h2 id={titleId} className="font-display text-[17px] font-semibold tracking-tight text-[var(--color-ink)]">
                 Resume preview
               </h2>
-              <p className="mt-1 text-[13px] leading-relaxed text-[var(--color-ink-soft)]">
-                Tap a dashed line to start a block on the next page. Close to keep editing this section.
-              </p>
             </div>
             <button
               type="button"

@@ -94,7 +94,6 @@ describe("PreviewPane with content", () => {
     expect(mockRenderResumePdf).toHaveBeenCalledWith(
       expect.objectContaining({ basicInfo: expect.objectContaining({ name: "Alexandra Montgomery-Whitfield" }) }),
     );
-    expect(document.querySelector('[data-tour="page-separator"]')).not.toBeNull();
   });
 
   it("draws a PDF the caller already renders (the export step) instead of its own", () => {

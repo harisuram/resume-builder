@@ -4,7 +4,7 @@ import { useCallback, useEffect, useId, useLayoutEffect, useState, type CSSPrope
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
 
-type TourTarget = "skip-switch" | "section-sort" | "page-separator";
+type TourTarget = "skip-switch" | "section-sort";
 
 interface TourStep {
   target: TourTarget;
@@ -26,12 +26,7 @@ const STEPS: TourStep[] = [
     body: "Grab the dotted handle next to a section and drop it where you want. The preview and Save & Next follow this list. Skipped sections stay locked until you include them again.",
     placement: "right",
   },
-  {
-    target: "page-separator",
-    title: "Keep a section from splitting across pages",
-    body: "When a block runs over a page edge, a dashed line appears on the preview. Click it to start that section — or a single entry — on the next sheet. Click again to undo.",
-    placement: "left",
-  },
+
 ];
 
 function isVisibleRect(rect: DOMRect): boolean {
@@ -87,34 +82,9 @@ function SortDemo() {
   );
 }
 
-function PageDemo() {
-  return (
-    <div className="relative overflow-hidden rounded-xl bg-[linear-gradient(135deg,color-mix(in_srgb,var(--color-accent)_18%,transparent),color-mix(in_srgb,var(--color-focus)_12%,transparent))] px-3 py-4">
-      <div className="relative mx-auto h-[5.5rem] w-[7.5rem] rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)] shadow-card">
-        <div className="space-y-1 p-2">
-          <div className="h-1.5 w-10 rounded-full bg-[var(--color-ink)]/80" />
-          <div className="h-1 w-full rounded-full bg-[var(--color-border)]" />
-          <div className="h-1 w-4/5 rounded-full bg-[var(--color-border)]" />
-        </div>
-        <div className="tour-page-rule absolute inset-x-0 top-[52%] flex items-center">
-          <div className="h-px flex-1 border-t border-dashed border-[var(--color-accent)]" />
-          <span className="tour-page-pill mx-0.5 shrink-0 rounded-full bg-[var(--color-accent)] px-1.5 py-0.5 text-[7px] font-semibold uppercase tracking-wide text-[var(--color-accent-ink)]">
-            Move to page 2
-          </span>
-        </div>
-        <div className="absolute inset-x-2 bottom-2 space-y-1">
-          <div className="h-1 w-full rounded-full bg-[var(--color-border)]" />
-          <div className="h-1 w-2/3 rounded-full bg-[var(--color-border)]" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function Demo({ target }: { target: TourTarget }) {
   if (target === "skip-switch") return <SwitchDemo />;
-  if (target === "section-sort") return <SortDemo />;
-  return <PageDemo />;
+  return <SortDemo />;
 }
 
 function cardPosition(rect: DOMRect | null, placement: TourStep["placement"]): CSSProperties {

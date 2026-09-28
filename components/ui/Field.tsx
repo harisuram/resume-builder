@@ -8,7 +8,7 @@ import {
 } from "react";
 
 const CONTROL_BASE =
-  "w-full rounded-lg border bg-[var(--color-surface)] px-3 py-2 text-[13.5px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-faint)] transition duration-150 ease-out outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60";
+  "w-full rounded-lg border bg-[var(--color-surface)] px-3 py-2 text-[13.5px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-faint)] transition duration-150 ease-out outline-none focus:ring-2 max-md:focus:shadow-[0_0_0_5px_var(--accent-glow-soft),0_6px_18px_-8px_var(--accent-glow)] disabled:cursor-not-allowed disabled:opacity-60";
 
 const VALID_BORDER =
   "border-[var(--color-border)] focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]/15";
@@ -89,9 +89,12 @@ export function FieldGroup({
 }) {
   const errorId = htmlFor ? `${htmlFor}-error` : undefined;
   return (
-    <div>
+    <div className="group/field">
       <div className="mb-1.5 flex min-w-0 flex-wrap items-center gap-x-1 gap-y-1">
-        <Label htmlFor={htmlFor} className="min-w-0">
+        <Label
+          htmlFor={htmlFor}
+          className="min-w-0 transition-colors duration-150 max-md:group-focus-within/field:text-[var(--color-accent)]"
+        >
           {label}
         </Label>
         {required ? (

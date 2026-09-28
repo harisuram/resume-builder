@@ -1,25 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
-function EyeIcon() {
+/** Pulsing "live" dot — the preview updates as you type. */
+function LiveIcon() {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.6}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-5 w-5"
-      aria-hidden="true"
-    >
-      <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" />
-      <circle cx="12" cy="12" r="3" />
+    <span className="relative flex h-2.5 w-2.5" aria-hidden="true">
+      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--preview-ink)] opacity-70" />
+      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[var(--preview-ink)]" />
+    </span>
+  );
+}
+
+function SkipIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 md:hidden" aria-hidden="true">
+      <path d="M5 6.5 12 12l-7 5.5Z" />
+      <path d="M18.5 6.5v11" />
     </svg>
   );
+}
+
+function NextIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 md:hidden" aria-hidden="true">
+      <path d="M5 12h14" />
+      <path d="m13 6 6 6-6 6" />
+    </svg>
+  );
+}
+
+/** A light tap on phones that support it (Android Chrome); a no-op
+ * elsewhere, including iOS Safari. */
+function haptic() {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+  if (!window.matchMedia("(max-width: 767px)").matches) return;
+  try {
+    navigator.vibrate?.(8);
+  } catch {
+    // Some browsers throw when vibration is blocked by policy.
+  }
 }
 
 export function SectionFooterNav({
@@ -58,56 +80,90 @@ export function SectionFooterNav({
   onPreview?: () => void;
 }) {
   const [confirming, setConfirming] = useState(false);
+  const [celebration, setCelebration] = useState(0);
+  const prevRef = useRef({ label: clearLabel, enabled: nextEnabled });
+
+  // Same step, Next just unlocked because the user filled it in (not by
+  // arriving on an already-finished step, or by switching it off).
+  useEffect(() => {
+    const prev = prevRef.current;
+    prevRef.current = { label: clearLabel, enabled: nextEnabled };
+    if (prev.label === clearLabel && !prev.enabled && nextEnabled && canClear && canGoNext) {
+      setCelebration((n) => n + 1);
+    }
+  }, [clearLabel, nextEnabled, canClear, canGoNext]);
 
   if (!canGoBack && !canGoNext && !canSkip) return null;
 
   const helper = !nextEnabled && nextBlockedReason ? nextBlockedReason : undefined;
 
   return (
-    <div className="no-print fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-border)] bg-[var(--color-surface)]/95 px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-xl md:static md:z-0 md:mt-8 md:bg-transparent md:px-0 md:py-0 md:pt-5 md:backdrop-blur-none">
-      <div className="mx-auto flex max-w-2xl flex-col gap-3 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-2">
-        <div className="flex items-center gap-2 max-md:w-full">
-          {canGoBack && (
-            <Button variant="secondary" onClick={onBack} className="max-md:min-h-11">
-              Back
-            </Button>
-          )}
-          <Button variant="ghost" onClick={() => setConfirming(true)} disabled={!canClear} className="max-md:min-h-11">
-            Clear
+    <div className="no-print mt-8 border-t border-[var(--color-border)] pt-5 md:flex md:flex-wrap md:items-center md:justify-between md:gap-2">
+      {/* Back and Clear stay in the page flow, so on phones they sit at the
+          end of the form; only Skip and Save & Next are pinned. */}
+      <div className="flex items-center gap-2">
+        {canGoBack && (
+          <Button variant="secondary" onClick={onBack} className="max-md:min-h-11">
+            Back
           </Button>
-          {onPreview ? (
+        )}
+        <Button variant="ghost" onClick={() => setConfirming(true)} disabled={!canClear}
+          className="max-md:min-h-11 max-md:border max-md:border-dashed max-md:border-[var(--color-border)] max-md:bg-[var(--color-surface)]/60 max-md:text-[var(--color-ink-soft)] max-md:disabled:opacity-60"
+        >
+          Clear
+        </Button>
+      </div>
+      {/* Phones: a floating frosted-glass capsule (iOS tab bar style) with
+          Preview riding just above it. From md up it
+          flattens back into the inline footer row. */}
+      <div className="no-print pointer-events-none fixed inset-x-0 bottom-0 z-40 flex flex-col gap-2 px-3 pb-[max(0.625rem,env(safe-area-inset-bottom))] md:pointer-events-auto md:static md:z-0 md:flex-row md:items-center md:gap-3 md:p-0">
+        {onPreview ? (
+          <div className="flex items-end justify-end px-1 md:hidden">
             <button
               type="button"
               onClick={onPreview}
               aria-label="Preview resume"
               title="Preview resume"
               aria-haspopup="dialog"
-              className="ml-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--color-accent)] text-[var(--color-accent-ink)] shadow-cta transition duration-200 ease-out hover:brightness-110 active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)] md:hidden"
+              className="pointer-events-auto flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full bg-[linear-gradient(135deg,var(--preview-from),var(--preview-to))] pl-1 pr-3 text-[13px] font-semibold text-[var(--preview-ink)] shadow-[0_8px_22px_-8px_var(--preview-glow),inset_0_1px_0_rgb(255_255_255_/_0.22)] ring-1 ring-[color-mix(in_srgb,var(--preview-ink)_16%,transparent)] transition duration-200 ease-out hover:brightness-110 active:scale-95 active:brightness-95 md:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]"
             >
-              <EyeIcon />
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--preview-ink)_20%,transparent)]">
+                <LiveIcon />
+              </span>
+              <span aria-hidden="true">Preview</span>
             </button>
-          ) : null}
-        </div>
-        {helper ? (
-          <p className="min-w-0 text-[11.5px] leading-snug text-[var(--color-ink-faint)] md:hidden">{helper}</p>
+          </div>
         ) : null}
-        <div className="flex items-center gap-2 max-md:w-full md:gap-3">
+        <div className="pointer-events-auto relative flex items-center gap-1.5 max-md:w-full max-md:rounded-full max-md:border max-md:border-[var(--color-border)]/70 max-md:bg-[var(--color-surface)]/65 max-md:p-1.5 max-md:shadow-[0_10px_40px_-8px_rgb(0_0_0_/_0.28),inset_0_1px_0_color-mix(in_srgb,var(--color-surface)_60%,transparent)] max-md:backdrop-blur-2xl max-md:backdrop-saturate-[1.8] md:gap-3">
           {helper ? (
             <span className="hidden min-w-0 text-[11.5px] text-[var(--color-ink-faint)] md:inline">{helper}</span>
           ) : null}
           {canSkip && (
-            <Button variant="ghost" onClick={onSkip} className="max-md:min-h-11 max-md:flex-1">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                haptic();
+                onSkip();
+              }}
+              className="max-md:min-h-11 max-md:flex-1 max-md:rounded-full max-md:text-[var(--color-ink-soft)] max-md:active:scale-95 max-md:active:bg-[var(--color-ink)]/5"
+            >
+              <SkipIcon />
               Skip
             </Button>
           )}
           {canGoNext && (
             <Button
               variant="primary"
-              onClick={onNext}
+              key={celebration > 0 ? `ready-${celebration}` : "next"}
+              onClick={() => {
+                haptic();
+                onNext();
+              }}
               disabled={!nextEnabled}
-              className="max-md:min-h-11 max-md:flex-1 max-md:px-3 whitespace-nowrap"
+              className={`${celebration > 0 ? "capsule-ready " : ""}max-md:min-h-11 max-md:min-w-0 max-md:flex-[2] max-md:rounded-full max-md:px-3 max-md:active:scale-[0.97] whitespace-nowrap`}
             >
               Save &amp; Next
+              <NextIcon />
             </Button>
           )}
         </div>

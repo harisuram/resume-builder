@@ -39,10 +39,13 @@ import { takePendingImport } from "@/lib/resumeImport/pendingImport";
 import { ResumeImportProvider } from "./ResumeImport";
 import { adjacentUnskippedStep, getWizardOrder, type NavKey } from "./nav";
 import { MobilePreviewSheet } from "./MobilePreviewSheet";
+import { MenuIcon, MobileSectionDrawer } from "./MobileSectionDrawer";
 import { PreviewPane } from "./PreviewPane";
 import { TemplateRail } from "./TemplateRail";
 import { SectionFooterNav } from "./SectionFooterNav";
 import { SectionNav } from "./SectionNav";
+
+const FIX_FIELDS_REASON = "Fix the highlighted fields before continuing.";
 
 function stepLabel(key: NavKey): string {
   if (key === "basicInfo") return "Basic info";
@@ -106,7 +109,7 @@ function StepEnter({
   return (
     <div
       className={`print-unclip min-w-0 ${
-        enabled ? (direction === 1 ? "animate-step-in-from-right" : "animate-step-in-from-left") : ""
+        enabled ? `step-enter ${direction === 1 ? "animate-step-in-from-right" : "animate-step-in-from-left"}` : ""
       }`}
     >
       {children}
@@ -181,6 +184,7 @@ export function BuilderShell() {
   const [hydrated, setHydrated] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [importPrompt, setImportPrompt] = useState(false);
   const importFirstRef = useRef<boolean | null>(null);
   const pendingFileRef = useRef<File | null>(null);
@@ -230,6 +234,7 @@ export function BuilderShell() {
     const sync = () => {
       if (media.matches) {
         setPreviewOpen(false);
+        setMenuOpen(false);
         if (shouldOfferBuilderTour()) setTourOpen(true);
       } else {
         setTourOpen(false);
@@ -273,13 +278,13 @@ export function BuilderShell() {
     hasNextStep && !stepValid
       ? activeKey === "basicInfo"
         ? basicInfo.name.trim() && basicInfo.email.trim() && basicInfo.location.trim()
-          ? "Fix the highlighted fields before continuing."
+          ? FIX_FIELDS_REASON
           : "Fill in your name, email, and location to continue."
         : activeKey === "photo"
           ? "Upload a photo, or skip it, to continue."
           : isContentSection(activeKey)
             ? hasSectionContent(activeKey, sections)
-              ? "Fix the highlighted fields before continuing."
+              ? FIX_FIELDS_REASON
               : "Fill in this section, or skip it, to continue."
             : undefined
       : undefined;
@@ -349,12 +354,47 @@ export function BuilderShell() {
     <div className="print-unclip flex h-[100dvh] flex-col overflow-hidden">
       <div
         className="print-unclip flex min-h-0 flex-1 flex-col overflow-hidden"
-        inert={tourOpen || previewOpen || undefined}
+        inert={tourOpen || previewOpen || menuOpen || undefined}
       >
         <Navbar />
         <div className="print-unclip flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
           <aside className="no-print sticky top-0 z-20 shrink-0 border-b border-[var(--color-border)] bg-[var(--color-surface)] md:static md:h-full md:min-h-0 md:w-64 md:overflow-y-auto md:border-b-0 md:border-r">
-            <SectionNav active={activeKey} onSelect={selectSection} />
+            {/* Mobile: a bar that opens the side menu with the full section
+                list. From md up the list is the sidebar itself. */}
+            <div className="flex items-center gap-3 px-3 py-2 md:hidden">
+              <button
+                type="button"
+                onClick={() => setMenuOpen(true)}
+                aria-label="Open sections menu"
+                aria-haspopup="dialog"
+                aria-expanded={menuOpen}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)]/70 bg-[var(--color-surface)]/70 text-[var(--color-ink-soft)] shadow-[0_4px_14px_-6px_rgb(0_0_0_/_0.22),inset_0_1px_0_color-mix(in_srgb,var(--color-surface)_60%,transparent)] backdrop-blur-xl transition duration-150 hover:text-[var(--color-ink)] active:scale-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]"
+              >
+                <MenuIcon open={menuOpen} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setMenuOpen(true)}
+                className="flex min-w-0 flex-1 flex-col gap-1 text-left"
+                tabIndex={-1}
+                aria-hidden="true"
+              >
+                <span className="flex min-w-0 items-baseline justify-between gap-2">
+                  <span key={activeKey} className="animate-step-label-in truncate text-[13.5px] font-semibold text-[var(--color-ink)]">
+                    {stepLabel(activeKey)}
+                  </span>
+                </span>
+                <span className="block h-1.5 w-full rounded-full bg-[color-mix(in_srgb,var(--color-border)_70%,transparent)]">
+                  <span
+                    className="block h-full rounded-full bg-[linear-gradient(90deg,var(--color-accent),var(--color-focus))] shadow-[0_0_10px_var(--accent-glow)] transition-[width] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                    style={{ width: `${((stepIndex + 1) / wizardOrder.length) * 100}%` }}
+                  />
+                </span>
+              </button>
+            </div>
+            <div className="hidden md:block">
+              <SectionNav active={activeKey} onSelect={selectSection} />
+            </div>
           </aside>
 
           {activeKey === "export" ? (
@@ -385,7 +425,7 @@ export function BuilderShell() {
                 <div className="mx-auto w-full max-w-2xl">
                   {/* Above the step footer so absolute suggestion lists aren't
                       painted under Clear / Save & Next (later DOM sibling). */}
-                  <div className="relative z-10 min-w-0">
+                  <div className="relative z-10 min-w-0 max-md:rounded-2xl max-md:border max-md:border-[var(--color-border)]/70 max-md:bg-[var(--color-surface)] max-md:p-4 max-md:shadow-[0_1px_2px_rgb(0_0_0_/_0.04),0_12px_32px_-18px_rgb(0_0_0_/_0.18)]">
                     <StepEnter key={activeKey} direction={stepDir} enabled={animateStep}>
                       <ActivePanel activeKey={activeKey} />
                     </StepEnter>
@@ -442,6 +482,9 @@ export function BuilderShell() {
 
         <ToastHost />
       </div>
+      {menuOpen && (
+        <MobileSectionDrawer active={activeKey} onSelect={selectSection} onClose={() => setMenuOpen(false)} />
+      )}
       {previewOpen && <MobilePreviewSheet onClose={() => setPreviewOpen(false)} />}
       <BuilderTour
         open={tourOpen}

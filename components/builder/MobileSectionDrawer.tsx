@@ -1,0 +1,181 @@
+"use client";
+
+import { useEffect, useId, useRef, useState } from "react";
+import type { NavKey } from "./nav";
+import { SectionNav } from "./SectionNav";
+
+const DRAWER_EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
+const DRAWER_MS = 380;
+const DISMISS_PX = 80;
+const DISMISS_VELOCITY = 0.5;
+
+export function MenuIcon({ open = false }: { open?: boolean }) {
+  const line = "absolute left-0 h-[1.5px] w-full rounded-full bg-current transition-transform duration-300 ease-out";
+  return (
+    <span className="relative block h-3 w-4" aria-hidden="true">
+      <span className={`${line} top-0 ${open ? "translate-y-[5.25px] rotate-45" : ""}`} />
+      <span className={`${line} top-[5.25px] transition-opacity ${open ? "opacity-0" : ""}`} />
+      <span className={`${line} bottom-0 ${open ? "-translate-y-[5.25px] -rotate-45" : ""}`} />
+    </span>
+  );
+}
+
+/** Mobile side menu holding the full section list — the same switches,
+ * status dots, and reorder handles as the desktop sidebar. Slides in from
+ * the left; closes on backdrop tap, Escape, the close button, a swipe left
+ * on the header, or picking a section. */
+export function MobileSectionDrawer({
+  active,
+  onSelect,
+  onClose,
+}: {
+  active: NavKey;
+  onSelect: (key: NavKey) => void;
+  onClose: () => void;
+}) {
+  const titleId = useId();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const closedRef = useRef(false);
+  const closeTimerRef = useRef<number | null>(null);
+  const swipeRef = useRef<{ id: number; startX: number; x: number; t: number; vx: number } | null>(null);
+  const [open, setOpen] = useState(false);
+  const [dragX, setDragX] = useState(0);
+  const [dragging, setDragging] = useState(false);
+
+  useEffect(() => {
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    let cancelled = false;
+    const frame = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (!cancelled) setOpen(true);
+      });
+    });
+    panelRef.current?.focus();
+    function onKey(event: KeyboardEvent) {
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      // Escape mid-reorder cancels the drag (SectionNav) rather than the menu.
+      if (document.body.classList.contains("nav-section-dragging")) return;
+      requestClose();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+      if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
+      document.body.style.overflow = previous;
+      document.removeEventListener("keydown", onKey);
+    };
+    // requestClose is stable for this mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function finishClose() {
+    if (closedRef.current) return;
+    closedRef.current = true;
+    onClose();
+  }
+
+  function requestClose() {
+    if (closedRef.current) return;
+    setDragging(false);
+    setDragX(0);
+    setOpen(false);
+    closeTimerRef.current = window.setTimeout(finishClose, DRAWER_MS);
+  }
+
+  function onPanelTransitionEnd(event: React.TransitionEvent<HTMLDivElement>) {
+    if (event.target !== panelRef.current || event.propertyName !== "transform") return;
+    if (!open) finishClose();
+  }
+
+  function onHeaderPointerDown(event: React.PointerEvent<HTMLElement>) {
+    if (event.button !== 0) return;
+    if ((event.target as HTMLElement).closest("button, a")) return;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    swipeRef.current = { id: event.pointerId, startX: event.clientX, x: event.clientX, t: performance.now(), vx: 0 };
+    setDragging(true);
+  }
+
+  function onHeaderPointerMove(event: React.PointerEvent<HTMLElement>) {
+    const swipe = swipeRef.current;
+    if (!swipe || swipe.id !== event.pointerId) return;
+    const now = performance.now();
+    const dt = now - swipe.t;
+    if (dt > 0) swipe.vx = (event.clientX - swipe.x) / dt;
+    swipe.x = event.clientX;
+    swipe.t = now;
+    setDragX(Math.min(0, event.clientX - swipe.startX));
+  }
+
+  function onHeaderPointerUp(event: React.PointerEvent<HTMLElement>) {
+    const swipe = swipeRef.current;
+    if (!swipe || swipe.id !== event.pointerId) return;
+    swipeRef.current = null;
+    const dismiss = dragX < -DISMISS_PX || swipe.vx < -DISMISS_VELOCITY;
+    setDragging(false);
+    if (dismiss) requestClose();
+    else setDragX(0);
+  }
+
+  return (
+    <div
+      className={`no-print fixed inset-0 z-50 flex bg-black/40 backdrop-blur-[2px] transition-opacity duration-300 ease-out md:hidden ${
+        open ? "opacity-100" : "opacity-0"
+      }`}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      onClick={requestClose}
+    >
+      <div
+        ref={panelRef}
+        tabIndex={-1}
+        style={{
+          transform: `translate3d(${open ? `${dragX}px` : "-100%"}, 0, 0)`,
+          transition: dragging ? "none" : `transform ${DRAWER_MS}ms ${DRAWER_EASE}`,
+        }}
+        onTransitionEnd={onPanelTransitionEnd}
+        onClick={(event) => event.stopPropagation()}
+        className={`flex h-full w-[min(20rem,86vw)] min-w-0 flex-col overflow-hidden rounded-r-3xl border-r border-[var(--color-border)] bg-[var(--color-surface)] shadow-[12px_0_48px_color-mix(in_srgb,var(--color-ink)_18%,transparent)] outline-none will-change-transform ${
+          open ? "section-drawer-open" : ""
+        }`}
+      >
+        <div
+          className="flex shrink-0 touch-pan-y items-center justify-between gap-3 border-b border-[var(--color-border)] px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3"
+          onPointerDown={onHeaderPointerDown}
+          onPointerMove={onHeaderPointerMove}
+          onPointerUp={onHeaderPointerUp}
+          onPointerCancel={onHeaderPointerUp}
+        >
+          <div className="min-w-0">
+            <h2 id={titleId} className="font-display text-[17px] font-semibold tracking-tight text-[var(--color-ink)]">
+              Sections
+            </h2>
+            <p className="mt-0.5 text-[12px] leading-snug text-[var(--color-ink-soft)]">
+              Switch a section off to skip it. Drag the grip to reorder.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={requestClose}
+            aria-label="Close sections menu"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[var(--color-ink-faint)] transition duration-150 hover:bg-[var(--color-accent-tint)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]"
+          >
+            <MenuIcon open />
+          </button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)]">
+          <SectionNav
+            variant="drawer"
+            active={active}
+            onSelect={(key) => {
+              onSelect(key);
+              requestClose();
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}

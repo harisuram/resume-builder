@@ -56,7 +56,7 @@ export function PreviewPane({
     <div className={`print-unclip flex flex-col gap-4 ${nestedScroll ? "h-full min-h-0" : ""}`}>
       <div className="no-print flex shrink-0 flex-col gap-2 border-b border-[var(--color-border)] pb-3">
         <div className="flex min-w-0 flex-col gap-2.5">
-          <div className="flex min-w-0 items-center justify-between gap-3">
+          <div className="hidden min-w-0 items-center justify-between gap-3 md:flex">
             <span className="inline-flex items-center gap-2 rounded-full border border-[var(--color-accent)]/20 bg-[var(--color-accent-tint)] py-1 pl-2.5 pr-3 shadow-sm">
               <span className="relative flex h-2 w-2" aria-hidden="true">
                 <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 motion-safe:animate-ping" />
@@ -96,10 +96,14 @@ export function PreviewPane({
             another look before you add entries.
           </p>
         )}
+        {!empty && (
+          <p className="text-[11px] leading-snug text-[var(--color-ink-faint)] md:hidden">
+            Tap to try on a new look ✨
+          </p>
+        )}
       </div>
 
       <div
-        data-tour="page-separator"
         className={`print-unclip pb-4 ${nestedScroll ? "min-h-0 flex-1 overflow-y-auto overscroll-contain [scrollbar-gutter:stable]" : ""}`}
       >
         {empty && (

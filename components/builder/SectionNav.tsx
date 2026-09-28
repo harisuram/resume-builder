@@ -50,16 +50,36 @@ function clearRowDragStyles(el: HTMLElement) {
  * connector line and the whole thing reads as one step-to-step run. Stacked
  * from md up that would just be clutter, so only the two group boundaries
  * survive there, as the full-width rules they've always been. */
-function RowDivider({ group = false }: { group?: boolean }) {
+function RowDivider({ group = false, drawer = false }: { group?: boolean; drawer?: boolean }) {
+  if (drawer && !group) return null;
   return (
     <div
-      className={`my-auto h-px w-2.5 shrink-0 bg-[var(--color-border)] ${group ? "md:my-1 md:w-full" : "md:hidden"}`}
+      className={
+        drawer
+          ? "my-1 h-px w-full shrink-0 bg-[var(--color-border)]"
+          : `my-auto h-px w-2.5 shrink-0 bg-[var(--color-border)] ${group ? "md:my-1 md:w-full" : "md:hidden"}`
+      }
       aria-hidden="true"
     />
   );
 }
 
-export function SectionNav({ active, onSelect }: { active: NavKey; onSelect: (key: NavKey) => void }) {
+/** `drawer` renders the stacked desktop list (switches, status dots,
+ * reorder handles) at every width — the mobile side menu uses it so phones
+ * get the same controls as the desktop sidebar. */
+export function SectionNav({
+  active,
+  onSelect,
+  variant = "responsive",
+}: {
+  active: NavKey;
+  onSelect: (key: NavKey) => void;
+  variant?: "responsive" | "drawer";
+}) {
+  const drawer = variant === "drawer";
+  /** Display class for a control the mobile strip hides until md. */
+  const shown = (display: "flex" | "inline") =>
+    display === "flex" ? (drawer ? "flex" : "hidden md:flex") : drawer ? "inline" : "hidden md:inline";
   const basicInfo = useBuilderStore((s) => s.basicInfo);
   const photo = useBuilderStore((s) => s.photo);
   const sectionStatus = useBuilderStore((s) => s.sectionStatus);
@@ -229,7 +249,7 @@ export function SectionNav({ active, onSelect }: { active: NavKey; onSelect: (ke
   return (
     <>
       <nav
-        className="flex gap-1 overflow-x-auto p-3 md:flex-col md:overflow-x-visible"
+        className={drawer ? "flex flex-col gap-1 p-3" : "flex gap-1 overflow-x-auto p-3 md:flex-col md:overflow-x-visible"}
         aria-label="Resume sections"
       >
         <NavRow
@@ -237,30 +257,28 @@ export function SectionNav({ active, onSelect }: { active: NavKey; onSelect: (ke
           iconDelay={0}
           label="Basic info"
           active={active === "basicInfo"}
+          drawer={drawer}
           onClick={() => onSelect("basicInfo")}
           trailing={
-            <span className="hidden text-[10.5px] font-medium tracking-wide text-[var(--color-ink-faint)] md:inline">
+            <span className={`${shown("inline")} text-[10.5px] font-medium tracking-wide text-[var(--color-ink-faint)]`}>
               {basicInfoDone ? "Complete" : "Required"}
             </span>
           }
         />
 
-        <RowDivider group />
+        <RowDivider group drawer={drawer} />
 
         <NavRow
           navKey="summary"
           iconDelay={40}
           label={summaryLabel}
           active={active === "summary"}
+          drawer={drawer}
           skipped={summaryStatus === "skipped"}
           onClick={() => onSelect("summary")}
           trailing={
-            <div className="hidden shrink-0 items-center gap-2 md:flex" data-tour="skip-switch">
-              <span
-                className="h-1.5 w-1.5 shrink-0 rounded-full transition-colors duration-150"
-                style={{ background: DOT_COLOR[summaryStatus] }}
-                aria-hidden="true"
-              />
+            <div className={`${shown("flex")} shrink-0 items-center gap-2`} data-tour={drawer ? undefined : "skip-switch"}>
+              <StatusMark status={summaryStatus} drawer={drawer} />
               <div onClick={(e) => e.stopPropagation()}>
                 <Switch
                   checked={summaryStatus !== "skipped"}
@@ -272,22 +290,19 @@ export function SectionNav({ active, onSelect }: { active: NavKey; onSelect: (ke
           }
         />
 
-        <RowDivider />
+        <RowDivider drawer={drawer} />
 
         <NavRow
           navKey="photo"
           iconDelay={80}
           label="Photo"
           active={active === "photo"}
+          drawer={drawer}
           skipped={photoStatus === "skipped"}
           onClick={() => onSelect("photo")}
           trailing={
-            <div className="hidden shrink-0 items-center gap-2 md:flex">
-              <span
-                className="h-1.5 w-1.5 shrink-0 rounded-full transition-colors duration-150"
-                style={{ background: DOT_COLOR[photoStatus] }}
-                aria-hidden="true"
-              />
+            <div className={`${shown("flex")} shrink-0 items-center gap-2`}>
+              <StatusMark status={photoStatus} drawer={drawer} />
               <div onClick={(e) => e.stopPropagation()}>
                 <Switch
                   checked={photoStatus !== "skipped"}
@@ -305,12 +320,13 @@ export function SectionNav({ active, onSelect }: { active: NavKey; onSelect: (ke
           const skipped = status === "skipped";
           return (
             <Fragment key={key}>
-              <RowDivider />
+              <RowDivider drawer={drawer} />
               <NavRow
                 navKey={key}
                 iconDelay={120 + index * 40}
                 label={label}
                 active={active === key}
+                drawer={drawer}
                 skipped={skipped}
                 dragging={draggingKey === key}
                 dropped={droppedKey === key}
@@ -321,21 +337,18 @@ export function SectionNav({ active, onSelect }: { active: NavKey; onSelect: (ke
                   else rowRefs.current.delete(key);
                 }}
                 trailing={
-                  <div className="hidden shrink-0 items-center gap-1.5 md:flex">
+                  <div className={`${shown("flex")} shrink-0 items-center gap-1.5`}>
                     <ReorderHandle
                       label={label}
                       skipped={skipped}
                       dragging={draggingKey === key}
-                      tourAnchor={index === 1}
+                      tourAnchor={!drawer && index === 1}
+                      drawer={drawer}
                       onPointerDown={(event) => startDrag(key, event)}
                       onMoveUp={() => moveSection(key, "up")}
                       onMoveDown={() => moveSection(key, "down")}
                     />
-                    <span
-                      className="h-1.5 w-1.5 shrink-0 rounded-full transition-colors duration-150"
-                      style={{ background: DOT_COLOR[status] }}
-                      aria-hidden="true"
-                    />
+                    <StatusMark status={status} drawer={drawer} />
                     <div onClick={(e) => e.stopPropagation()}>
                       <Switch
                         checked={status !== "skipped"}
@@ -350,23 +363,50 @@ export function SectionNav({ active, onSelect }: { active: NavKey; onSelect: (ke
           );
         })}
 
-        <RowDivider group />
+        <RowDivider group drawer={drawer} />
 
         <NavRow
           navKey="export"
           iconDelay={120 + contentKeys.length * 40}
           label="Preview & download"
           active={active === "export"}
+          drawer={drawer}
           onClick={() => onSelect("export")}
         />
       </nav>
 
-      <AdSlot
-        slot={ADSENSE_SLOTS.builderNav}
-        name="Builder nav"
-        className="mt-1 flex flex-col items-center gap-1 px-3 pb-3"
-      />
+      {!drawer && (
+        <AdSlot
+          slot={ADSENSE_SLOTS.builderNav}
+          name="Builder nav"
+          className="mt-1 flex flex-col items-center gap-1 px-3 pb-3"
+        />
+      )}
     </>
+  );
+}
+
+/** Status dot; in the mobile side menu a finished section gets a green
+ * tick instead, which reads at a glance on a small screen. */
+function StatusMark({ status, drawer }: { status: SectionStatus; drawer: boolean }) {
+  if (drawer && status === "complete") {
+    return (
+      <span
+        className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[var(--color-success)] text-[var(--color-surface)]"
+        aria-hidden="true"
+      >
+        <svg viewBox="0 0 12 12" className="h-2.5 w-2.5" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+          <path d="m3 6.2 2 2 4-4.4" />
+        </svg>
+      </span>
+    );
+  }
+  return (
+    <span
+      className="h-1.5 w-1.5 shrink-0 rounded-full transition-colors duration-150"
+      style={{ background: DOT_COLOR[status] }}
+      aria-hidden="true"
+    />
   );
 }
 
@@ -380,6 +420,7 @@ function ReorderHandle({
   skipped,
   dragging,
   tourAnchor,
+  drawer = false,
   onPointerDown,
   onMoveUp,
   onMoveDown,
@@ -388,6 +429,7 @@ function ReorderHandle({
   skipped: boolean;
   dragging: boolean;
   tourAnchor: boolean;
+  drawer?: boolean;
   onPointerDown: (event: React.PointerEvent<HTMLButtonElement>) => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
@@ -395,7 +437,7 @@ function ReorderHandle({
   return (
     <div
       data-tour={tourAnchor ? "section-sort" : undefined}
-      className="hidden shrink-0 md:flex"
+      className={drawer ? "flex shrink-0" : "hidden shrink-0 md:flex"}
       onClick={(e) => e.stopPropagation()}
     >
       <button
@@ -442,6 +484,7 @@ function NavRow({
   iconDelay = 0,
   label,
   active,
+  drawer = false,
   skipped = false,
   dragging = false,
   dropped = false,
@@ -454,6 +497,7 @@ function NavRow({
   iconDelay?: number;
   label: string;
   active: boolean;
+  drawer?: boolean;
   skipped?: boolean;
   dragging?: boolean;
   dropped?: boolean;
@@ -467,7 +511,7 @@ function NavRow({
       ref={rowRef}
       data-section-key={sectionKey}
       aria-grabbed={dragging || undefined}
-      className={`group/navrow flex shrink-0 items-center justify-between gap-2 rounded-lg pr-2 text-[13px] font-medium transition-[background-color,color,box-shadow] duration-200 ease-out md:w-full ${
+      className={`group/navrow flex shrink-0 items-center justify-between gap-2 rounded-lg pr-2 text-[13px] font-medium transition-[background-color,color,box-shadow] duration-200 ease-out ${drawer ? "w-full" : "md:w-full"} ${
         dragging
           ? "nav-row-lift"
           : dropped
@@ -488,9 +532,13 @@ function NavRow({
             carry "this won't be on the resume" — it reverts to the row's
             color from md up, where those controls say it instead. */}
         <span
-          className={`max-w-[7.25rem] overflow-hidden text-ellipsis whitespace-nowrap md:max-w-none md:overflow-visible ${
-            skipped ? "text-[var(--color-ink-faint)] md:text-inherit" : ""
-          }`}
+          className={
+            drawer
+              ? "min-w-0 overflow-hidden text-ellipsis whitespace-nowrap"
+              : `max-w-[7.25rem] overflow-hidden text-ellipsis whitespace-nowrap md:max-w-none md:overflow-visible ${
+                  skipped ? "text-[var(--color-ink-faint)] md:text-inherit" : ""
+                }`
+          }
         >
           {label}
         </span>
