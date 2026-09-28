@@ -84,7 +84,7 @@ describe("BuilderShell first-run tour", () => {
     window.history.replaceState({}, "", "/");
   });
 
-  it("does not show the tour on a mobile viewport", async () => {
+  it("shows the phone tour, not the desktop one, on a mobile viewport", async () => {
     window.matchMedia = jest.fn().mockImplementation((query: string) => ({
       matches: false,
       media: query,
@@ -92,11 +92,11 @@ describe("BuilderShell first-run tour", () => {
       removeEventListener: jest.fn(),
     }));
     render(<BuilderShell />);
-    await screen.findByRole("heading", { name: "Basic info" });
-    expect(screen.queryByRole("button", { name: "Skip tour" })).not.toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: /every section lives in the menu/i })).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: /skip what this resume/i })).not.toBeInTheDocument();
   });
 
-  it("closes the tour when the viewport shrinks below md", async () => {
+  it("swaps to the phone tour when the viewport shrinks below md", async () => {
     const listeners: Array<(event: MediaQueryListEvent) => void> = [];
     const media = {
       matches: true,
@@ -113,7 +113,8 @@ describe("BuilderShell first-run tour", () => {
     act(() => {
       listeners.forEach((cb) => cb({ matches: false } as MediaQueryListEvent));
     });
-    expect(screen.queryByRole("button", { name: "Skip tour" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: /skip what this resume/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: /every section lives in the menu/i })).toBeInTheDocument();
   });
 
   it("does not show the tour when a saved section already has a value", async () => {

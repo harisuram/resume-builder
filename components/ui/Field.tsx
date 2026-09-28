@@ -89,7 +89,7 @@ export function FieldGroup({
 }) {
   const errorId = htmlFor ? `${htmlFor}-error` : undefined;
   return (
-    <div className="group/field">
+    <div className="group/field min-w-0">
       <div className="mb-1.5 flex min-w-0 flex-wrap items-center gap-x-1 gap-y-1">
         <Label
           htmlFor={htmlFor}

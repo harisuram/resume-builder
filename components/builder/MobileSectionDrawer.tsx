@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { setMobileMenuOpen, useMobileMenuOpen } from "./mobileMenuStore";
 import type { NavKey } from "./nav";
 import { SectionNav } from "./SectionNav";
 
-const DRAWER_EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
-const DRAWER_MS = 380;
+// iOS-style: a longer decelerating open, a quicker accelerating close.
+const OPEN_EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
+const OPEN_MS = 420;
+const CLOSE_EASE = "cubic-bezier(0.4, 0, 0.9, 0.6)";
+const DRAWER_MS = 260;
 const DISMISS_PX = 80;
 const DISMISS_VELOCITY = 0.5;
 
@@ -20,31 +24,87 @@ export function MenuIcon({ open = false }: { open?: boolean }) {
   );
 }
 
+/** The ☰ button. Subscribes to the menu store on its own so the builder
+ * around it doesn't re-render when the menu opens. */
+export function MobileMenuButton({ className }: { className: string }) {
+  const open = useMobileMenuOpen();
+  return (
+    <button
+      type="button"
+      onClick={() => setMobileMenuOpen(true)}
+      aria-label="Open sections menu"
+      aria-haspopup="dialog"
+      aria-expanded={open}
+      data-mtour="menu"
+      className={className}
+    >
+      <MenuIcon open={open} />
+    </button>
+  );
+}
+
+/** Mounts the drawer when it's open, or ahead of time once `warm`. */
+export function MobileSectionMenu({
+  warm,
+  ...props
+}: {
+  warm: boolean;
+  active: NavKey;
+  onSelect: (key: NavKey) => void;
+  onReplayTour?: () => void;
+}) {
+  const open = useMobileMenuOpen();
+  if (!open && !warm) return null;
+  return <MobileSectionDrawer open={open} onClose={() => setMobileMenuOpen(false)} {...props} />;
+}
+
 /** Mobile side menu holding the full section list — the same switches,
  * status dots, and reorder handles as the desktop sidebar. Slides in from
  * the left; closes on backdrop tap, Escape, the close button, a swipe left
- * on the header, or picking a section. */
+ * on the header, or picking a section.
+ *
+ * It can stay mounted while closed (hidden and inert), so opening only has
+ * to start the slide instead of building the whole list on the tap. */
 export function MobileSectionDrawer({
+  open: requested,
   active,
   onSelect,
   onClose,
+  onReplayTour,
 }: {
+  /** The parent wants the menu open. It flips back via `onClose` once the
+   * close animation has finished. */
+  open: boolean;
   active: NavKey;
   onSelect: (key: NavKey) => void;
   onClose: () => void;
+  /** Close the menu and walk the phone tour again. */
+  onReplayTour?: () => void;
 }) {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
   const closedRef = useRef(false);
   const closeTimerRef = useRef<number | null>(null);
   const swipeRef = useRef<{ id: number; startX: number; x: number; t: number; vx: number } | null>(null);
+  // A section picked in the menu is applied once the panel has slid away,
+  // so swapping the form doesn't compete with the close animation.
+  const pendingSelectRef = useRef<NavKey | null>(null);
   const [open, setOpen] = useState(false);
+  const hidden = !requested && !open;
   const [dragX, setDragX] = useState(0);
   const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
+    if (!requested) return;
+    closedRef.current = false;
+    pendingSelectRef.current = null;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    // The builder behind is made inert here rather than through React, so
+    // opening doesn't re-render it.
+    const content = document.querySelector<HTMLElement>("[data-builder-content]");
+    const contentWasInert = content?.hasAttribute("inert") ?? false;
+    if (content && !contentWasInert) content.setAttribute("inert", "");
     let cancelled = false;
     const frame = requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -65,15 +125,23 @@ export function MobileSectionDrawer({
       if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
       document.body.style.overflow = previous;
       document.removeEventListener("keydown", onKey);
+      if (content && !contentWasInert) content.removeAttribute("inert");
+      // Closed from outside (e.g. the viewport grew past md): drop straight
+      // to hidden rather than leaving the panel drawn.
+      setOpen(false);
+      setDragX(0);
+      setDragging(false);
     };
-    // requestClose is stable for this mount.
+    // requestClose only reads refs and setters.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [requested]);
 
   function finishClose() {
     if (closedRef.current) return;
     closedRef.current = true;
+    const pending = pendingSelectRef.current;
     onClose();
+    if (pending) onSelect(pending);
   }
 
   function requestClose() {
@@ -118,26 +186,41 @@ export function MobileSectionDrawer({
     else setDragX(0);
   }
 
+  const panelWidth = panelRef.current?.offsetWidth || 320;
+  const backdropOpacity = open ? Math.max(0, 1 + dragX / panelWidth) : 0;
+  const ease = open ? OPEN_EASE : CLOSE_EASE;
+  const ms = open ? OPEN_MS : DRAWER_MS;
+
   return (
     <div
-      className={`no-print fixed inset-0 z-50 flex bg-black/40 backdrop-blur-[2px] transition-opacity duration-300 ease-out md:hidden ${
-        open ? "opacity-100" : "opacity-0"
-      }`}
+      className={`no-print fixed inset-0 z-50 md:hidden ${hidden ? "invisible pointer-events-none" : ""}`}
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
-      onClick={requestClose}
+      aria-hidden={hidden || undefined}
+      inert={hidden || undefined}
     >
+      {/* Backdrop and panel are separate layers so each animates on the
+          compositor alone: a plain fade (no backdrop blur, which phones
+          re-rasterise every frame) and a transform-only slide. */}
+      <div
+        className="absolute inset-0 bg-black/45 will-change-[opacity]"
+        style={{
+          opacity: backdropOpacity,
+          transition: dragging ? "none" : `opacity ${ms}ms ${ease}`,
+        }}
+        onClick={requestClose}
+        aria-hidden="true"
+      />
       <div
         ref={panelRef}
         tabIndex={-1}
         style={{
           transform: `translate3d(${open ? `${dragX}px` : "-100%"}, 0, 0)`,
-          transition: dragging ? "none" : `transform ${DRAWER_MS}ms ${DRAWER_EASE}`,
+          transition: dragging ? "none" : `transform ${ms}ms ${ease}`,
         }}
         onTransitionEnd={onPanelTransitionEnd}
-        onClick={(event) => event.stopPropagation()}
-        className={`flex h-full w-[min(20rem,86vw)] min-w-0 flex-col overflow-hidden rounded-r-3xl border-r border-[var(--color-border)] bg-[var(--color-surface)] shadow-[12px_0_48px_color-mix(in_srgb,var(--color-ink)_18%,transparent)] outline-none will-change-transform ${
+        className={`absolute inset-y-0 left-0 flex w-[min(20rem,86vw)] min-w-0 flex-col overflow-hidden rounded-r-3xl border-r border-[var(--color-border)] bg-[var(--color-surface)] shadow-[12px_0_48px_color-mix(in_srgb,var(--color-ink)_18%,transparent)] outline-none [backface-visibility:hidden] [contain:layout_paint] will-change-transform ${
           open ? "section-drawer-open" : ""
         }`}
       >
@@ -170,10 +253,29 @@ export function MobileSectionDrawer({
             variant="drawer"
             active={active}
             onSelect={(key) => {
-              onSelect(key);
+              if (key !== active) pendingSelectRef.current = key;
               requestClose();
             }}
           />
+          {onReplayTour ? (
+            <div className="px-3 pt-1 pb-4">
+              <button
+                type="button"
+                onClick={() => {
+                  requestClose();
+                  window.setTimeout(onReplayTour, DRAWER_MS);
+                }}
+                className="flex w-full items-center justify-center gap-2 rounded-full border border-dashed border-[var(--color-border)] py-2.5 text-[12.5px] font-medium text-[var(--color-ink-soft)] transition active:scale-[0.98] active:text-[var(--color-ink)]"
+              >
+                <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="8" cy="8" r="6.25" />
+                  <path d="M6.4 6.2a1.7 1.7 0 1 1 2.3 1.6c-.5.2-.7.6-.7 1.1v.3" />
+                  <path d="M8 11.4h.01" />
+                </svg>
+                Take the quick tour
+              </button>
+            </div>
+          ) : null}
         </div>
       </div>
     </div>

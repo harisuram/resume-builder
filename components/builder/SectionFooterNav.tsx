@@ -124,6 +124,7 @@ export function SectionFooterNav({
               onClick={onPreview}
               aria-label="Preview resume"
               title="Preview resume"
+              data-mtour="preview"
               aria-haspopup="dialog"
               className="pointer-events-auto flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full bg-[linear-gradient(135deg,var(--preview-from),var(--preview-to))] pl-1 pr-3 text-[13px] font-semibold text-[var(--preview-ink)] shadow-[0_8px_22px_-8px_var(--preview-glow),inset_0_1px_0_rgb(255_255_255_/_0.22)] ring-1 ring-[color-mix(in_srgb,var(--preview-ink)_16%,transparent)] transition duration-200 ease-out hover:brightness-110 active:scale-95 active:brightness-95 md:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]"
             >
@@ -134,7 +135,7 @@ export function SectionFooterNav({
             </button>
           </div>
         ) : null}
-        <div className="pointer-events-auto relative flex items-center gap-1.5 max-md:w-full max-md:rounded-full max-md:border max-md:border-[var(--color-border)]/70 max-md:bg-[var(--color-surface)]/65 max-md:p-1.5 max-md:shadow-[0_10px_40px_-8px_rgb(0_0_0_/_0.28),inset_0_1px_0_color-mix(in_srgb,var(--color-surface)_60%,transparent)] max-md:backdrop-blur-2xl max-md:backdrop-saturate-[1.8] md:gap-3">
+        <div data-mtour="capsule" className="pointer-events-auto relative flex items-center gap-1.5 max-md:w-full max-md:rounded-full max-md:border max-md:border-[var(--color-border)]/70 max-md:bg-[var(--color-surface)]/65 max-md:p-1.5 max-md:shadow-[0_10px_40px_-8px_rgb(0_0_0_/_0.28),inset_0_1px_0_color-mix(in_srgb,var(--color-surface)_60%,transparent)] max-md:backdrop-blur-2xl max-md:backdrop-saturate-[1.8] md:gap-3">
           {helper ? (
             <span className="hidden min-w-0 text-[11.5px] text-[var(--color-ink-faint)] md:inline">{helper}</span>
           ) : null}

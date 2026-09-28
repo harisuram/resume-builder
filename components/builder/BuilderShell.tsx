@@ -9,8 +9,10 @@ import { hasSavedResumeData, loadResumeData } from "@/lib/storage";
 import {
   BUILDER_TOUR_MEDIA,
   dismissBuilderTour,
+  dismissMobileBuilderTour,
   isBuilderTourViewport,
   shouldOfferBuilderTour,
+  shouldOfferMobileBuilderTour,
 } from "@/lib/builderTour";
 import { isBasicInfoComplete, hasBasicInfoContent, hasSectionContent, useBuilderStore } from "@/lib/store";
 import { showToast } from "@/lib/toast";
@@ -34,12 +36,14 @@ import { AdditionalForm } from "./sections/AdditionalForm";
 import { SummaryForm } from "./sections/SummaryForm";
 import { Navbar } from "./Navbar";
 import { BuilderTour } from "./BuilderTour";
+import { MobileBuilderTour } from "./MobileBuilderTour";
 import { wantsImportPrompt } from "@/lib/resumeImport/extractText";
 import { takePendingImport } from "@/lib/resumeImport/pendingImport";
 import { ResumeImportProvider } from "./ResumeImport";
 import { adjacentUnskippedStep, getWizardOrder, type NavKey } from "./nav";
 import { MobilePreviewSheet } from "./MobilePreviewSheet";
-import { MenuIcon, MobileSectionDrawer } from "./MobileSectionDrawer";
+import { MobileMenuButton, MobileSectionMenu } from "./MobileSectionDrawer";
+import { setMobileMenuOpen } from "./mobileMenuStore";
 import { PreviewPane } from "./PreviewPane";
 import { TemplateRail } from "./TemplateRail";
 import { SectionFooterNav } from "./SectionFooterNav";
@@ -184,7 +188,10 @@ export function BuilderShell() {
   const [hydrated, setHydrated] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  // On phones the side menu is built once, shortly after load, and kept
+  // (hidden) so the ☰ tap only has to start the slide.
+  const [menuWarm, setMenuWarm] = useState(false);
+  const [mobileTourOpen, setMobileTourOpen] = useState(false);
   const [importPrompt, setImportPrompt] = useState(false);
   const importFirstRef = useRef<boolean | null>(null);
   const pendingFileRef = useRef<File | null>(null);
@@ -224,9 +231,19 @@ export function BuilderShell() {
     setHydrated(true);
     if (pendingFileRef.current) setInitialFile(pendingFileRef.current);
     else if (importFirst) setImportPrompt(true);
-    else if (shouldOfferBuilderTour() && isBuilderTourViewport()) setTourOpen(true);
+    else if (isBuilderTourViewport()) {
+      if (shouldOfferBuilderTour()) setTourOpen(true);
+    } else if (shouldOfferMobileBuilderTour()) setMobileTourOpen(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!hydrated || menuWarm || isBuilderTourViewport()) return;
+    const idle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 400));
+    const cancel = window.cancelIdleCallback ?? window.clearTimeout;
+    const handle = idle(() => setMenuWarm(true));
+    return () => cancel(handle);
+  }, [hydrated, menuWarm]);
 
   useEffect(() => {
     if (typeof window.matchMedia !== "function") return;
@@ -234,14 +251,19 @@ export function BuilderShell() {
     const sync = () => {
       if (media.matches) {
         setPreviewOpen(false);
-        setMenuOpen(false);
+        setMobileMenuOpen(false);
+        setMobileTourOpen(false);
         if (shouldOfferBuilderTour()) setTourOpen(true);
       } else {
         setTourOpen(false);
+        if (shouldOfferMobileBuilderTour()) setMobileTourOpen(true);
       }
     };
     media.addEventListener("change", sync);
-    return () => media.removeEventListener("change", sync);
+    return () => {
+      media.removeEventListener("change", sync);
+      setMobileMenuOpen(false);
+    };
   }, []);
 
   useEffect(() => {
@@ -344,6 +366,10 @@ export function BuilderShell() {
           dismissBuilderTour();
           setTourOpen(false);
         }
+        if (mobileTourOpen) {
+          dismissMobileBuilderTour();
+          setMobileTourOpen(false);
+        }
         selectSection("basicInfo");
       }}
       onReviewSection={(key) => selectSection(key)}
@@ -354,7 +380,8 @@ export function BuilderShell() {
     <div className="print-unclip flex h-[100dvh] flex-col overflow-hidden">
       <div
         className="print-unclip flex min-h-0 flex-1 flex-col overflow-hidden"
-        inert={tourOpen || previewOpen || menuOpen || undefined}
+        data-builder-content=""
+        inert={tourOpen || mobileTourOpen || previewOpen || undefined}
       >
         <Navbar />
         <div className="print-unclip flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
@@ -362,19 +389,10 @@ export function BuilderShell() {
             {/* Mobile: a bar that opens the side menu with the full section
                 list. From md up the list is the sidebar itself. */}
             <div className="flex items-center gap-3 px-3 py-2 md:hidden">
+              <MobileMenuButton className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)]/70 bg-[var(--color-surface)]/70 text-[var(--color-ink-soft)] shadow-[0_4px_14px_-6px_rgb(0_0_0_/_0.22),inset_0_1px_0_color-mix(in_srgb,var(--color-surface)_60%,transparent)] backdrop-blur-xl transition duration-150 hover:text-[var(--color-ink)] active:scale-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]" />
               <button
                 type="button"
-                onClick={() => setMenuOpen(true)}
-                aria-label="Open sections menu"
-                aria-haspopup="dialog"
-                aria-expanded={menuOpen}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)]/70 bg-[var(--color-surface)]/70 text-[var(--color-ink-soft)] shadow-[0_4px_14px_-6px_rgb(0_0_0_/_0.22),inset_0_1px_0_color-mix(in_srgb,var(--color-surface)_60%,transparent)] backdrop-blur-xl transition duration-150 hover:text-[var(--color-ink)] active:scale-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]"
-              >
-                <MenuIcon open={menuOpen} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setMenuOpen(true)}
+                onClick={() => setMobileMenuOpen(true)}
                 className="flex min-w-0 flex-1 flex-col gap-1 text-left"
                 tabIndex={-1}
                 aria-hidden="true"
@@ -482,10 +500,22 @@ export function BuilderShell() {
 
         <ToastHost />
       </div>
-      {menuOpen && (
-        <MobileSectionDrawer active={activeKey} onSelect={selectSection} onClose={() => setMenuOpen(false)} />
-      )}
+      <MobileSectionMenu
+        warm={menuWarm}
+        active={activeKey}
+        onSelect={selectSection}
+        onReplayTour={() => setMobileTourOpen(true)}
+      />
       {previewOpen && <MobilePreviewSheet onClose={() => setPreviewOpen(false)} />}
+      {mobileTourOpen && (
+        <MobileBuilderTour
+          open
+          onDismiss={() => {
+            dismissMobileBuilderTour();
+            setMobileTourOpen(false);
+          }}
+        />
+      )}
       <BuilderTour
         open={tourOpen}
         onDismiss={() => {
