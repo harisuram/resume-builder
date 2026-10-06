@@ -110,6 +110,10 @@ export default function Home() {
             <Link href="/ats" className="font-medium text-[var(--color-accent)] hover:underline">
               ATS-friendly resumes
             </Link>
+            . For help with the writing itself — summaries, bullet points, skills, cover letters — browse the{" "}
+            <Link href="/guides" className="font-medium text-[var(--color-accent)] hover:underline">
+              resume guides
+            </Link>
             .
           </p>
         </section>

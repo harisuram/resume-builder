@@ -9,6 +9,7 @@ export const SITE_URL = (
 export const INDEXABLE_PATHS = [
   "/",
   "/how-to-make-a-resume",
+  "/guides",
   "/private",
   "/templates",
   "/ats",

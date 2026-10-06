@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { TEMPLATES } from "@/components/templates/shared/theme";
 import { capitalizedNumberWords } from "./numberWords";
+import type { Guide } from "./guides/types";
 import { SITE_URL, absoluteUrl, type IndexablePath } from "./site";
 
 /** Spelled-out template count ("Forty"), derived from the catalog so the copy
@@ -172,6 +173,7 @@ export const HOW_TO_STEPS: HowToStep[] = [
 export const FOOTER_LINKS: { href: IndexablePath; label: string }[] = [
   { href: "/", label: "Home" },
   { href: "/how-to-make-a-resume", label: "How to make a resume" },
+  { href: "/guides", label: "Resume guides" },
   { href: "/templates", label: "Templates" },
   { href: "/private", label: "Private & safe" },
   { href: "/ats", label: "ATS" },
@@ -192,6 +194,11 @@ export const PAGE_META: Record<
     title: "How to Make a Resume Free (No Account)",
     description:
       "How to make a resume with the best free, unlimited AI-powered builder: add your details, skip unused sections, pick a template, and download a PDF. No account.",
+  },
+  "/guides": {
+    title: "Resume Writing Guides",
+    description:
+      "In-depth resume guides: summaries, bullet points, skills, education, ATS, formats, cover letters, and career gaps — with examples you can adapt.",
   },
   "/private": {
     title: "Safe, Private Resume Builder",
@@ -309,6 +316,69 @@ export function howToJsonLd() {
       name: step.name,
       text: step.text,
       url: `${absoluteUrl("/how-to-make-a-resume")}#step-${i + 1}`,
+    })),
+  };
+}
+
+/** Per-article metadata for /guides/[slug]. Same shape as `pageMetadata`,
+ * but typed as an article with its publish and update dates. */
+export function guideMetadata(guide: Guide): Metadata {
+  const path = `/guides/${guide.slug}`;
+  const url = absoluteUrl(path);
+  const branded = `${guide.title} — ${SITE_NAME}`;
+
+  return {
+    title: guide.title,
+    description: guide.description,
+    robots: { index: true, follow: true },
+    alternates: { canonical: path },
+    openGraph: {
+      title: branded,
+      description: guide.description,
+      url,
+      siteName: SITE_NAME,
+      type: "article",
+      publishedTime: guide.published,
+      modifiedTime: guide.updated,
+      section: guide.category,
+      images: [{ url: "/og.png", width: 1200, height: 630, alt: HOME_TITLE }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: branded,
+      description: guide.description,
+      images: ["/og.png"],
+    },
+  };
+}
+
+export function articleJsonLd(guide: Guide) {
+  const url = absoluteUrl(`/guides/${guide.slug}`);
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: guide.title,
+    description: guide.description,
+    datePublished: guide.published,
+    dateModified: guide.updated,
+    articleSection: guide.category,
+    image: absoluteUrl("/og.png"),
+    mainEntityOfPage: url,
+    url,
+    author: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+    publisher: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+  };
+}
+
+export function breadcrumbJsonLd(items: { name: string; path: string }[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: item.name,
+      item: absoluteUrl(item.path),
     })),
   };
 }

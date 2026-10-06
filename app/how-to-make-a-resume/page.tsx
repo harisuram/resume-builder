@@ -55,6 +55,26 @@ export default function HowToMakeAResumePage() {
           .
         </Body>
 
+        <SectionHeading>Help with the writing</SectionHeading>
+        <Body>
+          The steps above cover the editor. For what to actually write, the{" "}
+          <Link href="/guides" className="font-medium text-[var(--color-accent)] hover:underline">
+            resume guides
+          </Link>{" "}
+          go section by section with examples — including{" "}
+          <Link href="/guides/how-to-write-a-resume-summary" className="font-medium text-[var(--color-accent)] hover:underline">
+            writing a summary
+          </Link>{" "}
+          and{" "}
+          <Link
+            href="/guides/how-to-write-work-experience-bullet-points"
+            className="font-medium text-[var(--color-accent)] hover:underline"
+          >
+            work experience bullet points
+          </Link>
+          .
+        </Body>
+
         <div className="mt-10">
           <BuilderCta>Make a resume</BuilderCta>
         </div>

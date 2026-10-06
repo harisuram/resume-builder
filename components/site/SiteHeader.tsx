@@ -5,6 +5,7 @@ import { ctaPrimary } from "@/components/ui/cta";
 
 const HEADER_LINKS = [
   { href: "/templates", label: "Templates" },
+  { href: "/guides", label: "Guides" },
   { href: "/how-to-make-a-resume", label: "How to" },
   { href: "/private", label: "Private" },
 ] as const;
