@@ -47,6 +47,7 @@ export function TemplatePreviewStrip() {
               <div
                 className="absolute inset-0 origin-top transition-transform duration-500 ease-out group-hover:scale-[1.035]"
                 aria-hidden="true"
+                inert
               >
                 <ScaledTemplatePreview theme={template} compact fullPage framed={false} fillParent />
               </div>

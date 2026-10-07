@@ -29,8 +29,10 @@ export function SiteHeader({ home = false }: { home?: boolean }) {
           </nav>
           <ThemeToggle />
           <Link href="/builder" className={ctaPrimary.sm} aria-label="Start building">
+            {/* Not "Start": Lighthouse's SEO audit flags it as non-descriptive
+                link text (the aria-label doesn't count there). */}
             <span className="sm:hidden" aria-hidden="true">
-              Start
+              Build
             </span>
             <span className="hidden sm:inline" aria-hidden="true">
               Start building

@@ -6,7 +6,7 @@ export const BRAND = {
   surfaceDark: "#121826",
   ink: "#0b1220",
   inkSoft: "#4b5568",
-  inkFaint: "#8893a7",
+  inkFaint: "#677186",
   accent: "#4f46e5",
   accentInk: "#ffffff",
 } as const;
