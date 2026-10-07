@@ -15,6 +15,9 @@ export const INDEXABLE_PATHS = [
   "/ats",
   "/privacy",
   "/about",
+  "/contact",
+  "/terms",
+  "/disclaimer",
 ] as const;
 
 export type IndexablePath = (typeof INDEXABLE_PATHS)[number];

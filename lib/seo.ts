@@ -64,11 +64,11 @@ export const FEATURES = [
   },
   {
     title: "PDF from the live preview",
-    body: "Print a PDF of the template you picked. The download is the same view you already reviewed — same layout, headings, and section order.",
+    body: "The preview you see is the PDF itself, so the download has exactly the layout, headings, and section order you already checked.",
   },
   {
     title: "Private by default",
-    body: "Work stays in your browser. Clicking Save & Next or Skip writes a draft to this device’s local storage — nothing is uploaded as a hosted resume. Ads (if enabled), the optional ATS rewrite, and importing a resume (the extracted text) are the only network exceptions — details on the private resume builder page.",
+    body: "Work stays in your browser. Clicking Save & Next or Skip writes a draft to this device’s local storage — nothing is uploaded as a hosted resume. Ads, importing a resume, and the optional AI rewrite are the only times anything leaves your device — the private resume builder page has the details.",
     href: "/private" as const,
     linkLabel: "How private this is",
   },
@@ -77,7 +77,7 @@ export const FEATURES = [
 export const FEATURE_LIST = [
   "Free and unlimited — no account, no download cap",
   "Drop an existing resume to fill matching sections",
-  "Optional AI-powered ATS rewrite for experience bullets",
+  "Optional AI rewrite for your summary, experience bullets, and project descriptions",
   "Choose only the resume sections you need",
   "Suggestions for roles and skills across software, data, IT, pharmacy, architecture, and construction",
   `${TEMPLATE_COUNT_WORDS} resume templates with a live preview`,
@@ -114,7 +114,7 @@ export const HOME_FAQS: FaqItem[] = [
   {
     question: "Is it safe? Do you store my resume?",
     answer:
-      "Drafts live in your browser. Clicking Save & Next or Skip writes a copy to this device’s local storage, and there is no resume hosting account. If ads are on, Google AdSense loads. If you click “Make ATS-friendly,” those experience bullets are sent to a rewrite API. If you import a resume file, the extracted text is sent so we can fill matching sections. The private page explains those exceptions.",
+      "Your draft lives in your browser. Clicking Save & Next or Skip saves it to this device’s local storage, and there’s no account or hosted copy. Three things do touch the internet: Google AdSense ads, importing a resume (the text is sent so sections can be filled in), and the optional “Make ATS-friendly” button (the text you’re rewriting is sent to an AI service). The private page explains each one.",
   },
   {
     question: "Do I need an account or email?",
@@ -124,7 +124,7 @@ export const HOME_FAQS: FaqItem[] = [
   {
     question: "Can I download a resume as PDF?",
     answer:
-      "Yes. Download uses the browser’s print-to-PDF flow against the live preview, so the file matches the template you already reviewed.",
+      "Yes. The PDF is generated right in your browser and saved as a file. The preview you look at while editing is that same PDF, so what you download matches what you reviewed.",
   },
   {
     question: "Can I make a CV or a free curriculum vitae?",
@@ -134,7 +134,7 @@ export const HOME_FAQS: FaqItem[] = [
   {
     question: "Are the templates ATS-friendly?",
     answer:
-      "Templates use real headings and skip empty sections, which keeps the file readable. Experience entries also have an optional “Make ATS-friendly” rewrite. The ATS page covers what that does and what it does not claim.",
+      "Templates use real headings and skip empty sections, which keeps the file readable. Your summary, experience entries, and projects also have an optional “Make ATS-friendly” rewrite. The ATS page covers what that does and what it does not claim.",
   },
 ];
 
@@ -161,8 +161,8 @@ export const HOW_TO_STEPS: HowToStep[] = [
     text: "Work through experience, internships, projects, education, skills, and the rest. Pick from suggestions — software, data, IT, pharmacy, architecture, construction — or type your own. Skip anything that isn’t on this resume.",
   },
   {
-    name: "Optionally make experience bullets ATS-friendly",
-    text: "On an experience entry you can rewrite bullets into plain, action-led lines. That step is optional and only runs if you click it.",
+    name: "Optionally tighten your wording",
+    text: "Your summary, experience entries, and projects each have a “Make ATS-friendly” button that rewrites what you wrote into plain, action-led lines. It only runs if you click it — and it’s worth reading the result before you keep it.",
   },
   {
     name: "Pick a template and download a PDF",
@@ -177,12 +177,15 @@ export const FOOTER_LINKS: { href: IndexablePath; label: string }[] = [
   { href: "/templates", label: "Templates" },
   { href: "/private", label: "Private & safe" },
   { href: "/ats", label: "ATS" },
-  { href: "/privacy", label: "Privacy" },
   { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
+  { href: "/privacy", label: "Privacy policy" },
+  { href: "/terms", label: "Terms" },
+  { href: "/disclaimer", label: "Disclaimer" },
 ];
 
 export const FOOTER_TAGLINE =
-  "The best free, unlimited AI-powered resume builder for any field — software, data, IT, pharmacy, architecture, construction, and more. Skip unused sections, pick a template, download a PDF.";
+  "A free resume and CV builder for any field — software, data, IT, pharmacy, architecture, construction, and more. Skip the sections you don’t need, pick a template, and download a PDF.";
 
 export const FOOTER_NOTE = "Free · Unlimited · AI-powered · No account";
 
@@ -216,14 +219,29 @@ export const PAGE_META: Record<
       "Make an ATS-friendly resume with real headings and an optional AI-powered bullet rewrite. Free, unlimited resume creator — no account.",
   },
   "/privacy": {
-    title: "Privacy",
+    title: "Privacy Policy",
     description:
-      "How this free, unlimited AI-powered resume builder handles data: browser storage, no account, optional ads, resume import, and the optional ATS rewrite.",
+      "How Free Resume Builder handles your data: drafts in browser storage, no account, Google AdSense cookies, and what the optional import and AI rewrite send.",
   },
   "/about": {
     title: "About",
     description:
-      "The best free, unlimited AI-powered resume maker for any field. Skip unused sections, pick a template, download a PDF. No account.",
+      "Who runs Free Resume Builder, why it is free with no account, how it is paid for, and what it does and doesn’t try to do.",
+  },
+  "/contact": {
+    title: "Contact",
+    description:
+      "Get in touch about Free Resume Builder — bug reports, template problems, privacy questions, or corrections to a guide. Email address and what to include.",
+  },
+  "/terms": {
+    title: "Terms and Conditions",
+    description:
+      "The terms for using Free Resume Builder: acceptable use, your content, the optional AI features, advertising, liability, and governing law.",
+  },
+  "/disclaimer": {
+    title: "Disclaimer",
+    description:
+      "Limits of Free Resume Builder and its guides: general career information, no guarantee of interviews or ATS results, AI output, ads, and external links.",
   },
 };
 

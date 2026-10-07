@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { SiteFooter } from "./SiteFooter";
 import { SiteHeader } from "./SiteHeader";
 
@@ -55,4 +56,35 @@ export function SectionHeading({ children }: { children: React.ReactNode }) {
 
 export function Body({ children }: { children: React.ReactNode }) {
   return <p className="mt-3 text-[14.5px] leading-relaxed text-[var(--color-ink-soft)]">{children}</p>;
+}
+
+export function List({ items }: { items: React.ReactNode[] }) {
+  return (
+    <ul className="mt-3 list-disc space-y-1.5 pl-5 text-[14.5px] leading-relaxed text-[var(--color-ink-soft)]">
+      {items.map((item, i) => (
+        <li key={i}>{item}</li>
+      ))}
+    </ul>
+  );
+}
+
+export function TextLink({ href, children }: { href: string; children: React.ReactNode }) {
+  const className = "font-medium text-[var(--color-accent)] hover:underline";
+  if (href.startsWith("/")) {
+    return (
+      <Link href={href} className={className}>
+        {children}
+      </Link>
+    );
+  }
+  const external = /^https?:\/\//.test(href);
+  return (
+    <a href={href} className={className} {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
+      {children}
+    </a>
+  );
+}
+
+export function Updated({ date }: { date: string }) {
+  return <p className="mt-3 text-[12.5px] text-[var(--color-ink-faint)]">Last updated {date}</p>;
 }

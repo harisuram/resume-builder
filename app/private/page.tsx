@@ -1,6 +1,5 @@
-import Link from "next/link";
 import { BuilderCta } from "@/components/site/BuilderCta";
-import { Article, Body, Lead, MarketingPage, PageTitle, SectionHeading } from "@/components/site/MarketingPage";
+import { Article, Body, Lead, List, MarketingPage, PageTitle, SectionHeading, TextLink } from "@/components/site/MarketingPage";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/private");
@@ -11,50 +10,52 @@ export default function PrivatePage() {
       <Article>
         <PageTitle>A private resume builder that doesn’t require an account</PageTitle>
         <Lead>
-          This is a safe, private resume builder and resume creator: no sign-up, no resume hosting. Clicking Save &amp;
-          Next or Skip stores a draft in this browser. If you were searching for a secure resume maker, here’s what that
-          actually means here.
+          A resume holds your phone number, email, address, work history, and sometimes a photo. You shouldn’t have to
+          hand all of that to a website just to format it. Here’s exactly where your information goes when you use
+          this builder — and, mostly, where it doesn’t.
         </Lead>
 
-        <SectionHeading>What stays in your browser</SectionHeading>
+        <SectionHeading>Your draft stays on your device</SectionHeading>
         <Body>
-          Editing happens on this page in your browser. There is no account, so there is no cloud copy of your resume
-          waiting on a server we run. Clicking Save &amp; Next or Skip writes a copy to this browser’s local storage on
-          this device — not uploaded as a hosted file. Importing a resume or downloading a PDF updates that same copy.
-          Use Start new resume, or clear site data in the browser, to remove it.
+          You write your resume on this page, in your browser. When you click Save &amp; Next or Skip, the draft is
+          saved to your browser’s local storage on this device. It isn’t uploaded to an account, because there are no
+          accounts — so there’s no cloud copy sitting on a server, and nothing for anyone else to log in to.
+        </Body>
+        <Body>
+          The flip side is worth knowing: the draft only exists on the device and browser you used. It won’t follow you
+          from laptop to phone, and clearing your browser data deletes it. Click Start new resume in the builder to
+          wipe it yourself.
         </Body>
 
-        <SectionHeading>What does leave the device</SectionHeading>
+        <SectionHeading>Your PDF is made on your device too</SectionHeading>
         <Body>
-          A few optional exceptions, and only those:
-        </Body>
-        <Body>
-          If ads are enabled on this deployment, Google AdSense loads on some screens. That is Google’s ad script, not
-          a copy of your resume.
-        </Body>
-        <Body>
-          If you click “Make ATS-friendly” on an experience entry, those bullets are sent to a rewrite API so they can
-          come back as plain, action-led lines. If you never click it, that request never happens.
-        </Body>
-        <Body>
-          If you drop or choose a resume file, the file is read in the browser and the extracted text is sent so we can
-          fill matching sections (including synonym headings). If you never import a file, that request never happens.
+          The PDF is generated inside your browser and saved straight to your downloads. It isn’t built on a server,
+          and I never receive a copy. The preview you see while editing is that same PDF, so there are no surprises
+          when you open the file.
         </Body>
 
-        <SectionHeading>PDF download</SectionHeading>
+        <SectionHeading>The three times something leaves your device</SectionHeading>
+        <Body>Being honest about privacy means listing the exceptions, so here they are:</Body>
+        <List
+          items={[
+            "Ads. The site is paid for by Google AdSense, so Google’s ad script loads on some pages. It sees what any web page sees — like your browser and rough location — but never the contents of your resume.",
+            "Importing a resume. If you drop in a PDF, Word, or text file, it’s read in your browser, then the extracted text is sent to the site’s server and an AI service so it can be sorted into the right sections. Don’t want that? Type your resume in instead.",
+            "The “Make ATS-friendly” button. It appears on your summary, experience entries, and projects. Clicking it sends the text of that one item to an AI service to be rewritten. If you never click it, nothing is sent.",
+          ]}
+        />
         <Body>
-          Download uses the browser’s print dialog against the live preview. The file is produced on your machine from
-          the template you already reviewed.
+          The server passes text through and returns the result; it doesn’t save what you sent. The full details,
+          including the AI provider and cookies, are in the <TextLink href="/privacy">privacy policy</TextLink>.
         </Body>
 
-        <SectionHeading>The legal page</SectionHeading>
-        <Body>
-          This page is the product explanation. The{" "}
-          <Link href="/privacy" className="font-medium text-[var(--color-accent)] hover:underline">
-            privacy policy
-          </Link>{" "}
-          is the same facts in policy form.
-        </Body>
+        <SectionHeading>A few tips if privacy matters to you</SectionHeading>
+        <List
+          items={[
+            "On a shared or public computer, click Start new resume when you’re done so your draft isn’t left behind.",
+            "Keep the downloaded PDF somewhere safe — it’s your only copy outside the browser.",
+            "You don’t need to put your full home address on a resume. A city and country is enough for most applications.",
+          ]}
+        />
 
         <div className="mt-10">
           <BuilderCta>Build privately</BuilderCta>

@@ -22,7 +22,7 @@ export const metadata = pageMetadata("/");
 const STEPS = [
   { n: "01", title: "Fill what belongs", body: "Name, contact, then only the sections this resume needs." },
   { n: "02", title: "Pick a look", body: "Switch templates in the live preview until one fits." },
-  { n: "03", title: "Download a PDF", body: "Print the same view you already checked. No account." },
+  { n: "03", title: "Download a PDF", body: "Save the same view you already checked. No account." },
 ] as const;
 
 function NibMark() {

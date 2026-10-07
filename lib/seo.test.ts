@@ -37,7 +37,7 @@ describe("pageMetadata", () => {
     expect(home.robots).toEqual({ index: true, follow: true });
 
     const privacy = pageMetadata("/privacy");
-    expect(privacy.title).toBe("Privacy");
+    expect(privacy.title).toBe("Privacy Policy");
     expect(privacy.alternates).toEqual({ canonical: "/privacy" });
     expect(privacy.openGraph?.images).toEqual([
       expect.objectContaining({ url: "/og.png", width: 1200, height: 630 }),
