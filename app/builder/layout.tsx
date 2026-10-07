@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { HOME_TITLE } from "@/lib/seo";
+import { SAVED_RESUME_MARKER_SCRIPT } from "@/lib/storage";
 
 const BUILDER_DESCRIPTION =
   "Build a resume with the best free, unlimited AI-powered resume maker. Pick a template and download a PDF — no account.";
@@ -24,5 +25,10 @@ export const metadata: Metadata = {
 };
 
 export default function BuilderLayout({ children }: LayoutProps<"/builder">) {
-  return children;
+  return (
+    <>
+      <script dangerouslySetInnerHTML={{ __html: SAVED_RESUME_MARKER_SCRIPT }} />
+      {children}
+    </>
+  );
 }

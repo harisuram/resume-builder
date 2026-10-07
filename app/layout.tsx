@@ -27,10 +27,13 @@ const geist = Geist({
   display: "swap",
 });
 
+/* Only the résumé templates use the serif, never a page's first screen, so
+ * it isn't preloaded — that kept ~30 KB off the critical path on phones. */
 const sourceSerif = Source_Serif_4({
   variable: "--font-source-serif",
   subsets: ["latin"],
   display: "swap",
+  preload: false,
 });
 
 /* Display faces for the names and titles of a few templates. Not preloaded:

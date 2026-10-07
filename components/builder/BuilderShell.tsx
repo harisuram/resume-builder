@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { AdSlot } from "@/components/ads/AdSlot";
 import { requestedTemplateId } from "@/components/templates/shared/theme";
@@ -35,8 +36,6 @@ import { SoftSkillsForm } from "./sections/SoftSkillsForm";
 import { AdditionalForm } from "./sections/AdditionalForm";
 import { SummaryForm } from "./sections/SummaryForm";
 import { Navbar } from "./Navbar";
-import { BuilderTour } from "./BuilderTour";
-import { MobileBuilderTour } from "./MobileBuilderTour";
 import { wantsImportPrompt } from "@/lib/resumeImport/extractText";
 import { takePendingImport } from "@/lib/resumeImport/pendingImport";
 import { ResumeImportProvider } from "./ResumeImport";
@@ -49,6 +48,13 @@ import { TemplateRail } from "./TemplateRail";
 import { SectionFooterNav } from "./SectionFooterNav";
 import { SectionNav } from "./SectionNav";
 
+// Tours only open after mount (first visit or "Replay tour"), so their code
+// stays out of the bundle that has to load before the builder is usable.
+const BuilderTour = dynamic(() => import("./BuilderTour").then((m) => m.BuilderTour), { ssr: false });
+const MobileBuilderTour = dynamic(() => import("./MobileBuilderTour").then((m) => m.MobileBuilderTour), {
+  ssr: false,
+});
+
 const FIX_FIELDS_REASON = "Fix the highlighted fields before continuing.";
 
 function stepLabel(key: NavKey): string {
@@ -56,20 +62,6 @@ function stepLabel(key: NavKey): string {
   if (key === "photo") return "Photo";
   if (key === "export") return "Preview & download";
   return getSectionMeta(key).label;
-}
-
-/** AdsBot fetches `/builder` once and does not click the wizard, so every
- * builder unit has to be in this first view (and in the pre-hydrate HTML). */
-function BuilderAdCrawlerTree() {
-  return (
-    <div data-ad-crawler="">
-      <AdSlot slot={ADSENSE_SLOTS.builderNav} name="Builder nav" />
-      <AdSlot slot={ADSENSE_SLOTS.builderPreviewTop} name="Builder preview top" />
-      <AdSlot slot={ADSENSE_SLOTS.builderPreview} name="Builder preview" />
-      <AdSlot slot={ADSENSE_SLOTS.builderSectionFooter} name="Section footer" />
-      <AdSlot slot={ADSENSE_SLOTS.builderExport} name="Export page" />
-    </div>
-  );
 }
 
 /** Whether the current step has to be resolved (filled in, or explicitly
@@ -350,15 +342,10 @@ export function BuilderShell() {
     }
   }
 
-  if (!hydrated) {
-    return (
-      <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-[var(--color-paper)]">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-border)] border-t-[var(--color-accent)]" />
-        <BuilderAdCrawlerTree />
-      </div>
-    );
-  }
-
+  // The full builder (empty store, Basic info step) is in the static HTML so
+  // phones paint the real layout before JS runs — no spinner-to-UI jump.
+  // That also puts every builder ad unit in the pre-hydrate HTML for AdsBot,
+  // which fetches `/builder` once and never clicks the wizard.
   return (
     <ResumeImportProvider
       onImported={() => {
@@ -384,7 +371,14 @@ export function BuilderShell() {
         inert={tourOpen || mobileTourOpen || previewOpen || undefined}
       >
         <Navbar />
-        <div className="print-unclip flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
+        {/* Inert until hydrated: anything typed into the static form before
+            React attaches would show in the field but never reach the store
+            (Save & Next would stay disabled). */}
+        <div
+          className="print-unclip flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row"
+          data-builder-pending={hydrated ? undefined : ""}
+          inert={!hydrated || undefined}
+        >
           <aside className="no-print sticky top-0 z-20 shrink-0 border-b border-[var(--color-border)] bg-[var(--color-surface)] md:static md:h-full md:min-h-0 md:w-64 md:overflow-y-auto md:border-b-0 md:border-r">
             {/* Mobile: a bar that opens the side menu with the full section
                 list. From md up the list is the sidebar itself. */}
@@ -490,9 +484,10 @@ export function BuilderShell() {
                   name="Builder preview top"
                   className="mb-4 flex shrink-0 flex-col items-center gap-1"
                 />
-                <div className="min-h-0 min-w-0 flex-1">
-                  <PreviewPane />
-                </div>
+                {/* Mounted after hydration: the saved copy and `?template=`
+                    are only applied then, so a pre-hydrate preview would show
+                    the wrong résumé or template for a moment. */}
+                <div className="min-h-0 min-w-0 flex-1">{hydrated && <PreviewPane />}</div>
               </aside>
             </div>
           )}

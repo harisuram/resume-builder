@@ -28,7 +28,9 @@ describe("BuilderShell section-footer ads", () => {
 
   it("keeps those units in the pre-hydrate HTML Google's crawler fetches", () => {
     const html = renderToString(<BuilderShell />);
-    expect(html).toContain("data-ad-crawler");
+    // The real builder (not a spinner) is prerendered, ads included.
+    expect(html).toContain("Basic info");
+    expect(html).toContain("data-builder-pending");
     expect(html).toContain("Builder nav");
     expect(html).toContain("Builder preview top");
     expect(html).toContain("Builder preview");

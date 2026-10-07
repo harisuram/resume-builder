@@ -467,6 +467,13 @@ input[type="month"]::-webkit-calendar-picker-indicator {
   }
 }
 
+/* The builder's static HTML holds an empty form. A returning visitor's saved
+ * copy only loads after hydration, so hide (not remove — no layout shift)
+ * that empty form until then instead of flashing blank fields. */
+html[data-resume-saved] [data-builder-pending] {
+  visibility: hidden;
+}
+
 .animate-fade-up {
   animation: fade-up 0.55s ease-out both;
 }
@@ -1869,8 +1876,7 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
     0 0 0 2px color-mix(in srgb, var(--color-accent) 80%, transparent),
     0 0 26px 6px var(--accent-glow);
   transition:
-    left 0.55s cubic-bezier(0.32, 0.72, 0, 1),
-    top 0.55s cubic-bezier(0.32, 0.72, 0, 1),
+    transform 0.55s cubic-bezier(0.32, 0.72, 0, 1),
     width 0.55s cubic-bezier(0.32, 0.72, 0, 1),
     height 0.55s cubic-bezier(0.32, 0.72, 0, 1),
     border-radius 0.55s cubic-bezier(0.32, 0.72, 0, 1);

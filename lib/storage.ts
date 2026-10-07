@@ -2,6 +2,10 @@ import type { ResumeData } from "./types";
 
 const STORAGE_KEY = "resumeData";
 
+/** Inline, pre-paint: marks <html> when a saved résumé exists so the builder
+ * can keep its empty static form hidden until that copy is loaded in. */
+export const SAVED_RESUME_MARKER_SCRIPT = `(function(){try{if(localStorage.getItem("${STORAGE_KEY}")!==null)document.documentElement.setAttribute("data-resume-saved","")}catch(e){}})();`;
+
 export function saveResumeData(data: ResumeData) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }

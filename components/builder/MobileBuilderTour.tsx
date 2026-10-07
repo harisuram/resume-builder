@@ -260,13 +260,20 @@ export function MobileBuilderTour({ open, onDismiss }: { open: boolean; onDismis
     >
       {/* Spotlight: one box whose huge shadow is the dim layer, so moving
           between targets is a single smooth morph. With no target it
-          shrinks to the centre and the whole screen stays dimmed. */}
+          shrinks to the centre and the whole screen stays dimmed. Moved by
+          transform, not left/top: Chrome counts every frame of an animated
+          left/top as a layout shift (it was the builder's whole CLS). */}
       <div
-        className="mtour-spotlight pointer-events-none absolute"
+        className="mtour-spotlight pointer-events-none absolute left-0 top-0"
         style={
           hole
-            ? { left: hole.left, top: hole.top, width: hole.width, height: hole.height, borderRadius: hole.radius }
-            : { left: "50%", top: "50%", width: 0, height: 0, borderRadius: 999 }
+            ? {
+                transform: `translate(${hole.left}px, ${hole.top}px)`,
+                width: hole.width,
+                height: hole.height,
+                borderRadius: hole.radius,
+              }
+            : { transform: "translate(50vw, 50vh)", width: 0, height: 0, borderRadius: 999 }
         }
         aria-hidden="true"
       />
