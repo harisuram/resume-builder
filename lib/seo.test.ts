@@ -24,10 +24,10 @@ describe("absoluteUrl", () => {
 describe("pageMetadata", () => {
   it("sets an absolute homepage title and a canonical on every indexable path", () => {
     const home = pageMetadata("/");
-    expect(home.title).toEqual({ absolute: expect.stringContaining("Free AI Resume Maker") });
+    expect(home.title).toEqual({ absolute: expect.stringContaining("Free Resume Builder") });
     expect(home.description).toBe(HOME_DESCRIPTION);
-    expect(HOME_TITLE).toMatch(/unlimited/i);
-    expect(HOME_DESCRIPTION).toMatch(/best/i);
+    expect(HOME_TITLE).toMatch(/no sign-up/i);
+    expect(HOME_TITLE).toMatch(/ATS-friendly/i);
     expect(HOME_DESCRIPTION).toMatch(/free/i);
     expect(HOME_DESCRIPTION).toMatch(/unlimited/i);
     expect(HOME_DESCRIPTION).toMatch(/AI-powered/i);

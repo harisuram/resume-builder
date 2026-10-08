@@ -1,6 +1,6 @@
 import { BuilderCta } from "@/components/site/BuilderCta";
-import { Article, Body, Lead, MarketingPage, PageTitle, SectionHeading, TextLink } from "@/components/site/MarketingPage";
-import { pageMetadata } from "@/lib/seo";
+import { Article, Body, Lead, List, MarketingPage, PageTitle, SectionHeading, TextLink } from "@/components/site/MarketingPage";
+import { TEMPLATE_COUNT_WORDS, pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/ats");
 
@@ -8,11 +8,12 @@ export default function AtsPage() {
   return (
     <MarketingPage>
       <Article>
-        <PageTitle>Make an ATS-friendly resume without a gimmick file</PageTitle>
+        <PageTitle>Free ATS-friendly resume builder — no gimmick file</PageTitle>
         <Lead>
           An applicant tracking system (ATS) is the software many employers use to collect applications. It pulls the
           text out of your resume so recruiters can search and sort it. The best thing you can do for it is boring:
-          clear headings, real text, and a simple order. That’s what the templates here are built around.
+          clear headings, real text, and a simple order. That’s what the templates here are built around — and the
+          builder is free, with no sign-up and no payment before you download.
         </Lead>
 
         <SectionHeading>What “ATS-friendly” means on this site</SectionHeading>
@@ -31,6 +32,30 @@ export default function AtsPage() {
           when you click it, and only sends the text of that one item — the{" "}
           <TextLink href="/private">private resume builder</TextLink> page explains what that means for your data.
         </Body>
+
+        <SectionHeading>How to build an ATS-friendly resume here</SectionHeading>
+        <Body>
+          Open the builder and add your name and contact details, or drop an existing PDF, Word, or text resume to fill
+          the matching sections. Work through experience, education, skills, and projects, and skip anything that
+          doesn’t apply to this job. Use the “Make ATS-friendly” button on any summary, experience entry, or project you
+          want tightened, then read the result. Pick one of the {TEMPLATE_COUNT_WORDS.toLowerCase()} templates in the
+          live preview and download the PDF — the file is the same text-based page you just checked.
+        </Body>
+
+        <SectionHeading>An ATS-friendly formatting checklist</SectionHeading>
+        <Body>
+          Whatever tool you use, these habits keep a resume readable by tracking software:
+        </Body>
+        <List
+          items={[
+            "Use standard section names — Experience, Education, Skills — rather than clever ones.",
+            "Keep every word as real text. Skills written inside an image or chart can’t be read.",
+            "Write job titles and dates plainly, with the same date format throughout.",
+            "Borrow the exact wording of skills from the job posting when you genuinely have them.",
+            "Send a PDF unless the employer asks for Word, and keep the file name simple.",
+            "Drop sections you have nothing for instead of leaving an empty heading.",
+          ]}
+        />
 
         <SectionHeading>What this doesn’t claim</SectionHeading>
         <Body>

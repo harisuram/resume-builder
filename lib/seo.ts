@@ -30,13 +30,15 @@ export const ALTERNATE_NAMES = [
   "AI Resume Maker",
 ] as const;
 
-export const HOME_TITLE = "Free AI Resume Maker — Unlimited, No Account";
+export const HOME_TITLE = "Free Resume Builder — No Sign-up, ATS-Friendly PDF";
 /** Shown under the link in search results and browser/social previews. */
 export const HOME_DESCRIPTION =
-  "The best free, unlimited AI-powered resume builder. Make a resume or CV for any field — no account, no limits. Pick a template and download a PDF.";
+  "Build your resume free — no sign-up, no payment, no watermark. ATS-friendly templates, an optional AI-powered rewrite, and unlimited PDF downloads.";
 
 export const SITE_KEYWORDS = [
   "free resume builder",
+  "free resume builder no sign up",
+  "free ATS-friendly resume builder",
   "unlimited resume maker",
   "best AI-powered resume builder",
   "AI resume maker",
@@ -214,9 +216,9 @@ export const PAGE_META: Record<
       `${TEMPLATE_COUNT_WORDS} free, unlimited resume templates. Preview the best AI-powered layouts, switch designs live, and download a PDF — no account.`,
   },
   "/ats": {
-    title: "ATS-Friendly Resume Builder",
+    title: "Free ATS-Friendly Resume Builder",
     description:
-      "Make an ATS-friendly resume with real headings and an optional AI-powered bullet rewrite. Free, unlimited resume creator — no account.",
+      "Free ATS-friendly resume builder: real text headings, no empty sections, and an optional AI rewrite for your bullets. No sign-up — download a PDF.",
   },
   "/privacy": {
     title: "Privacy Policy",

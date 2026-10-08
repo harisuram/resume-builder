@@ -56,13 +56,13 @@ export default function Home() {
           </div>
 
           <h1 className="animate-fade-up-delay mt-4 w-full min-w-0 text-pretty font-display text-[22px] font-semibold tracking-tight leading-[1.25] text-[var(--color-ink-soft)] sm:mt-5 sm:text-[28px] lg:text-[32px]">
-            Build the resume.
+            Free resume builder, no sign-up.
             <span className="text-[var(--color-ink)]"> Skip what doesn’t belong.</span>
           </h1>
 
           <p className="mt-4 w-full min-w-0 max-w-md text-[15px] leading-relaxed text-[var(--color-ink-soft)] sm:mt-5">
-            Empty sections never print. Switch templates in a live preview, then download that same PDF — no
-            account.
+            ATS-friendly templates where empty sections never print. Switch designs in a live preview, then download
+            that same PDF — free, with no account and no payment.
           </p>
 
           <div className="mt-8 flex w-full min-w-0 flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center">
