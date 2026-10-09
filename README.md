@@ -109,21 +109,18 @@ Until those are set, every slot stays out of the layout; Auto ads can still
 run from the loader script. A filled unit is the only thing that takes
 space — unfilled or blocked requests never leave a blank box.
 
-Six slots:
+Four slots. Inside the builder, every unit is kept away from form fields
+and buttons (AdSense restricts ads on form-only screens and placements that
+invite accidental clicks), and only one is on screen at a time:
 - **Landing page** — between the feature grid and the footer, well below the
   primary "Build my resume" CTA.
-- **Builder nav** — bottom of the left section sidebar, below "Preview &
-  download", desktop only.
 - **Builder preview top** — top of the right preview column, above the live
   résumé, desktop only, hidden on the export step.
-- **Builder preview** — under the live preview, desktop only, hidden on the
-  export step (the export step has its own slot instead — see below).
-- **Export page** — between the save/download card and the preview, on the
-  Preview & download step only.
-- **Section footer** — below the Back/Next/Skip row, on Photo, Summary,
-  Key achievements, Skills, Certifications, Patents, Languages, Hobbies, Soft skills, and
-  Additional (one shared slot id — only ever one of these is on screen at
-  a time).
+- **Builder preview** — mobile only, after the form on each step. Save & Next
+  is fixed to the bottom of the viewport there, and the pane's bottom padding
+  keeps the unit clear of it.
+- **Export page** — below the full résumé preview on the Preview & download
+  step, never beside the Download button.
 
 Each `AdSlot` stays collapsed — no label, no reserved space — until Google
 reports a fill (`data-ad-status="filled"`). An unfilled or blocked request

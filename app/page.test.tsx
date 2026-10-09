@@ -35,21 +35,17 @@ describe("homepage", () => {
     }
   });
 
-  it("keeps FAQ answers collapsed until a question is opened", async () => {
-    render(<Home />);
-    const first = screen.getByRole("button", { name: HOME_FAQS[0].question });
-    const second = screen.getByRole("button", { name: HOME_FAQS[1].question });
-    expect(first).toHaveAttribute("aria-expanded", "false");
-    expect(screen.getByText(HOME_FAQS[0].answer)).not.toBeVisible();
+  it("ships every FAQ answer in the HTML inside a collapsed <details>", async () => {
+    const { container } = render(<Home />);
+    const panels = container.querySelectorAll('details[name="faq"]');
+    expect(panels).toHaveLength(HOME_FAQS.length);
+    for (const [i, faq] of HOME_FAQS.entries()) {
+      expect(panels[i]).not.toHaveAttribute("open");
+      expect(panels[i]).toHaveTextContent(faq.answer);
+    }
 
-    await userEvent.click(first);
-    expect(first).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByText(HOME_FAQS[0].answer)).toBeVisible();
-
-    await userEvent.click(second);
-    expect(first).toHaveAttribute("aria-expanded", "false");
-    expect(second).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByText(HOME_FAQS[1].answer)).toBeVisible();
+    await userEvent.click(screen.getByText(HOME_FAQS[0].question));
+    expect(panels[0]).toHaveAttribute("open");
   });
 
   it("points at the cluster pages without stuffing extra routes into the CTA", () => {

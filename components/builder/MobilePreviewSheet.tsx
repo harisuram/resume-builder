@@ -163,7 +163,7 @@ export function MobilePreviewSheet({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="min-h-0 flex-1 overflow-hidden bg-[color-mix(in_srgb,var(--color-ink)_3.5%,var(--color-paper))] px-3 pt-1">
-          <PreviewPane showAd={false} />
+          <PreviewPane />
         </div>
 
         <div className="shrink-0 border-t border-[var(--color-border)] px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">

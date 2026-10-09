@@ -12,6 +12,7 @@ import type {
 } from "@/lib/types";
 import { formatDateRange, formatMonth, isCurrentExperience } from "@/lib/date";
 import { DEFAULT_DIAL_CODE } from "@/lib/countryCodes";
+import { linkHref } from "@/lib/link";
 import { itemBreakKey } from "@/lib/resume";
 import { CertificationIcon, GithubIcon, GlobeIcon, LinkedInIcon, MailIcon, PhoneIcon, PinIcon } from "./icons";
 import { BULLETS, type BulletKind } from "./iconShapes";
@@ -370,7 +371,7 @@ export function ProjectList({
             <p className={`text-[13px] font-semibold ${tone(light, "strong")}`}>{project.name}</p>
             {project.link && (
               <a
-                href={project.link}
+                href={linkHref(project.link)}
                 className="text-[11px] underline decoration-dotted underline-offset-2"
                 style={{ color: light ? "white" : accent }}
               >
@@ -490,7 +491,7 @@ export function PatentList({
               <>
                 {" · "}
                 <a
-                  href={patent.link}
+                  href={linkHref(patent.link)}
                   className="underline decoration-dotted underline-offset-2"
                   style={{ color: light ? "white" : accent }}
                 >

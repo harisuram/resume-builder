@@ -28,9 +28,7 @@ describe("ads config", () => {
       "landing",
       "builderPreview",
       "builderPreviewTop",
-      "builderNav",
       "builderExport",
-      "builderSectionFooter",
     ]);
   });
 });

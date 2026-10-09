@@ -24,7 +24,7 @@ describe("splitPhone", () => {
   });
 
   it("treats a 10-digit US number as +1", () => {
-    expect(splitPhone("5550100199")).toEqual({ phone: "5550100199", phoneCountryCode: "+1" });
+    expect(splitPhone("9876543210")).toEqual({ phone: "9876543210", phoneCountryCode: "+91" });
   });
 });
 

@@ -416,11 +416,6 @@ export function BuilderShell() {
                 <StepEnter key={activeKey} direction={stepDir} enabled={animateStep}>
                   <ExportSection />
                 </StepEnter>
-                <AdSlot
-                  slot={ADSENSE_SLOTS.builderPreview}
-                  name="Builder preview"
-                  className="mt-8 mb-4 flex min-h-[8.5rem] flex-col items-center gap-1 md:hidden"
-                />
               </div>
             </main>
             {/* Desktop only: every template as a thumbnail, so picking a look
@@ -456,20 +451,14 @@ export function BuilderShell() {
                     onClear={goClear}
                     onPreview={previewOpen ? undefined : () => setPreviewOpen(true)}
                   />
-                  <AdSlot
-                    slot={ADSENSE_SLOTS.builderSectionFooter}
-                    name={`Section footer — ${activeKey}`}
-                    className="mt-6 flex flex-col items-center gap-1"
-                  />
+                  {/* Mobile's one unit on form steps. Save & Next is fixed to
+                      the viewport bottom there, and the pane's bottom padding
+                      keeps this clear of it. Desktop shows the preview-column
+                      unit instead; nothing sits beside inputs or buttons. */}
                   <AdSlot
                     slot={ADSENSE_SLOTS.builderPreview}
                     name="Builder preview"
-                    className="mt-8 mb-4 flex min-h-[8.5rem] flex-col items-center gap-1 md:hidden"
-                  />
-                  <AdSlot
-                    slot={ADSENSE_SLOTS.builderExport}
-                    name="Export page"
-                    className="mt-6 flex flex-col items-center gap-1"
+                    className="mt-12 mb-4 flex min-h-[8.5rem] flex-col items-center gap-1 md:hidden"
                   />
                 </div>
               </main>

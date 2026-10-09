@@ -7,10 +7,10 @@ export interface CountryCode {
   dialCode: string;
 }
 
-/** Shown before the user picks one, and used to render a saved phone number
- * that predates this field. Matches the builder's existing US-flavored
- * phone placeholder. */
-export const DEFAULT_DIAL_CODE = "+1";
+/** Shown before the user picks one, used for an imported number that has no
+ * country code, and used to render a saved phone number that predates this
+ * field. India, since that's where most of this site's visitors are. */
+export const DEFAULT_DIAL_CODE = "+91";
 
 export const COUNTRY_CODES: CountryCode[] = [
   // United States leads the list (rather than sitting alphabetically) so it's

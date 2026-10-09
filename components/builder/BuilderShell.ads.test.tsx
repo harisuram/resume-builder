@@ -15,57 +15,37 @@ beforeEach(() => {
   useBuilderStore.getState().resetStore();
 });
 
-describe("BuilderShell section-footer ads", () => {
-  it("puts every builder ad unit in the first view so AdsBot does not have to click the wizard", async () => {
+/* AdSense restricts ads on form-only screens and next to controls people
+ * tap, so the builder keeps one unit per layout, away from inputs, the step
+ * buttons, and Download. */
+describe("BuilderShell ads", () => {
+  it("shows only the preview units on a form step — none in the nav or under the step buttons", async () => {
     render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
-    expect(screen.getByText("Builder nav")).toBeInTheDocument();
     expect(screen.getByText("Builder preview top")).toBeInTheDocument();
-    expect(screen.getAllByText("Builder preview").length).toBeGreaterThan(0);
-    expect(screen.getByText("Section footer — basicInfo")).toBeInTheDocument();
-    expect(screen.getByText("Export page")).toBeInTheDocument();
+    expect(screen.getAllByText("Builder preview")).toHaveLength(1);
+    expect(screen.queryByText("Builder nav")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Section footer/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Export page")).not.toBeInTheDocument();
   });
 
-  it("keeps those units in the pre-hydrate HTML Google's crawler fetches", () => {
+  it("keeps the preview units in the pre-hydrate HTML Google's crawler fetches", () => {
     const html = renderToString(<BuilderShell />);
-    // The real builder (not a spinner) is prerendered, ads included.
     expect(html).toContain("Basic info");
-    expect(html).toContain("data-builder-pending");
-    expect(html).toContain("Builder nav");
     expect(html).toContain("Builder preview top");
     expect(html).toContain("Builder preview");
-    expect(html).toContain("Section footer");
-    expect(html).toContain("Export page");
   });
 
-  it("shows a preview-column ad above the live résumé, except on export", async () => {
+  it("shows a single unit on export, placed after the preview rather than by Download", async () => {
     render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
-    expect(screen.getByText("Builder nav")).toBeInTheDocument();
-    expect(screen.getByText("Builder preview top")).toBeInTheDocument();
-    expect(screen.getAllByText("Builder preview").length).toBeGreaterThan(0);
-
     await userEvent.click(within(screen.getByRole("navigation", { name: "Resume sections" })).getByText("Preview & download"));
+
     expect(screen.queryByText("Builder preview top")).not.toBeInTheDocument();
-    expect(screen.getByText("Builder preview")).toBeInTheDocument();
-  });
-
-  it("keeps the footer ad on Basic info and the optional sections", async () => {
-    render(<BuilderShell />);
-    await screen.findByRole("heading", { name: "Basic info" });
-    expect(screen.getByText("Section footer — basicInfo")).toBeInTheDocument();
-
-    const steps: [string, string][] = [
-      ["Certifications", "Section footer — certifications"],
-      ["Patents", "Section footer — patents"],
-      ["Languages", "Section footer — languages"],
-      ["Hobbies", "Section footer — hobbies"],
-      ["Soft skills", "Section footer — softSkills"],
-      ["Additional", "Section footer — additional"],
-    ];
-    for (const [nav, name] of steps) {
-      await userEvent.click(within(screen.getByRole("navigation", { name: "Resume sections" })).getByText(nav));
-      expect(screen.getByText(name)).toBeInTheDocument();
-    }
+    expect(screen.queryByText("Builder preview")).not.toBeInTheDocument();
+    const ad = screen.getByText("Export page");
+    const heading = screen.getByRole("heading", { name: "Preview & download" });
+    expect(heading.compareDocumentPosition(ad) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(ad.previousElementSibling).not.toBeNull();
   });
 });

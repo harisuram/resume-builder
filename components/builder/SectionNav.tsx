@@ -1,9 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useRef, useState } from "react";
-import { AdSlot } from "@/components/ads/AdSlot";
 import { getSectionMeta, resolveSectionOrder, SUMMARY_COPY } from "@/lib/persona";
-import { ADSENSE_SLOTS } from "@/lib/ads";
 import { isBasicInfoComplete, useBuilderStore } from "@/lib/store";
 import type { SectionKey, SectionStatus } from "@/lib/types";
 import { Switch } from "@/components/ui/Switch";
@@ -375,13 +373,6 @@ export function SectionNav({
         />
       </nav>
 
-      {!drawer && (
-        <AdSlot
-          slot={ADSENSE_SLOTS.builderNav}
-          name="Builder nav"
-          className="mt-1 flex flex-col items-center gap-1 px-3 pb-3"
-        />
-      )}
     </>
   );
 }

@@ -65,7 +65,6 @@ export const SAMPLE_RESUME: ResumeData = {
       {
         name: "Open-source Kafka connector",
         description: "A CDC connector bridging mainframe DB2 change streams into Kafka topics.",
-        link: "github.com/alexandra-mw-sample/kafka-connector",
         technologies: ["Kafka", "Java"],
       },
     ],

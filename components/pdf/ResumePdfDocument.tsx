@@ -5,6 +5,7 @@ import { bulletKind, hasAvatar, visiblePhoto } from "@/components/templates/shar
 import { SECTION_ICON_NAMES, type IconName } from "@/components/templates/shared/iconShapes";
 import { getTheme, headerColor, railBackground, type TemplateTheme } from "@/components/templates/shared/theme";
 import { DEFAULT_DIAL_CODE } from "@/lib/countryCodes";
+import { linkHref } from "@/lib/link";
 import { formatDateRange, formatMonth, isCurrentExperience } from "@/lib/date";
 import { PAGE_INSET_PX, PAGE_PAD_X_PX, PAGE_PAD_Y_PX } from "@/lib/page";
 import { mixHex, tintHex } from "@/lib/pdf/color";
@@ -891,7 +892,7 @@ export function PdfSection({
                 >
                   <Text style={{ ...text(13), fontWeight: 600, color: ink.strong }}>{project.name}</Text>
                   {project.link && (
-                    <Link src={project.link} style={{ ...text(11), color: ink.mark, textDecoration: "underline" }}>
+                    <Link src={linkHref(project.link)} style={{ ...text(11), color: ink.mark, textDecoration: "underline" }}>
                       {displayLink(project.link)}
                     </Link>
                   )}
@@ -946,7 +947,7 @@ export function PdfSection({
                   {patent.link && (
                     <>
                       {" · "}
-                      <Link src={patent.link} style={{ color: ink.mark, textDecoration: "underline" }}>
+                      <Link src={linkHref(patent.link)} style={{ color: ink.mark, textDecoration: "underline" }}>
                         {displayLink(patent.link)}
                       </Link>
                     </>

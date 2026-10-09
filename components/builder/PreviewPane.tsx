@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AdSlot } from "@/components/ads/AdSlot";
 import { getTheme } from "@/components/templates/shared/theme";
-import { ADSENSE_SLOTS } from "@/lib/ads";
 import { getRenderableSections, hasAddedSection, hasSummary } from "@/lib/resume";
 import { useBuilderStore, useResumeData } from "@/lib/store";
 import { EmptyResumePreview } from "./EmptyResumePreview";
@@ -20,14 +18,10 @@ export const LIVE_PDF_DEBOUNCE_MS = 350;
 
 export function PreviewPane({
   printable = false,
-  showAd,
   pickerMobileOnly = false,
   pdf: sharedPdf,
 }: {
   printable?: boolean;
-  /** Defaults to on for the live column, off for print/export. The mobile
-   * sheet also turns this off so the résumé can use the full height. */
-  showAd?: boolean;
   /** Hide the dropdown from md up — the export step shows a thumbnail rail
    * beside the preview there instead. */
   pickerMobileOnly?: boolean;
@@ -50,7 +44,6 @@ export function PreviewPane({
   // page (controls + preview) is one scroller, and a nested `h-full` /
   // overflow-y-auto here trapped the wheel over the resume.
   const nestedScroll = !printable;
-  const renderAd = showAd ?? !printable;
 
   return (
     <div className={`print-unclip flex flex-col gap-4 ${nestedScroll ? "h-full min-h-0" : ""}`}>
@@ -117,15 +110,6 @@ export function PreviewPane({
             templateId={templateId}
             sections={[...(hasSummary(data) ? (["summary"] as const) : []), ...getRenderableSections(data)]}
             additionalTitle={data.sections.additional?.heading}
-          />
-        )}
-        {/* Never on the export/print step — kept well clear of the Download
-            button so there's nothing here to accidentally click through to. */}
-        {renderAd && (
-          <AdSlot
-            slot={ADSENSE_SLOTS.builderPreview}
-            name="Builder preview"
-            className="mt-6 flex flex-col items-center gap-1"
           />
         )}
       </div>

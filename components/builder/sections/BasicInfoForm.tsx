@@ -81,7 +81,7 @@ export function BasicInfoForm() {
             value={basicInfo.location}
             onChange={(e) => updateBasicInfo({ location: e.target.value })}
             onBlur={touch("location")}
-            placeholder="Austin, TX"
+            placeholder="Hyderabad, India"
             autoComplete="address-level2"
             maxLength={MAX_FIELD_LENGTH}
             invalid={Boolean(locationError)}

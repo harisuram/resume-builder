@@ -130,13 +130,15 @@ export function ExportSection() {
         </div>
       )}
 
+      <PreviewPane printable pickerMobileOnly pdf={pdf} />
+
+      {/* After the full résumé preview, never beside the Download button, so
+          nobody reaches it by mis-tapping download. */}
       <AdSlot
         slot={ADSENSE_SLOTS.builderExport}
         name="Export page"
-        className="flex flex-col items-center gap-1"
+        className="mt-6 flex flex-col items-center gap-1"
       />
-
-      <PreviewPane printable pickerMobileOnly pdf={pdf} />
     </div>
   );
 }
