@@ -254,7 +254,7 @@ describe("BuilderShell", () => {
     expect(option).toHaveAttribute("aria-pressed", "true");
   });
 
-  it("keeps the side-by-side preview aside to desktop (phones use the sheet instead)", async () => {
+  it("keeps the side-by-side preview to wide screens (phones and tablets use the sheet)", async () => {
     const { container } = render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
 
@@ -262,8 +262,8 @@ describe("BuilderShell", () => {
     const previewAside = asides[asides.length - 1];
     expect(previewAside.className.split(/\s+/)).toContain("w-0");
     expect(previewAside.className.split(/\s+/)).not.toContain("hidden");
-    expect(previewAside.className).toContain("md:w-[min(650px,max(325px,42.75%))]");
-    expect(previewAside.className).toContain("md:overflow-hidden");
+    expect(previewAside.className).toContain("lg:w-[min(650px,max(325px,42.75%))]");
+    expect(previewAside.className).toContain("lg:overflow-hidden");
     expect(previewAside.className).toContain("min-h-0");
     expect(container.querySelector("main")!.className).not.toContain("hidden");
     expect(container.querySelector("main")!.className).toContain("overflow-y-auto");
@@ -279,7 +279,7 @@ describe("BuilderShell", () => {
     expect((shell.firstElementChild as HTMLElement).className).toContain("print-unclip");
 
     const previewAside = container.querySelectorAll("aside")[container.querySelectorAll("aside").length - 1];
-    expect(previewAside.className).toContain("md:overflow-hidden");
+    expect(previewAside.className).toContain("lg:overflow-hidden");
     expect(previewAside.querySelector(".overflow-y-auto")).not.toBeNull();
   });
 
@@ -288,7 +288,7 @@ describe("BuilderShell", () => {
     await screen.findByRole("heading", { name: "Basic info" });
 
     const button = screen.getByRole("button", { name: "Preview resume" });
-    expect(button.className).toContain("md:hidden");
+    expect(button.className).toContain("lg:hidden");
     expect(container.querySelector("main")!.contains(button)).toBe(true);
 
     const main = container.querySelector("main")!;
@@ -346,7 +346,7 @@ describe("BuilderShell", () => {
 
     const preview = screen.getByRole("button", { name: "Preview resume" });
     expect(footer?.contains(preview)).toBe(true);
-    expect(preview.className).toContain("md:hidden");
+    expect(preview.className).toContain("lg:hidden");
     expect(container.querySelector("main")!.className).toContain("pb-[calc(11rem");
   });
 

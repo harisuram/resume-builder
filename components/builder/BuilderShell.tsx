@@ -48,6 +48,9 @@ import { TemplateRail } from "./TemplateRail";
 import { SectionFooterNav } from "./SectionFooterNav";
 import { SectionNav } from "./SectionNav";
 
+/** Matches the `lg:` breakpoint where the live preview sits beside the form. */
+const SIDE_PREVIEW_MEDIA = "(min-width: 1024px)";
+
 // Tours only open after mount (first visit or "Replay tour"), so their code
 // stays out of the bundle that has to load before the builder is usable.
 const BuilderTour = dynamic(() => import("./BuilderTour").then((m) => m.BuilderTour), { ssr: false });
@@ -242,7 +245,6 @@ export function BuilderShell() {
     const media = window.matchMedia(BUILDER_TOUR_MEDIA);
     const sync = () => {
       if (media.matches) {
-        setPreviewOpen(false);
         setMobileMenuOpen(false);
         setMobileTourOpen(false);
         if (shouldOfferBuilderTour()) setTourOpen(true);
@@ -256,6 +258,18 @@ export function BuilderShell() {
       media.removeEventListener("change", sync);
       setMobileMenuOpen(false);
     };
+  }, []);
+
+  // The preview sheet serves phones and tablets; from lg up the side column
+  // takes over, so a sheet still open when the window widens is closed.
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return;
+    const media = window.matchMedia(SIDE_PREVIEW_MEDIA);
+    const sync = () => {
+      if (media.matches) setPreviewOpen(false);
+    };
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
   }, []);
 
   useEffect(() => {
@@ -462,12 +476,14 @@ export function BuilderShell() {
                   />
                 </div>
               </main>
-              {/* Side-by-side preview is a desktop affordance only — on mobile
-                  the eye button opens the same pane in a bottom sheet. Width
+              {/* Side-by-side preview from lg up only. Below that — phones and
+                  tablets — the eye button opens the same pane in a bottom
+                  sheet; beside the section menu at md the column left the
+                  form under 200px wide. Width
                   grows with the viewport (capped below the A4 design width)
                   so the CSS-scaled résumé stays readable without crowding the
                   form. */}
-              <aside className="flex min-h-0 w-0 overflow-hidden border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-ink)_3.5%,var(--color-paper))] p-0 md:w-[min(650px,max(325px,42.75%))] md:shrink-0 md:flex-col md:overflow-hidden md:border-l md:px-3 md:py-5 lg:px-4 lg:py-6 xl:px-5">
+              <aside className="flex min-h-0 w-0 overflow-hidden border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-ink)_3.5%,var(--color-paper))] p-0 lg:w-[min(650px,max(325px,42.75%))] lg:shrink-0 lg:flex-col lg:overflow-hidden lg:border-l lg:px-4 lg:py-6 xl:px-5">
                 <AdSlot
                   slot={ADSENSE_SLOTS.builderPreviewTop}
                   name="Builder preview top"

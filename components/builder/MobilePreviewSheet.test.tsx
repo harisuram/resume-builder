@@ -12,7 +12,7 @@ describe("MobilePreviewSheet", () => {
     render(<MobilePreviewSheet onClose={jest.fn()} />);
     const dialog = screen.getByRole("dialog", { name: "Resume preview" });
     expect(dialog).toBeInTheDocument();
-    expect(dialog.className).toContain("md:hidden");
+    expect(dialog.className).toContain("lg:hidden");
     expect(within(dialog).getByRole("button", { name: "Choose a template" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Continue editing" })).toBeInTheDocument();
   });

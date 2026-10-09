@@ -8,7 +8,7 @@ import {
   type LayoutKind,
   type TemplateTheme,
 } from "@/components/templates/shared/theme";
-import { ScaledTemplatePreview } from "./ScaledTemplatePreview";
+import { TemplateThumb } from "./TemplateThumb";
 import { TemplatePreviewModal } from "./TemplatePreviewModal";
 
 type LayoutFilter = "all" | LayoutKind;
@@ -124,12 +124,11 @@ export function TemplatesGallery() {
           >
             <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-card transition duration-300 ease-out hover:border-[var(--color-accent)]/35 hover:shadow-[0_22px_44px_-28px_color-mix(in_srgb,var(--color-ink)_45%,transparent)]">
               <div className="relative aspect-[210/297] w-full overflow-hidden bg-white">
-                <div
-                  className="absolute inset-0 origin-top transition-transform duration-500 ease-out group-hover:scale-[1.035]"
-                  aria-hidden="true"
-                  inert
-                >
-                  <ScaledTemplatePreview theme={template} compact fullPage framed={false} fillParent />
+                <div className="absolute inset-0 origin-top transition-transform duration-500 ease-out group-hover:scale-[1.035]">
+                  <TemplateThumb
+                    theme={template}
+                    sizes="(min-width: 1024px) 270px, (min-width: 768px) 33vw, 50vw"
+                  />
                 </div>
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/45 to-transparent opacity-0 transition duration-300 group-hover:opacity-100 group-focus-within:opacity-100" />
                 {/* An overlay rather than a button wrapped around the sheet:

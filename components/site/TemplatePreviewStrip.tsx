@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { TEMPLATES, type TemplateTheme } from "@/components/templates/shared/theme";
-import { ScaledTemplatePreview } from "./ScaledTemplatePreview";
+import { TemplateThumb } from "./TemplateThumb";
 import { TemplatePreviewModal } from "./TemplatePreviewModal";
 
 const PREVIEW = TEMPLATES.slice(0, 6);
@@ -44,12 +44,9 @@ export function TemplatePreviewStrip() {
             className="group min-w-0 cursor-pointer overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-left shadow-card transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[var(--color-accent)]/35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]"
           >
             <div className="relative aspect-[210/297] w-full overflow-hidden bg-white">
-              <div
-                className="absolute inset-0 origin-top transition-transform duration-500 ease-out group-hover:scale-[1.035]"
-                aria-hidden="true"
-                inert
-              >
-                <ScaledTemplatePreview theme={template} compact fullPage framed={false} fillParent />
+              {/* The button's aria-label already names the template. */}
+              <div className="absolute inset-0 origin-top transition-transform duration-500 ease-out group-hover:scale-[1.035]">
+                <TemplateThumb theme={template} alt="" sizes="(min-width: 1024px) 140px, (min-width: 640px) 33vw, 50vw" />
               </div>
             </div>
             <p className="truncate border-t border-[var(--color-border)] px-2 py-2 text-center text-[11px] font-medium text-[var(--color-ink-soft)] group-hover:text-[var(--color-ink)]">

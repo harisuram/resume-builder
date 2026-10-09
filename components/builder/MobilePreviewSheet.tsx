@@ -116,7 +116,7 @@ export function MobilePreviewSheet({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className={`no-print fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-[2px] transition-opacity duration-300 ease-out md:hidden ${
+      className={`no-print fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-[2px] transition-opacity duration-300 ease-out lg:hidden ${
         open ? "opacity-100" : "opacity-0"
       }`}
       role="dialog"

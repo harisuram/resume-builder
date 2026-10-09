@@ -118,7 +118,7 @@ export function SectionFooterNav({
           flattens back into the inline footer row. */}
       <div className="no-print pointer-events-none fixed inset-x-0 bottom-0 z-40 flex flex-col gap-2 px-3 pb-[max(0.625rem,env(safe-area-inset-bottom))] md:pointer-events-auto md:static md:z-0 md:flex-row md:items-center md:gap-3 md:p-0">
         {onPreview ? (
-          <div className="flex items-end justify-end px-1 md:hidden">
+          <div className="flex items-end justify-end px-1 lg:hidden">
             <button
               type="button"
               onClick={onPreview}
@@ -126,7 +126,7 @@ export function SectionFooterNav({
               title="Preview resume"
               data-mtour="preview"
               aria-haspopup="dialog"
-              className="pointer-events-auto flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full bg-[linear-gradient(135deg,var(--preview-from),var(--preview-to))] pl-1 pr-3 text-[13px] font-semibold text-[var(--preview-ink)] shadow-[0_8px_22px_-8px_var(--preview-glow),inset_0_1px_0_rgb(255_255_255_/_0.22)] ring-1 ring-[color-mix(in_srgb,var(--preview-ink)_16%,transparent)] transition duration-200 ease-out hover:brightness-110 active:scale-95 active:brightness-95 md:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]"
+              className="pointer-events-auto flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full bg-[linear-gradient(135deg,var(--preview-from),var(--preview-to))] pl-1 pr-3 text-[13px] font-semibold text-[var(--preview-ink)] shadow-[0_8px_22px_-8px_var(--preview-glow),inset_0_1px_0_rgb(255_255_255_/_0.22)] ring-1 ring-[color-mix(in_srgb,var(--preview-ink)_16%,transparent)] transition duration-200 ease-out hover:brightness-110 active:scale-95 active:brightness-95 lg:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]"
             >
               <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--preview-ink)_20%,transparent)]">
                 <LiveIcon />

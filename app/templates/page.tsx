@@ -12,8 +12,8 @@ export default function TemplatesPage() {
         <div className="animate-fade-up mx-auto w-full max-w-3xl md:mx-0">
           <PageTitle>Free resume templates (and CV layouts)</PageTitle>
           <Lead>
-            {TEMPLATES.length} free resume templates, including curriculum vitae layouts. Each tile shows sample
-            text in that layout — the same look you&apos;ll get as a PDF. Open a sheet for a closer look, or send
+            {TEMPLATES.length} free resume templates, including curriculum vitae layouts. Each tile is a picture of
+            that layout filled with sample text — the same look you&apos;ll get as a PDF. Open a sheet for a closer look, or send
             one straight to the builder.
           </Lead>
         </div>

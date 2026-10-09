@@ -47,9 +47,14 @@ describe("templates gallery", () => {
         `/builder?template=${encodeURIComponent(template.id)}`,
       );
     }
-    expect(document.querySelector('[data-sample-resume="atlas"]')).not.toBeNull();
-    expect(document.querySelector('[data-template-skeleton]')).toBeNull();
-    expect(document.querySelector('[data-layout="single"]')).not.toBeNull();
+    // Each tile is a picture of the layout, not a live render of the sample.
+    expect(screen.getByRole("img", { name: "Atlas resume template" })).toHaveAttribute(
+      "src",
+      "/template-thumbs/atlas.webp",
+    );
+    expect(screen.getAllByRole("img", { name: / resume template$/ })).toHaveLength(TEMPLATES.length);
+    expect(document.querySelector("[data-sample-resume]")).toBeNull();
+    expect(document.querySelector("[data-template-skeleton]")).toBeNull();
     expect(screen.getByText(/use template to open it in the builder/i)).toBeInTheDocument();
   });
 
