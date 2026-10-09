@@ -250,7 +250,7 @@ export const guide: Guide = {
         },
         {
           type: "p",
-          text: "Whatever you choose, use a plain text heading such as “Skills” or “Technical Skills”. Creative headings like “My Toolbox” or “What I Bring” can confuse software that looks for standard section names, and they don’t help human readers either. If you build your resume in our free builder, every section is optional and the templates use real text headings, so you can move the skills section or drop it without leaving an empty gap.",
+          text: "Whatever you choose, use a plain text heading such as “Skills” or “Technical Skills”. Creative headings like “My Toolbox” or “What I Bring” can confuse software that looks for standard section names, and they don’t help human readers either. If you build your resume in this site’s free builder, every section is optional and the templates use real text headings, so you can move the skills section or drop it without leaving an empty gap.",
         },
       ],
     },

@@ -217,7 +217,7 @@ export const guide: Guide = {
         },
         {
           type: "p",
-          text: "If you need two versions — one with a photo for a European or Gulf application and one without for a UK role — keep them as separate files. In our builder the photo step is optional, and a template with a photo slot simply shows no picture if you skip it, so you can produce both from the same content.",
+          text: "If you need two versions — one with a photo for a European or Gulf application and one without for a UK role — keep them as separate files. In this site’s builder the photo step is optional, and a template with a photo slot simply shows no picture if you skip it, so you can produce both from the same content.",
         },
       ],
     },

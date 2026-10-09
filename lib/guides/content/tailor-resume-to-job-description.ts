@@ -198,7 +198,7 @@ export const guide: Guide = {
         },
         {
           type: "p",
-          text: "If you’re applying for genuinely different kinds of roles, build one base resume per role family rather than one per application. Most people need two or three at most. If you build your resumes in our free builder, drafts stay in your browser, so you can keep a separate saved version per role family and switch templates without retyping.",
+          text: "If you’re applying for genuinely different kinds of roles, build one base resume per role family rather than one per application. Most people need two or three at most. If you build your resumes in this site’s free builder, drafts stay in your browser, so you can keep a separate saved version per role family and switch templates without retyping.",
         },
       ],
     },

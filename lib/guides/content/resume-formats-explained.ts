@@ -207,7 +207,7 @@ export const guide: Guide = {
         },
         {
           type: "p",
-          text: "Whichever you choose, use standard section headings and keep the format consistent across every role. If you’re using our free builder, every section is optional and can be skipped without leaving an empty heading, so you can drop or reorder sections to fit the format you’ve chosen and check the result in the live preview.",
+          text: "Whichever you choose, use standard section headings and keep the format consistent across every role. If you’re using the free builder here, every section is optional and can be skipped without leaving an empty heading, so you can drop or reorder sections to fit the format you’ve chosen and check the result in the live preview.",
         },
       ],
     },

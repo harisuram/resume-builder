@@ -207,7 +207,7 @@ export const guide: Guide = {
         },
         {
           type: "p",
-          text: "When you update your resume after a break, our free builder lets you import your old resume to fill in the sections, so you can add the gap entry and your recent learning without starting from scratch.",
+          text: "When you update your resume after a break, the free builder on this site lets you import your old resume to fill in the sections, so you can add the gap entry and your recent learning without starting from scratch.",
         },
       ],
     },

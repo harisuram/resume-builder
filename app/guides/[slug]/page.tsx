@@ -53,7 +53,11 @@ export default async function GuidePage({ params }: Props) {
           <PageTitle>{guide.title}</PageTitle>
         </div>
         <p className="mt-3 text-[12.5px] text-[var(--color-ink-faint)]">
-          By the {SITE_NAME} team · Updated{" "}
+          By the{" "}
+          <Link href="/about" className="underline-offset-2 hover:text-[var(--color-ink)] hover:underline">
+            developer behind {SITE_NAME}
+          </Link>{" "}
+          · Updated{" "}
           <time dateTime={guide.updated}>{formatGuideDate(guide.updated)}</time> · {guideReadMinutes(guide)} min read
         </p>
         <Lead>{guide.intro}</Lead>

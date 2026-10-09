@@ -148,7 +148,7 @@ export interface HowToStep {
 export const HOW_TO_STEPS: HowToStep[] = [
   {
     name: "Add your name and contact details — or drop a resume",
-    text: "Start with name, email, location, and an optional phone number with a country code. Links are optional. Or drop a PDF, Word, or text resume and we'll fill every section we can read, including synonym headings like Work History. Required fields have to be valid before you can continue.",
+    text: "Start with name, email, location, and an optional phone number with a country code. Links are optional. Or drop a PDF, Word, or text resume and the builder fills every section it can read, including synonym headings like Work History. Required fields have to be valid before you can continue.",
   },
   {
     name: "Write a short summary — or skip it",

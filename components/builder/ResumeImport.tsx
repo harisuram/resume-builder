@@ -206,7 +206,7 @@ export function ResumeImportProvider({
       <ConfirmDialog
         open={prompt && !confirming && !progress}
         title="Start from your own resume"
-        description="Choose a PDF, Word (.docx), or text file. We'll fill in every section we can read, even when your headings say things like Work History or Career Objective. You can also drop the file anywhere on this page."
+        description="Choose a PDF, Word (.docx), or text file. The builder fills in every section it can read, even when your headings say things like Work History or Career Objective. You can also drop the file anywhere on this page."
         confirmLabel="Choose a file"
         cancelLabel="Start from scratch"
         confirmVariant="primary"
@@ -219,7 +219,7 @@ export function ResumeImportProvider({
       <ConfirmDialog
         open={confirming}
         title="Replace the current draft with this file?"
-        description="We'll fill every section we can read from the resume. Sections the file doesn't have stay on, empty and ready to fill in."
+        description="The builder fills every section it can read from the resume. Sections the file doesn't have stay on, empty and ready to fill in."
         confirmLabel="Replace and import"
         cancelLabel="Keep what I have"
         confirmVariant="primary"

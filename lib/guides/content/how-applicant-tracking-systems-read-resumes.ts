@@ -171,7 +171,7 @@ export const guide: Guide = {
         },
         {
           type: "p",
-          text: "Our free resume builder uses templates with real text headings and produces a text-based PDF identical to the preview, which avoids the image-of-text problem. No tool can guarantee how a particular employer’s system will read a file, though, so the checks below are still worth doing.",
+          text: "The free resume builder on this site uses templates with real text headings and produces a text-based PDF identical to the preview, which avoids the image-of-text problem. No tool can guarantee how a particular employer’s system will read a file, though, so the checks below are still worth doing.",
         },
       ],
     },

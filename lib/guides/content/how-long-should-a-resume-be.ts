@@ -179,7 +179,7 @@ export const guide: Guide = {
         },
         {
           type: "p",
-          text: "Our free resume builder shows a live preview of the page as you edit, and the downloaded PDF matches that preview, so you can see exactly where the page break falls before you send anything.",
+          text: "The free resume builder on this site shows a live preview of the page as you edit, and the downloaded PDF matches that preview, so you can see exactly where the page break falls before you send anything.",
         },
       ],
     },
