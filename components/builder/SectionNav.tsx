@@ -5,6 +5,8 @@ import { getSectionMeta, resolveSectionOrder, SUMMARY_COPY } from "@/lib/persona
 import { isBasicInfoComplete, useBuilderStore } from "@/lib/store";
 import type { SectionKey, SectionStatus } from "@/lib/types";
 import { Switch } from "@/components/ui/Switch";
+import { showToast } from "@/lib/toast";
+import { FilledDownloadIcon } from "./AnimatedIcons";
 import { dropIndexFromY, type NavKey } from "./nav";
 import { NavSectionIcon } from "./NavSectionIcon";
 
@@ -28,6 +30,23 @@ interface DragSession {
   origin: SectionKey[];
   rects: { top: number; height: number }[];
   active: boolean;
+}
+
+/** Runs a reorder and confirms it with a toast naming the section and its
+ * new neighbor — only when the order really changed (a drop back in place,
+ * or a nudge past the end, says nothing). */
+function reorderWithToast(key: SectionKey, apply: () => void) {
+  const before = useBuilderStore.getState().sectionOrder;
+  apply();
+  const after = useBuilderStore.getState().sectionOrder;
+  if (after === before) return;
+  const order = resolveSectionOrder(after);
+  const index = order.indexOf(key);
+  const label = getSectionMeta(key).label;
+  showToast(
+    index > 0 ? `${label} moved below ${getSectionMeta(order[index - 1]).label}` : `${label} moved to the top`,
+    "success",
+  );
 }
 
 function prefersReducedMotion() {
@@ -64,17 +83,21 @@ function RowDivider({ group = false, drawer = false }: { group?: boolean; drawer
 
 /** `drawer` renders the stacked desktop list (switches, status dots,
  * reorder handles) at every width — the mobile side menu uses it so phones
- * get the same controls as the desktop sidebar. */
+ * get the same controls as the desktop sidebar. `collapsed` is the desktop
+ * sidebar's icon-only rail: labels fade out and the row controls go. */
 export function SectionNav({
   active,
   onSelect,
   variant = "responsive",
+  collapsed = false,
 }: {
   active: NavKey;
   onSelect: (key: NavKey) => void;
   variant?: "responsive" | "drawer";
+  collapsed?: boolean;
 }) {
   const drawer = variant === "drawer";
+  const rail = collapsed && !drawer;
   /** Display class for a control the mobile strip hides until md. */
   const shown = (display: "flex" | "inline") =>
     display === "flex" ? (drawer ? "flex" : "hidden md:flex") : drawer ? "inline" : "hidden md:inline";
@@ -153,7 +176,9 @@ export function SectionNav({
       window.clearTimeout(settleTimer.current);
       settleTimer.current = window.setTimeout(() => {
         settleTimer.current = 0;
-        if (commit && toIndex !== fromIndex) useBuilderStore.getState().reorderSection(key, toIndex);
+        if (commit && toIndex !== fromIndex) {
+          reorderWithToast(key, () => useBuilderStore.getState().reorderSection(key, toIndex));
+        }
         clearAllRowStyles();
         setDraggingKey(null);
         if (commit && toIndex !== fromIndex) {
@@ -247,7 +272,11 @@ export function SectionNav({
   return (
     <>
       <nav
-        className={drawer ? "flex flex-col gap-1 p-3" : "flex gap-1 overflow-x-auto p-3 md:flex-col md:overflow-x-visible"}
+        className={
+          drawer
+            ? "flex flex-col gap-1 p-3"
+            : `flex gap-1 overflow-x-auto p-3 md:flex-col md:overflow-x-visible ${rail ? "md:px-2" : ""}`
+        }
         aria-label="Resume sections"
       >
         <NavRow
@@ -256,6 +285,7 @@ export function SectionNav({
           label="Basic info"
           active={active === "basicInfo"}
           drawer={drawer}
+          rail={rail}
           onClick={() => onSelect("basicInfo")}
           trailing={
             <span className={`${shown("inline")} text-[10.5px] font-medium tracking-wide text-[var(--color-ink-faint)]`}>
@@ -272,6 +302,7 @@ export function SectionNav({
           label={summaryLabel}
           active={active === "summary"}
           drawer={drawer}
+          rail={rail}
           skipped={summaryStatus === "skipped"}
           onClick={() => onSelect("summary")}
           trailing={
@@ -296,6 +327,7 @@ export function SectionNav({
           label="Photo"
           active={active === "photo"}
           drawer={drawer}
+          rail={rail}
           skipped={photoStatus === "skipped"}
           onClick={() => onSelect("photo")}
           trailing={
@@ -325,6 +357,7 @@ export function SectionNav({
                 label={label}
                 active={active === key}
                 drawer={drawer}
+                rail={rail}
                 skipped={skipped}
                 dragging={draggingKey === key}
                 dropped={droppedKey === key}
@@ -343,8 +376,8 @@ export function SectionNav({
                       tourAnchor={!drawer && index === 1}
                       drawer={drawer}
                       onPointerDown={(event) => startDrag(key, event)}
-                      onMoveUp={() => moveSection(key, "up")}
-                      onMoveDown={() => moveSection(key, "down")}
+                      onMoveUp={() => reorderWithToast(key, () => moveSection(key, "up"))}
+                      onMoveDown={() => reorderWithToast(key, () => moveSection(key, "down"))}
                     />
                     <StatusMark status={status} drawer={drawer} />
                     <div onClick={(e) => e.stopPropagation()}>
@@ -363,14 +396,28 @@ export function SectionNav({
 
         <RowDivider group drawer={drawer} />
 
-        <NavRow
-          navKey="export"
-          iconDelay={120 + contentKeys.length * 40}
-          label="Preview & download"
-          active={active === "export"}
-          drawer={drawer}
-          onClick={() => onSelect("export")}
-        />
+        {/* The finish line, not another section: an accent call to action
+            pinned to the bottom of the scrolling sidebar so "you can
+            download" is visible from the first step. */}
+        <div
+          className={
+            drawer
+              ? "pt-1"
+              : `md:sticky md:bottom-0 md:z-[9] md:-mb-3 md:mt-1 md:bg-[var(--color-surface)] md:pb-3 md:pt-2 ${
+                  rail ? "md:-mx-2 md:px-2" : "md:-mx-3 md:px-3"
+                }`
+          }
+        >
+          <NavRow
+            navKey="export"
+            label="Download"
+            active={active === "export"}
+            drawer={drawer}
+            rail={rail}
+            cta
+            onClick={() => onSelect("export")}
+          />
+        </div>
       </nav>
 
     </>
@@ -476,6 +523,8 @@ function NavRow({
   label,
   active,
   drawer = false,
+  rail = false,
+  cta = false,
   skipped = false,
   dragging = false,
   dropped = false,
@@ -489,6 +538,10 @@ function NavRow({
   label: string;
   active: boolean;
   drawer?: boolean;
+  /** Collapsed desktop sidebar: icon only, label kept as the accessible name. */
+  rail?: boolean;
+  /** Accent call-to-action styling (Download). */
+  cta?: boolean;
   skipped?: boolean;
   dragging?: boolean;
   dropped?: boolean;
@@ -502,8 +555,12 @@ function NavRow({
       ref={rowRef}
       data-section-key={sectionKey}
       aria-grabbed={dragging || undefined}
-      className={`group/navrow flex shrink-0 items-center justify-between gap-2 rounded-lg pr-2 text-[13px] font-medium transition-[background-color,color,box-shadow] duration-200 ease-out ${drawer ? "w-full" : "md:w-full"} ${
-        dragging
+      className={`group/navrow flex shrink-0 items-center justify-between gap-2 rounded-lg ${cta ? "" : "pr-2"} ${rail ? "md:pr-0" : ""} text-[13px] font-medium transition-[background-color,color,box-shadow] duration-200 ease-out ${drawer ? "w-full" : "md:w-full"} ${
+        cta
+          ? `bg-[linear-gradient(135deg,var(--color-accent),color-mix(in_srgb,var(--color-accent)_70%,var(--color-focus)))] font-semibold text-[var(--color-accent-ink)] shadow-[0_8px_20px_-10px_var(--accent-glow)] hover:brightness-110 ${
+              active ? "ring-2 ring-[var(--color-focus)] ring-offset-2 ring-offset-[var(--color-surface)]" : ""
+            }`
+          : dragging
           ? "nav-row-lift"
           : dropped
             ? `nav-row-dropped ${active ? "bg-[var(--color-accent-tint)] text-[var(--color-accent)]" : "text-[var(--color-ink-soft)]"}`
@@ -516,8 +573,30 @@ function NavRow({
           — the row's trailing content (the skip Switch) is its own
           interactive button, and a <button> can't contain another
           <button> without breaking HTML validity and event handling. */}
-      <button type="button" onClick={onClick} className="flex min-w-0 flex-1 items-center gap-2 rounded-lg px-3 py-2 text-left">
-        <NavSectionIcon navKey={navKey} active={active || dragging} skipped={skipped} delayMs={iconDelay} />
+      <button
+        type="button"
+        onClick={onClick}
+        aria-label={rail ? label : undefined}
+        className={`flex min-w-0 flex-1 items-center gap-2 rounded-lg px-3 py-2 text-left ${cta ? "justify-center" : ""} ${
+          rail ? "md:justify-center md:gap-0 md:px-0" : ""
+        }`}
+      >
+        {/* The Download item is text-only while the sidebar is open; the
+            collapsed rail has no label, so it keeps the icon there. */}
+        {cta ? (
+          rail ? (
+            <span
+              data-nav-icon={navKey}
+              data-active={active ? "true" : undefined}
+              className="-my-1 flex shrink-0 items-center justify-center"
+              aria-hidden="true"
+            >
+              <FilledDownloadIcon />
+            </span>
+          ) : null
+        ) : (
+          <NavSectionIcon navKey={navKey} active={active || dragging} skipped={skipped} delayMs={iconDelay} />
+        )}
         {/* The mobile strip has no room for the status dot, skip Switch, or
             "Optional" badge, so the label's own color is all that's left to
             carry "this won't be on the resume" — it reverts to the row's
@@ -526,15 +605,15 @@ function NavRow({
           className={
             drawer
               ? "min-w-0 overflow-hidden text-ellipsis whitespace-nowrap"
-              : `max-w-[7.25rem] overflow-hidden text-ellipsis whitespace-nowrap md:max-w-none md:overflow-visible ${
-                  skipped ? "text-[var(--color-ink-faint)] md:text-inherit" : ""
-                }`
+              : `max-w-[7.25rem] overflow-hidden text-ellipsis whitespace-nowrap transition-[opacity,max-width] duration-300 ease-out ${
+                  rail ? "md:max-w-0 md:opacity-0" : "md:max-w-none md:overflow-visible"
+                } ${skipped ? "text-[var(--color-ink-faint)] md:text-inherit" : ""}`
           }
         >
           {label}
         </span>
       </button>
-      {trailing}
+      {rail ? null : trailing}
     </div>
   );
 }

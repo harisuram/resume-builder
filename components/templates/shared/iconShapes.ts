@@ -71,6 +71,7 @@ export const ICONS = {
     path("M14 14.2c1.6-.3 3.4.6 4 2.8"),
   ),
   additional: line(path("M5 6.5h14"), path("M5 12h14"), path("M5 17.5h9")),
+  profile: line(circle(12, 8.5, 3.5), path("M5 19.5c.8-3.4 3.6-5.5 7-5.5s6.2 2.1 7 5.5")),
   globe: GLOBE,
   // Octicons mark-github (MIT, © GitHub Inc.) and the Simple Icons LinkedIn
   // mark (CC0). Licence text: public/third-party-notices.txt.
@@ -116,6 +117,13 @@ export const SECTION_ICON_NAMES: Partial<Record<SectionKey, IconName>> = {
   softSkills: "softSkill",
   additional: "additional",
 };
+
+/** Headings that always draw a glyph (the marker style's solid square) need
+ * one for the summary too; the shared map above leaves summary bare so the
+ * existing icon headings keep drawing it without one. */
+export function markerIconName(section: SectionKey): IconName {
+  return SECTION_ICON_NAMES[section] ?? "profile";
+}
 
 /** Bullet marks, drawn in a 10×10 box. Each carries its own fill/stroke
  * because the solid shapes and the line marks use different weights. */

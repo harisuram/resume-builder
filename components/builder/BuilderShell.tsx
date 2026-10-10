@@ -51,6 +51,35 @@ import { SectionNav } from "./SectionNav";
 /** Matches the `lg:` breakpoint where the live preview sits beside the form. */
 const SIDE_PREVIEW_MEDIA = "(min-width: 1024px)";
 
+/** Hover delays for the collapsed sidebar's peek: a short wait before it
+ * opens so a cursor passing over doesn't fling it open, and a brief grace
+ * before it closes so grazing the edge doesn't snap it shut. */
+const PEEK_OPEN_DELAY_MS = 120;
+const PEEK_CLOSE_DELAY_MS = 180;
+
+function SidebarToggleIcon({ collapsed }: { collapsed: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.7}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-4 w-4 shrink-0"
+      aria-hidden="true"
+    >
+      <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" />
+      <path d="M9.5 4.5v15" />
+      <path
+        className="transition-transform duration-300 ease-out"
+        style={{ transformBox: "fill-box", transformOrigin: "center", transform: collapsed ? "scaleX(-1)" : undefined }}
+        d="m15.5 10-2 2 2 2"
+      />
+    </svg>
+  );
+}
+
 // Tours only open after mount (first visit or "Replay tour"), so their code
 // stays out of the bundle that has to load before the builder is usable.
 const BuilderTour = dynamic(() => import("./BuilderTour").then((m) => m.BuilderTour), { ssr: false });
@@ -63,7 +92,7 @@ const FIX_FIELDS_REASON = "Fix the highlighted fields before continuing.";
 function stepLabel(key: NavKey): string {
   if (key === "basicInfo") return "Basic info";
   if (key === "photo") return "Photo";
-  if (key === "export") return "Preview & download";
+  if (key === "export") return "Download";
   return getSectionMeta(key).label;
 }
 
@@ -183,6 +212,17 @@ export function BuilderShell() {
   const [hydrated, setHydrated] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  // Desktop sidebar: open on every visit; collapsing gives the form and the
+  // preview the room. The tour points at sidebar controls, so it forces the
+  // sidebar open while it runs. While collapsed, hovering it "peeks": it
+  // slides open over the page (no layout shift) and shuts when the cursor
+  // leaves.
+  const [navCollapsed, setNavCollapsed] = useState(false);
+  const [navPeek, setNavPeek] = useState(false);
+  const peekTimer = useRef(0);
+  const layoutCollapsed = navCollapsed && !tourOpen;
+  const peeking = layoutCollapsed && navPeek;
+  const railMode = layoutCollapsed && !navPeek;
   // On phones the side menu is built once, shortly after load, and kept
   // (hidden) so the ☰ tap only has to start the slide.
   const [menuWarm, setMenuWarm] = useState(false);
@@ -280,6 +320,38 @@ export function BuilderShell() {
     const pane = formPaneRef.current;
     if (pane) pane.scrollTop = 0;
   }, [activeKey]);
+
+  function toggleNav() {
+    window.clearTimeout(peekTimer.current);
+    setNavPeek(false);
+    setNavCollapsed((current) => !current);
+  }
+
+  function schedulePeek(open: boolean, event: React.PointerEvent) {
+    // Mouse only: on a touch tablet a tap would open it with no way to
+    // "move out" and close it again.
+    if (event.pointerType !== "mouse" || !layoutCollapsed) return;
+    window.clearTimeout(peekTimer.current);
+    // Mid-drag the rows are measured; don't resize the sidebar under them.
+    if (!open && document.body.classList.contains("nav-section-dragging")) return;
+    peekTimer.current = window.setTimeout(() => setNavPeek(open), open ? PEEK_OPEN_DELAY_MS : PEEK_CLOSE_DELAY_MS);
+  }
+
+  useEffect(() => () => window.clearTimeout(peekTimer.current), []);
+
+  // Ctrl/Cmd+B toggles the sidebar, as in most editors.
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if (event.key.toLowerCase() !== "b" || !(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey) return;
+      if (!isBuilderTourViewport()) return;
+      event.preventDefault();
+      window.clearTimeout(peekTimer.current);
+      setNavPeek(false);
+      setNavCollapsed((current) => !current);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const wizardOrder = getWizardOrder(sectionOrder);
   const stepIndex = wizardOrder.indexOf(activeKey);
@@ -393,7 +465,22 @@ export function BuilderShell() {
           data-builder-pending={hydrated ? undefined : ""}
           inert={!hydrated || undefined}
         >
-          <aside className="no-print sticky top-0 z-20 shrink-0 border-b border-[var(--color-border)] bg-[var(--color-surface)] md:static md:h-full md:min-h-0 md:w-64 md:overflow-y-auto md:border-b-0 md:border-r">
+          {/* Peeking keeps the collapsed 4rem footprint: the width grows to
+              16rem while an equal negative right margin (same duration and
+              easing) cancels it, so the panel slides over the form instead
+              of pushing it. */}
+          <aside
+            onPointerEnter={(event) => schedulePeek(true, event)}
+            onPointerLeave={(event) => schedulePeek(false, event)}
+            data-peek={peeking ? "" : undefined}
+            className={`no-print sticky top-0 z-20 shrink-0 border-b border-[var(--color-border)] bg-[var(--color-surface)] md:relative md:z-30 md:flex md:h-full md:min-h-0 md:flex-col md:overflow-x-hidden md:overflow-y-auto md:border-b-0 md:border-r md:transition-[width,margin,box-shadow] md:duration-300 md:ease-[cubic-bezier(0.22,1,0.36,1)] ${
+              peeking
+                ? "md:-mr-48 md:w-64 md:shadow-[12px_0_32px_-12px_rgb(0_0_0_/_0.25)]"
+                : railMode
+                  ? "md:w-16"
+                  : "md:w-64"
+            }`}
+          >
             {/* Mobile: a bar that opens the side menu with the full section
                 list. From md up the list is the sidebar itself. */}
             <div className="flex items-center gap-3 px-3 py-2 md:hidden">
@@ -418,15 +505,40 @@ export function BuilderShell() {
                 </span>
               </button>
             </div>
+            {/* Header row: overlaps the nav's top padding so the toggle
+                doesn't leave a band of empty space above Basic info. */}
+            <div
+              className={`hidden md:-mb-2 md:flex md:shrink-0 md:items-center md:pt-2 ${
+                railMode ? "md:justify-center md:px-2" : "md:justify-between md:pl-6 md:pr-3"
+              }`}
+            >
+              {railMode ? null : (
+                <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[var(--color-ink-faint)]">
+                  Sections
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={toggleNav}
+                aria-expanded={!layoutCollapsed}
+                aria-label={layoutCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                title={`${layoutCollapsed ? "Keep sidebar open" : "Collapse sidebar"} (Ctrl/⌘ B)`}
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--color-ink-faint)] transition-colors hover:bg-[var(--color-accent-tint)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]"
+              >
+                <SidebarToggleIcon collapsed={layoutCollapsed} />
+              </button>
+            </div>
             <div className="hidden md:block">
-              <SectionNav active={activeKey} onSelect={selectSection} />
+              <SectionNav active={activeKey} onSelect={selectSection} collapsed={railMode} />
             </div>
           </aside>
 
           {activeKey === "export" ? (
             <div className="print-unclip flex min-h-0 flex-1 overflow-hidden">
             <main ref={formPaneRef} className="print-unclip min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-clip overscroll-contain px-5 py-6 sm:px-8">
-              <div className="mx-auto w-full max-w-[820px]">
+              <div
+                className={`mx-auto w-full transition-[max-width] duration-300 ease-out ${layoutCollapsed ? "max-w-[980px]" : "max-w-[820px]"}`}
+              >
                 <StepEnter key={activeKey} direction={stepDir} enabled={animateStep}>
                   <ExportSection />
                 </StepEnter>
@@ -443,7 +555,9 @@ export function BuilderShell() {
               {/* Extra bottom padding on mobile: the sticky step footer sits
                   over the viewport, so the last field has to scroll above it. */}
               <main ref={formPaneRef} className="block min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-clip overscroll-contain px-5 py-6 pb-[calc(11rem+env(safe-area-inset-bottom))] sm:px-8 md:pb-6">
-                <div className="mx-auto w-full max-w-2xl">
+                <div
+                  className={`mx-auto w-full transition-[max-width] duration-300 ease-out ${layoutCollapsed ? "max-w-3xl" : "max-w-2xl"}`}
+                >
                   {/* Above the step footer so absolute suggestion lists aren't
                       painted under Clear / Save & Next (later DOM sibling). */}
                   <div className="relative z-10 min-w-0 max-md:rounded-2xl max-md:border max-md:border-[var(--color-border)]/70 max-md:bg-[var(--color-surface)] max-md:p-4 max-md:shadow-[0_1px_2px_rgb(0_0_0_/_0.04),0_12px_32px_-18px_rgb(0_0_0_/_0.18)]">
@@ -464,6 +578,7 @@ export function BuilderShell() {
                     onSkip={goSkip}
                     onClear={goClear}
                     onPreview={previewOpen ? undefined : () => setPreviewOpen(true)}
+                    onDownload={() => selectSection("export")}
                   />
                   {/* Mobile's one unit on form steps. Save & Next is fixed to
                       the viewport bottom there, and the pane's bottom padding
@@ -482,8 +597,13 @@ export function BuilderShell() {
                   form under 200px wide. Width
                   grows with the viewport (capped below the A4 design width)
                   so the CSS-scaled résumé stays readable without crowding the
-                  form. */}
-              <aside className="flex min-h-0 w-0 overflow-hidden border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-ink)_3.5%,var(--color-paper))] p-0 lg:w-[min(650px,max(325px,42.75%))] lg:shrink-0 lg:flex-col lg:overflow-hidden lg:border-l lg:px-4 lg:py-6 xl:px-5">
+                  form. A collapsed sidebar lifts the cap so the freed room
+                  goes to the résumé, not empty margin. */}
+              <aside
+                className={`flex min-h-0 w-0 overflow-hidden border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-ink)_3.5%,var(--color-paper))] p-0 lg:shrink-0 lg:flex-col lg:overflow-hidden lg:border-l lg:px-4 lg:py-6 lg:transition-[width] lg:duration-300 lg:ease-[cubic-bezier(0.22,1,0.36,1)] xl:px-5 ${
+                  layoutCollapsed ? "lg:w-[min(820px,max(325px,48%))]" : "lg:w-[min(650px,max(325px,42.75%))]"
+                }`}
+              >
                 <AdSlot
                   slot={ADSENSE_SLOTS.builderPreviewTop}
                   name="Builder preview top"

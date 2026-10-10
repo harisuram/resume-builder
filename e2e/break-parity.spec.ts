@@ -11,8 +11,12 @@ import { seedBuilder } from "./helpers/printCuts";
  * the first must start its content at the 4% top inset — the regression this
  * guards against was a double-counted inset (PAGE_HEIGHT + PAGE_PAD).
  */
-test("sidebar pages are one A4 tall with a single top inset (no double gap)", async ({ page }) => {
-  await seedBuilder(page, "pacific", makeLongResume("pacific"));
+/** Pacific is the original regression; Fern, Orchid and Dune are the newer
+ * sidebars, with a solid rail, a name band, and a paper colour respectively. */
+const SIDEBAR_CASES = ["pacific", "fern", "orchid", "dune"];
+
+for (const id of SIDEBAR_CASES) test(`${id}: sidebar pages are one A4 tall with a single top inset (no double gap)`, async ({ page }) => {
+  await seedBuilder(page, id, makeLongResume(id));
   await expect(page.getByTestId("pdf-engine-preview").getByRole("status")).toHaveText(/^\d+ pages?$/, {
     timeout: 60_000,
   });

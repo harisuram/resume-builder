@@ -44,7 +44,7 @@ export async function openPrintableResume(page: Page, templateId: string): Promi
   );
 
   await page.goto(`/builder?template=${encodeURIComponent(templateId)}`);
-  await page.getByRole("button", { name: "Preview & download" }).click();
+  await page.getByRole("button", { name: "Download", exact: true }).click();
   await page.locator("#resume-print-root").waitFor({ state: "attached" });
   await page.evaluate(() => document.fonts.ready);
 

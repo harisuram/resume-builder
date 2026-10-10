@@ -2198,3 +2198,101 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
     transform: rotate(var(--a)) translateY(calc(var(--d) * -1)) rotate(220deg) scale(0.6);
   }
 }
+
+/* Toasts drop in from above; the success tick draws itself. */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -10px, 0) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes toast-check-draw {
+  from {
+    stroke-dashoffset: 16;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.toast-in {
+  animation: toast-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.toast-check {
+  stroke-dasharray: 16;
+  animation: toast-check-draw 0.4s ease-out 0.12s both;
+}
+
+/* Preview / Download call-to-action icons: one short beat every ~4.5s so
+   the eye catches them without a constant loop. Hover replays it. */
+@keyframes anim-download-drop {
+  0%,
+  72%,
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  80% {
+    transform: translateY(3px);
+  }
+  86% {
+    transform: translateY(-1px);
+  }
+  92% {
+    transform: translateY(1px);
+  }
+}
+
+@keyframes anim-download-tray {
+  0%,
+  76%,
+  100% {
+    transform: scaleX(1);
+  }
+  82% {
+    transform: scaleX(1.12);
+  }
+}
+
+@keyframes anim-eye-blink {
+  0%,
+  86%,
+  100% {
+    transform: scaleY(1);
+  }
+  90% {
+    transform: scaleY(0.12);
+  }
+  94% {
+    transform: scaleY(1);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .anim-download-arrow {
+    animation: anim-download-drop 4.5s ease-in-out 1.2s infinite;
+  }
+
+  .anim-download-tray {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: anim-download-tray 4.5s ease-in-out 1.2s infinite;
+  }
+
+  .anim-eye-lid {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: anim-eye-blink 5s ease-in-out 0.8s infinite;
+  }
+
+  :is(button, a):hover .anim-download .anim-download-arrow {
+    animation: anim-download-drop 1.1s ease-in-out;
+    animation-delay: -0.75s;
+  }
+}

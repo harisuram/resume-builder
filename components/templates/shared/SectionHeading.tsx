@@ -1,6 +1,8 @@
 import type { SectionKey } from "@/lib/types";
-import { SectionIcon } from "./icons";
+import { MarkerIcon, SectionIcon } from "./icons";
 import { DISPLAY_FONT_CSS, headerColor, tint, type TemplateTheme } from "./theme";
+
+const ON_DARK_RULE = "rgba(255,255,255,0.35)";
 
 export function SectionHeading({
   theme,
@@ -130,6 +132,77 @@ export function SectionHeading({
               color: headerColor(theme),
               fontFamily: theme.displayFont ? DISPLAY_FONT_CSS[theme.displayFont] : undefined,
             }}
+          >
+            {title}
+          </h3>
+        </div>
+      );
+    case "marker":
+      return (
+        <div
+          className="mb-2 flex items-center gap-2 border-b pb-1 break-after-avoid"
+          style={{ borderColor: light ? ON_DARK_RULE : tint(accent, 30, theme.paper) }}
+        >
+          <span
+            className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[4px] text-white"
+            style={{ background: light ? "rgba(255,255,255,0.2)" : accent }}
+          >
+            <MarkerIcon section={section} className="h-[13px] w-[13px]" />
+          </span>
+          <h3
+            className="min-w-0 text-[12.5px] font-semibold uppercase tracking-[0.12em]"
+            style={{ color }}
+          >
+            {title}
+          </h3>
+        </div>
+      );
+    case "diamond":
+      return (
+        <div className="mb-2.5 flex items-center gap-2 break-after-avoid">
+          <span className="h-[7px] w-[7px] shrink-0 rotate-45" style={{ background: color }} />
+          <h3
+            className="text-[13px] font-semibold uppercase tracking-[0.06em]"
+            style={{ color }}
+          >
+            {title}
+          </h3>
+        </div>
+      );
+    case "divider":
+      return (
+        <div
+          className="mb-2 border-t pt-3 break-after-avoid"
+          style={{ borderColor: light ? ON_DARK_RULE : tint(accent, 40, theme.paper) }}
+        >
+          <h3
+            className="text-[13.5px] font-semibold uppercase tracking-[0.04em]"
+            style={{ color }}
+          >
+            {title}
+          </h3>
+        </div>
+      );
+    case "pill":
+      return (
+        <div
+          className="mb-2.5 inline-block rounded-full px-3.5 py-1 break-after-avoid"
+          style={{ background: light ? "rgba(255,255,255,0.16)" : tint(accent, 14, theme.paper) }}
+        >
+          <h3
+            className="text-[12px] font-semibold uppercase tracking-[0.1em]"
+            style={{ color }}
+          >
+            {title}
+          </h3>
+        </div>
+      );
+    case "band":
+      return (
+        <div className="mb-2.5 px-2 py-1 text-center break-after-avoid" style={{ background: light ? "#ffffff" : accent }}>
+          <h3
+            className="text-[12px] font-semibold uppercase tracking-[0.14em]"
+            style={{ color: light ? (theme.railColor ?? accent) : "#ffffff" }}
           >
             {title}
           </h3>

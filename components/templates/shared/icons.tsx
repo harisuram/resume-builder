@@ -1,5 +1,13 @@
 import type { SectionKey } from "@/lib/types";
-import { ICONS, LINE_ICON_STROKE, SECTION_ICON_NAMES, type IconDef, type IconName, type IconShape } from "./iconShapes";
+import {
+  ICONS,
+  LINE_ICON_STROKE,
+  SECTION_ICON_NAMES,
+  markerIconName,
+  type IconDef,
+  type IconName,
+  type IconShape,
+} from "./iconShapes";
 
 type IconProps = { className?: string };
 
@@ -72,4 +80,10 @@ export function SectionIcon({ section, className }: { section: SectionKey; class
   const name = SECTION_ICON_NAMES[section];
   if (!name) return null;
   return <Icon def={ICONS[name]} className={className} />;
+}
+
+/** The marker heading's glyph: the section's icon, or a profile mark for
+ * sections the shared map leaves bare (summary). */
+export function MarkerIcon({ section, className }: { section: SectionKey; className?: string }) {
+  return <Icon def={ICONS[markerIconName(section)]} className={className} />;
 }

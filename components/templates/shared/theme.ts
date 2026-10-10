@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 export type LayoutKind = "single" | "sidebar" | "asymmetric" | "labeled";
 export type HeadingStyle =
   | "plain"
@@ -17,7 +19,17 @@ export type HeadingStyle =
   /** Accent bar on the left of letter-spaced capitals. */
   | "bar"
   /** Small accent square before letter-spaced capitals. */
-  | "tile";
+  | "tile"
+  /** Section icon in a solid accent square, capitals, hairline beneath. */
+  | "marker"
+  /** Small accent diamond before bold capitals. */
+  | "diamond"
+  /** Full-width hairline above bold capitals — the rule separates sections. */
+  | "divider"
+  /** Capitals on a soft, fully rounded tint of the accent. */
+  | "pill"
+  /** Full-width solid accent band with centred white capitals. */
+  | "band";
 
 /** A single-column template with its own header and section treatment.
  * Each one draws only the resume's existing fields. */
@@ -61,7 +73,33 @@ export interface TemplateTheme {
   /** Single-column only: which bespoke header/section treatment to draw. */
   variant?: TemplateVariant;
   displayFont?: DisplayFont;
+  /** Paper colour for the whole sheet (hex). Defaults to white; tints for
+   * rails and heading chrome are mixed toward it rather than toward white. */
+  paper?: string;
 }
+
+const WHITE_PAPER = "#ffffff";
+
+/** The sheet's colour: the theme's paper, or white. */
+export function paperColor(theme: TemplateTheme): string {
+  return theme.paper ?? WHITE_PAPER;
+}
+
+/** Sets the resume surface's paper token (`--r-bg`, see globals.css) for a
+ * theme with its own paper; undefined leaves the white default untouched. */
+export function paperStyle(theme: TemplateTheme): CSSProperties | undefined {
+  return theme.paper ? ({ "--r-bg": theme.paper } as CSSProperties) : undefined;
+}
+
+/** The one weight each display face ships in (app/layout.tsx and the PDF's
+ * embedded fonts load exactly these), so a name set in it never falls back. */
+export const DISPLAY_FONT_WEIGHT: Record<DisplayFont, number> = {
+  fraunces: 300,
+  playfair: 600,
+  cormorant: 500,
+  mono: 600,
+  syne: 700,
+};
 
 /** CSS stacks for the display faces (variables come from next/font in
  * app/layout.tsx). */
@@ -103,13 +141,14 @@ export function headerColor(theme: TemplateTheme): string {
 
 export function railBackground(theme: TemplateTheme): string {
   const base = theme.railColor ?? theme.accent;
-  return theme.sidebarStyle === "solid" ? base : tint(base, 8);
+  return theme.sidebarStyle === "solid" ? base : tint(base, 8, theme.paper);
 }
 
 /** A light tint of the accent, mixed at render time — avoids hand-picking a
- * second hex per template just to get a chip/sidebar background. */
-export function tint(accent: string, weight = 12) {
-  return `color-mix(in srgb, ${accent} ${weight}%, white)`;
+ * second hex per template just to get a chip/sidebar background. Mixed
+ * toward `paper` on templates that set one, otherwise toward white. */
+export function tint(accent: string, weight = 12, paper?: string) {
+  return `color-mix(in srgb, ${accent} ${weight}%, ${paper ?? "white"})`;
 }
 
 /* Display order for the gallery, home strip, picker and rail. Mixed on
@@ -665,6 +704,71 @@ export const TEMPLATES: TemplateTheme[] = [
     density: "relaxed",
     fontDisplay: "serif",
     darkHeader: true,
+  },
+  {
+    id: "fern",
+    name: "Fern",
+    description: "Sage photo rail, title bands",
+    layout: "sidebar",
+    sidebarSide: "left",
+    accent: "#44705F",
+    headingStyle: "band",
+    density: "relaxed",
+    fontDisplay: "sans",
+    showAvatar: true,
+    sidebarStyle: "solid",
+  },
+  {
+    id: "vellum",
+    name: "Vellum",
+    description: "Cream paper, ruled sections",
+    layout: "single",
+    accent: "#2B2722",
+    headingStyle: "divider",
+    density: "relaxed",
+    fontDisplay: "sans",
+    paper: "#F7F3EA",
+  },
+  {
+    id: "orchid",
+    name: "Orchid",
+    description: "Plum band, marked titles",
+    layout: "sidebar",
+    sidebarSide: "left",
+    accent: "#6E2F62",
+    headerColor: "#4C1F45",
+    railColor: "#4C1F45",
+    headingStyle: "marker",
+    density: "relaxed",
+    fontDisplay: "sans",
+    darkHeader: true,
+    showAvatar: true,
+  },
+  {
+    id: "linen",
+    name: "Linen",
+    description: "Warm grey, diamond split",
+    layout: "asymmetric",
+    accent: "#2A2A2A",
+    headingStyle: "diamond",
+    density: "relaxed",
+    fontDisplay: "sans",
+    paper: "#F3F1ED",
+  },
+  {
+    id: "dune",
+    name: "Dune",
+    description: "Sand paper, soft pill titles",
+    layout: "sidebar",
+    sidebarSide: "left",
+    accent: "#6B4B3A",
+    railColor: "#B08968",
+    headingStyle: "pill",
+    density: "relaxed",
+    fontDisplay: "sans",
+    showAvatar: true,
+    displayFont: "fraunces",
+    paper: "#FBF7F1",
   },
 ];
 

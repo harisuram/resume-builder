@@ -7,7 +7,15 @@ import type { NameHeadingLevel } from "../registry";
 import { Avatar, ContactLine, hasAvatar, SummaryText, visiblePhoto } from "../shared/atoms";
 import { NARROW_SECTION_KEYS, ResumeSection } from "../shared/ResumeSection";
 import { SectionHeading } from "../shared/SectionHeading";
-import { headerColor, railBackground, type TemplateTheme } from "../shared/theme";
+import {
+  DISPLAY_FONT_CSS,
+  DISPLAY_FONT_WEIGHT,
+  headerColor,
+  paperColor,
+  paperStyle,
+  railBackground,
+  type TemplateTheme,
+} from "../shared/theme";
 
 /** The rail is 34% of the page. Kept as a resolved px number for the print
  * fill, which is positioned against the sheet rather than this page-width root. */
@@ -52,7 +60,12 @@ export function SidebarLayout({
     // Repeating page-2+ band matches the real 4% content inset above —
     // same number on every page, not the single-column family's 5%.
     "--resume-page-inset": `${PAGE_PAD_Y_PX}px`,
+    ...paperStyle(theme),
   } as CSSProperties;
+  // A display face, when the theme names one, at the single weight it ships in.
+  const nameFont: CSSProperties | undefined = theme.displayFont
+    ? { fontFamily: DISPLAY_FONT_CSS[theme.displayFont], fontWeight: DISPLAY_FONT_WEIGHT[theme.displayFont] }
+    : undefined;
 
   const sidebar = (
     <td
@@ -74,7 +87,10 @@ export function SidebarLayout({
                 size={72}
               />
             )}
-            <NameHeading className={`${fontClass} text-[19px] font-semibold`} style={{ color: solid ? "#ffffff" : headerColor(theme) }}>
+            <NameHeading
+              className={`${fontClass} ${nameFont ? "text-[22px] leading-tight" : "text-[19px] font-semibold"}`}
+              style={{ color: solid ? "#ffffff" : headerColor(theme), ...nameFont }}
+            >
               {data.basicInfo.name || "Your Name"}
             </NameHeading>
             <ContactLine info={data.basicInfo} light={solid} stacked />
@@ -93,7 +109,7 @@ export function SidebarLayout({
     <td
       data-resume-column="main"
       className="resume-main-column relative"
-      style={{ verticalAlign: "top", padding: 0, backgroundColor: "#ffffff" }}
+      style={{ verticalAlign: "top", padding: 0, backgroundColor: paperColor(theme) }}
     >
       <div className="resume-col-pad flex flex-col gap-5" style={COL_PAD_STYLE}>
         {hasSummary(data) && (
@@ -196,7 +212,9 @@ export function SidebarLayout({
           style={{ background: headerColor(theme), padding: `${PAGE_PAD_Y_PX}px ${PAGE_PAD_X_PX * 2}px` }}
         >
           <div className="min-w-0 flex-1">
-            <NameHeading className={`${fontClass} text-[24px] font-semibold`}>{data.basicInfo.name || "Your Name"}</NameHeading>
+            <NameHeading className={`${fontClass} text-[24px] ${nameFont ? "" : "font-semibold"}`} style={nameFont}>
+              {data.basicInfo.name || "Your Name"}
+            </NameHeading>
             <div className="mt-1.5">
               <ContactLine info={data.basicInfo} light />
             </div>

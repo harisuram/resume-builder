@@ -222,7 +222,7 @@ describe("BuilderShell", () => {
     const { container } = render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
     act(() => useBuilderStore.getState().setSkills(["TypeScript"]));
-    await userEvent.click(nav().getByText("Preview & download"));
+    await userEvent.click(nav().getByText("Download"));
 
     expect(screen.getByRole("heading", { name: "Preview & download" })).toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -245,7 +245,7 @@ describe("BuilderShell", () => {
     render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
     act(() => useBuilderStore.getState().setSkills(["TypeScript"]));
-    await userEvent.click(nav().getByText("Preview & download"));
+    await userEvent.click(nav().getByText("Download"));
 
     const rail = screen.getByRole("list", { name: "Templates" });
     const option = within(rail).getByRole("button", { name: "Use Harbor template" });
@@ -330,7 +330,7 @@ describe("BuilderShell", () => {
   it("still drops the pinned preview button on the export step", async () => {
     render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
-    await userEvent.click(nav().getByText("Preview & download"));
+    await userEvent.click(nav().getByText("Download"));
     expect(screen.getByRole("heading", { name: "Preview & download" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Preview resume" })).not.toBeInTheDocument();
   });
@@ -488,7 +488,7 @@ describe("BuilderShell", () => {
     render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
     act(() => useBuilderStore.getState().setSkills(["TypeScript"]));
-    await userEvent.click(nav().getByText("Preview & download"));
+    await userEvent.click(nav().getByText("Download"));
     await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
 
     expect(screen.getByRole("alert")).toHaveTextContent(
@@ -506,7 +506,7 @@ describe("BuilderShell", () => {
     act(() =>
       useBuilderStore.getState().updateBasicInfo({ name: "Jamie", email: "jamie@example.com", location: "Austin, TX" }),
     );
-    await userEvent.click(nav().getByText("Preview & download"));
+    await userEvent.click(nav().getByText("Download"));
     await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();

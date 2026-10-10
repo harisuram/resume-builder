@@ -5,7 +5,7 @@ import type { NameHeadingLevel } from "../registry";
 import { Avatar, ContactLine, hasAvatar, SummaryText, visiblePhoto } from "../shared/atoms";
 import { ResumeSection } from "../shared/ResumeSection";
 import { SectionHeading } from "../shared/SectionHeading";
-import { headerColor, type TemplateTheme } from "../shared/theme";
+import { headerColor, paperStyle, type TemplateTheme } from "../shared/theme";
 import { VariantLayout } from "./VariantLayout";
 
 export function SingleColumnLayout({
@@ -67,7 +67,7 @@ export function SingleColumnLayout({
   );
 
   return (
-    <div className="resume-surface min-h-full" data-layout={theme.layout} data-resume-theme={resumeTheme}>
+    <div className="resume-surface min-h-full" data-layout={theme.layout} data-resume-theme={resumeTheme} style={paperStyle(theme)}>
       {header}
       <div className={`resume-page-body relative flex flex-col px-8 ${theme.darkHeader ? "pt-6" : "pt-5"} pb-8 ${theme.density === "compact" ? "gap-4" : "gap-5"}`}>
         {hasSummary(data) && (

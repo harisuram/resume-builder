@@ -39,7 +39,7 @@ describe("BuilderShell ads", () => {
   it("shows a single unit on export, placed after the preview rather than by Download", async () => {
     render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
-    await userEvent.click(within(screen.getByRole("navigation", { name: "Resume sections" })).getByText("Preview & download"));
+    await userEvent.click(within(screen.getByRole("navigation", { name: "Resume sections" })).getByText("Download"));
 
     expect(screen.queryByText("Builder preview top")).not.toBeInTheDocument();
     expect(screen.queryByText("Builder preview")).not.toBeInTheDocument();

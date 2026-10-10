@@ -4,7 +4,7 @@ import type { ResumeData, SectionKey } from "@/lib/types";
 import type { NameHeadingLevel } from "../registry";
 import { Avatar, ContactGrid, hasAvatar, SummaryText, visiblePhoto } from "../shared/atoms";
 import { ResumeSection } from "../shared/ResumeSection";
-import { headerColor, type TemplateTheme } from "../shared/theme";
+import { headerColor, paperStyle, type TemplateTheme } from "../shared/theme";
 
 /** European-style CV: centered name, section titles in a left label column,
  * content in a wide right column. Hairline rules sit on the content column
@@ -37,7 +37,7 @@ export function LabeledLayout({
   let rowIndex = 0;
 
   return (
-    <div className={`resume-surface min-h-full px-8 pb-8 pt-8 ${fontClass}`} data-layout={theme.layout}>
+    <div className={`resume-surface min-h-full px-8 pb-8 pt-8 ${fontClass}`} data-layout={theme.layout} style={paperStyle(theme)}>
       <div className="flex flex-col items-center gap-3 text-center">
         {hasAvatar(data, theme) && (
           <Avatar name={data.basicInfo.name || "?"} accent={theme.accent} photo={visiblePhoto(data)} size={72} />

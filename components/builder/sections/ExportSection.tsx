@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AdSlot } from "@/components/ads/AdSlot";
 import { Button } from "@/components/ui/Button";
 import { FieldGroup, TextInput } from "@/components/ui/Field";
+import { AnimatedDownloadIcon, CheckIcon, SpinnerIcon } from "@/components/builder/AnimatedIcons";
 import { PreviewPane } from "@/components/builder/PreviewPane";
 import { useResumePdf } from "@/components/builder/useResumePdf";
 import { ADSENSE_SLOTS } from "@/lib/ads";
@@ -17,25 +18,8 @@ function slugifyName(name: string): string {
   return slug || "resume";
 }
 
-/** Plain outline that inherits the primary button's (white) text color —
- * a colored PDF badge would clash on the solid fill. */
-function PdfIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.6}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-3.5 w-3.5 shrink-0"
-      aria-hidden="true"
-    >
-      <path d="M7 3.5h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-16a1 1 0 0 1 1-1Z" />
-      <path d="M14 3.5v4h4" />
-    </svg>
-  );
-}
+/** How long the button holds its ✓ after a download before it resets. */
+const DOWNLOADED_HOLD_MS = 2000;
 
 /** Saves `blob` as `fileName` through a temporary link. The URL is revoked
  * on the next tick, after the browser has started the download. */
@@ -73,17 +57,26 @@ export function ExportSection() {
   // this render, and the download saves the same bytes — so page breaks can't
   // differ between what's shown and what's saved.
   const pdf = useResumePdf(data, true);
+  const [phase, setPhase] = useState<"idle" | "building" | "done">("idle");
+  const resetTimer = useRef(0);
+  useEffect(() => () => window.clearTimeout(resetTimer.current), []);
 
   async function downloadPdf() {
     persistCurrentResume();
+    window.clearTimeout(resetTimer.current);
+    setPhase("building");
     try {
       saveBlob(await pdf.latestBlob(), `${slugifyName(fileBaseName)}.pdf`);
+      setPhase("done");
+      resetTimer.current = window.setTimeout(() => setPhase("idle"), DOWNLOADED_HOLD_MS);
     } catch {
+      setPhase("idle");
       showToast("Couldn't build the PDF. Try again.");
     }
   }
 
   function handleDownloadPdf() {
+    if (phase === "building") return;
     const blocked = downloadBlockedReason(basicInfo);
     if (blocked) {
       showToast(blocked);
@@ -122,9 +115,20 @@ export function ExportSection() {
           </p>
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <Button variant="primary" onClick={handleDownloadPdf}>
-              <PdfIcon />
-              Download PDF
+            <Button
+              variant="primary"
+              onClick={handleDownloadPdf}
+              aria-label="Download PDF"
+              aria-busy={phase === "building" || undefined}
+            >
+              {phase === "building" ? (
+                <SpinnerIcon className="h-4 w-4" />
+              ) : phase === "done" ? (
+                <CheckIcon className="h-4 w-4" />
+              ) : (
+                <AnimatedDownloadIcon className="h-4 w-4" />
+              )}
+              {phase === "building" ? "Preparing PDF…" : phase === "done" ? "Downloaded" : "Download PDF"}
             </Button>
           </div>
         </div>

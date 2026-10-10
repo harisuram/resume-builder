@@ -140,12 +140,13 @@ describe("two-tone templates", () => {
     return Array.from(root.querySelectorAll<HTMLElement>("h3")).map((h) => h.style.color);
   }
 
-  it("ships the eight two-tone templates with a header colour distinct from the accent", () => {
+  it("ships the nine two-tone templates with a header colour distinct from the accent", () => {
     expect(TWO_TONE.map((theme) => theme.id).sort()).toEqual([
       "tidewater",
       "evergreen",
       "plum",
       "lagoon",
+      "orchid",
       "oxford",
       "laurel",
       "regent",

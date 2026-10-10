@@ -349,6 +349,46 @@ exports[`TemplateSkeleton matches the layout snap for dossier (Dossier) 1`] = `
 }
 `;
 
+exports[`TemplateSkeleton matches the layout snap for dune (Dune) 1`] = `
+{
+  "avatarSizes": [
+    "72px",
+  ],
+  "darkHeaderBg": null,
+  "headings": [
+    {
+      "color": "rgb(107, 75, 58)",
+      "italic": false,
+      "text": "Education",
+    },
+    {
+      "color": "rgb(107, 75, 58)",
+      "italic": false,
+      "text": "Skills",
+    },
+    {
+      "color": "rgb(107, 75, 58)",
+      "italic": false,
+      "text": "Summary",
+    },
+    {
+      "color": "rgb(107, 75, 58)",
+      "italic": false,
+      "text": "Experience",
+    },
+    {
+      "color": "rgb(107, 75, 58)",
+      "italic": false,
+      "text": "Projects",
+    },
+  ],
+  "id": "dune",
+  "layout": "sidebar",
+  "railBg": "color-mix(in srgb, rgb(176, 137, 104) 8%, rgb(251, 247, 241))",
+  "railOnRight": false,
+}
+`;
+
 exports[`TemplateSkeleton matches the layout snap for ember (Ember) 1`] = `
 {
   "avatarSizes": [
@@ -423,6 +463,46 @@ exports[`TemplateSkeleton matches the layout snap for evergreen (Evergreen) 1`] 
   "id": "evergreen",
   "layout": "sidebar",
   "railBg": "color-mix(in srgb, rgb(31, 61, 54) 8%, white)",
+  "railOnRight": false,
+}
+`;
+
+exports[`TemplateSkeleton matches the layout snap for fern (Fern) 1`] = `
+{
+  "avatarSizes": [
+    "72px",
+  ],
+  "darkHeaderBg": null,
+  "headings": [
+    {
+      "color": "rgb(68, 112, 95)",
+      "italic": false,
+      "text": "Education",
+    },
+    {
+      "color": "rgb(68, 112, 95)",
+      "italic": false,
+      "text": "Skills",
+    },
+    {
+      "color": "rgb(255, 255, 255)",
+      "italic": false,
+      "text": "Summary",
+    },
+    {
+      "color": "rgb(255, 255, 255)",
+      "italic": false,
+      "text": "Experience",
+    },
+    {
+      "color": "rgb(255, 255, 255)",
+      "italic": false,
+      "text": "Projects",
+    },
+  ],
+  "id": "fern",
+  "layout": "sidebar",
+  "railBg": "rgb(68, 112, 95)",
   "railOnRight": false,
 }
 `;
@@ -959,6 +1039,44 @@ exports[`TemplateSkeleton matches the layout snap for ledger (Ledger) 1`] = `
 }
 `;
 
+exports[`TemplateSkeleton matches the layout snap for linen (Linen) 1`] = `
+{
+  "avatarSizes": [],
+  "darkHeaderBg": null,
+  "headings": [
+    {
+      "color": "rgb(42, 42, 42)",
+      "italic": false,
+      "text": "Education",
+    },
+    {
+      "color": "rgb(42, 42, 42)",
+      "italic": false,
+      "text": "Skills",
+    },
+    {
+      "color": "rgb(42, 42, 42)",
+      "italic": false,
+      "text": "Summary",
+    },
+    {
+      "color": "rgb(42, 42, 42)",
+      "italic": false,
+      "text": "Experience",
+    },
+    {
+      "color": "rgb(42, 42, 42)",
+      "italic": false,
+      "text": "Projects",
+    },
+  ],
+  "id": "linen",
+  "layout": "asymmetric",
+  "railBg": null,
+  "railOnRight": false,
+}
+`;
+
 exports[`TemplateSkeleton matches the layout snap for marquee (Marquee) 1`] = `
 {
   "avatarSizes": [],
@@ -1185,6 +1303,46 @@ exports[`TemplateSkeleton matches the layout snap for nova (Nova) 1`] = `
   "id": "nova",
   "layout": "single",
   "railBg": null,
+  "railOnRight": false,
+}
+`;
+
+exports[`TemplateSkeleton matches the layout snap for orchid (Orchid) 1`] = `
+{
+  "avatarSizes": [
+    "76px",
+  ],
+  "darkHeaderBg": "rgb(76, 31, 69)",
+  "headings": [
+    {
+      "color": "rgb(110, 47, 98)",
+      "italic": false,
+      "text": "Education",
+    },
+    {
+      "color": "rgb(110, 47, 98)",
+      "italic": false,
+      "text": "Skills",
+    },
+    {
+      "color": "rgb(110, 47, 98)",
+      "italic": false,
+      "text": "Summary",
+    },
+    {
+      "color": "rgb(110, 47, 98)",
+      "italic": false,
+      "text": "Experience",
+    },
+    {
+      "color": "rgb(110, 47, 98)",
+      "italic": false,
+      "text": "Projects",
+    },
+  ],
+  "id": "orchid",
+  "layout": "sidebar",
+  "railBg": "color-mix(in srgb, rgb(76, 31, 69) 8%, white)",
   "railOnRight": false,
 }
 `;
@@ -1796,6 +1954,44 @@ exports[`TemplateSkeleton matches the layout snap for twin (Twin) 1`] = `
   ],
   "id": "twin",
   "layout": "asymmetric",
+  "railBg": null,
+  "railOnRight": false,
+}
+`;
+
+exports[`TemplateSkeleton matches the layout snap for vellum (Vellum) 1`] = `
+{
+  "avatarSizes": [],
+  "darkHeaderBg": null,
+  "headings": [
+    {
+      "color": "rgb(43, 39, 34)",
+      "italic": false,
+      "text": "Summary",
+    },
+    {
+      "color": "rgb(43, 39, 34)",
+      "italic": false,
+      "text": "Experience",
+    },
+    {
+      "color": "rgb(43, 39, 34)",
+      "italic": false,
+      "text": "Projects",
+    },
+    {
+      "color": "rgb(43, 39, 34)",
+      "italic": false,
+      "text": "Education",
+    },
+    {
+      "color": "rgb(43, 39, 34)",
+      "italic": false,
+      "text": "Skills",
+    },
+  ],
+  "id": "vellum",
+  "layout": "single",
   "railBg": null,
   "railOnRight": false,
 }

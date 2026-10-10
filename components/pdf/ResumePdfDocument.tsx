@@ -2,8 +2,15 @@ import { Document, Image, Link, Page, Text, View } from "@react-pdf/renderer";
 import type { Style } from "@react-pdf/types";
 import type { ReactNode } from "react";
 import { bulletKind, hasAvatar, visiblePhoto } from "@/components/templates/shared/atoms";
-import { SECTION_ICON_NAMES, type IconName } from "@/components/templates/shared/iconShapes";
-import { getTheme, headerColor, railBackground, type TemplateTheme } from "@/components/templates/shared/theme";
+import { SECTION_ICON_NAMES, markerIconName, type IconName } from "@/components/templates/shared/iconShapes";
+import {
+  DISPLAY_FONT_WEIGHT,
+  getTheme,
+  headerColor,
+  paperColor,
+  railBackground,
+  type TemplateTheme,
+} from "@/components/templates/shared/theme";
 import { DEFAULT_DIAL_CODE } from "@/lib/countryCodes";
 import { linkHref } from "@/lib/link";
 import { formatDateRange, formatMonth, isCurrentExperience } from "@/lib/date";
@@ -57,7 +64,7 @@ export const onPaper = (theme: TemplateTheme): Ink => ({
   faint: INK_FAINT,
   mark: theme.accent,
   light: false,
-  surface: WHITE,
+  surface: paperColor(theme),
 });
 
 const onRail = (rail: string): Ink => ({
@@ -103,6 +110,7 @@ function SingleColumnPages({ data, theme }: { data: ResumeData; theme: TemplateT
       size="A4"
       style={{
         ...pageBase,
+        backgroundColor: paperColor(theme),
         // Every page starts below the same top inset the HTML print uses.
         paddingTop: pt(PAGE_INSET_PX),
         paddingBottom: pt(PAGE_PAD_Y_PX),
@@ -190,18 +198,23 @@ function SidebarPages({ data, theme }: { data: ResumeData; theme: TemplateTheme 
   const railBg = railBackground(theme);
   // railBackground() may hand back a CSS color-mix() for tinted rails; the
   // PDF needs the resolved hex.
-  const railFill = solid ? railBg : tintHex(theme.railColor ?? theme.accent, 8);
+  const railFill = solid ? railBg : mixHex(theme.railColor ?? theme.accent, 8, paperColor(theme));
   const railInk = solid ? onRail(railFill) : onPaper(theme);
   const mainInk = onPaper(theme);
   const band = theme.darkHeader ? headerColor(theme) : undefined;
   const railWidth = PAGE_WIDTH_PT * RAIL_SHARE;
   const colPad = { paddingHorizontal: pt(PAGE_PAD_X_PX) };
+  // A display face, when the theme names one, at the single weight it ships in.
+  const nameFont: Style = theme.displayFont
+    ? { fontFamily: PDF_DISPLAY[theme.displayFont], fontWeight: DISPLAY_FONT_WEIGHT[theme.displayFont] }
+    : { fontFamily: theme.fontDisplay === "serif" ? PDF_SERIF : PDF_SANS, fontWeight: 600 };
 
   return (
     <Page
       size="A4"
       style={{
         ...pageBase,
+        backgroundColor: paperColor(theme),
         // 4% top and bottom inset on every sheet — the HTML's repeating
         // thead/tfoot bands (page 1's top comes from the column padding).
         paddingTop: pt(PAGE_PAD_Y_PX),
@@ -236,14 +249,7 @@ function SidebarPages({ data, theme }: { data: ResumeData; theme: TemplateTheme 
           }}
         >
           <View style={{ flex: 1 }}>
-            <Text
-              style={{
-                fontFamily: theme.fontDisplay === "serif" ? PDF_SERIF : PDF_SANS,
-                ...text(24),
-                fontWeight: 600,
-                color: WHITE,
-              }}
-            >
+            <Text style={{ ...nameFont, ...text(24), color: WHITE }}>
               {data.basicInfo.name || "Your Name"}
             </Text>
             <View style={{ marginTop: pt(6) }}>
@@ -276,9 +282,8 @@ function SidebarPages({ data, theme }: { data: ResumeData; theme: TemplateTheme 
               )}
               <Text
                 style={{
-                  fontFamily: theme.fontDisplay === "serif" ? PDF_SERIF : PDF_SANS,
-                  ...text(19),
-                  fontWeight: 600,
+                  ...nameFont,
+                  ...(theme.displayFont ? text(22, 1.25) : text(19)),
                   color: solid ? WHITE : headerColor(theme),
                 }}
               >
@@ -325,6 +330,7 @@ function TwoColumnPages({ data, theme }: { data: ResumeData; theme: TemplateThem
       size="A4"
       style={{
         ...pageBase,
+        backgroundColor: paperColor(theme),
         paddingTop: pt(SPLIT_BAND_PX),
         paddingBottom: pt(SPLIT_BAND_PX),
         paddingHorizontal: pt(32),
@@ -409,6 +415,7 @@ function LabeledPages({ data, theme }: { data: ResumeData; theme: TemplateTheme 
       size="A4"
       style={{
         ...pageBase,
+        backgroundColor: paperColor(theme),
         // The whole CV takes the template's face, not only the name.
         fontFamily: theme.fontDisplay === "serif" ? PDF_SERIF : PDF_SANS,
         paddingTop: pt(PAGE_INSET_PX),
@@ -734,6 +741,133 @@ export function SectionHeading({ theme, section, title, ink }: { theme: Template
               textTransform: "uppercase",
               letterSpacing: pt(12) * 0.14,
               color: headerColor(theme),
+            }}
+          >
+            {title}
+          </Text>
+        </View>
+      );
+    case "marker":
+      return (
+        <View
+          minPresenceAhead={keep.minPresenceAhead}
+          style={{
+            marginBottom: keep.marginBottom,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: pt(8),
+            borderBottomWidth: pt(1),
+            borderBottomColor: ink.light ? mixHex(WHITE, 35, ink.surface) : mixHex(accent, 30, ink.surface),
+            paddingBottom: pt(4),
+          }}
+        >
+          <View
+            style={{
+              width: pt(22),
+              height: pt(22),
+              borderRadius: pt(4),
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: ink.light ? mixHex(WHITE, 20, ink.surface) : accent,
+            }}
+          >
+            <PdfIcon name={markerIconName(section)} size={pt(13)} color={WHITE} />
+          </View>
+          <Text style={{ ...titleStyle, letterSpacing: pt(12.5) * 0.12, color }}>
+            {title}
+          </Text>
+        </View>
+      );
+    case "diamond":
+      return (
+        <View
+          minPresenceAhead={keep.minPresenceAhead}
+          style={{ marginBottom: pt(10), flexDirection: "row", alignItems: "center", gap: pt(8) }}
+        >
+          <View style={{ width: pt(7), height: pt(7), backgroundColor: color, transform: "rotate(45deg)" }} />
+          <Text
+            style={{
+              ...text(13),
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: pt(13) * 0.06,
+              color,
+            }}
+          >
+            {title}
+          </Text>
+        </View>
+      );
+    case "divider":
+      return (
+        <View
+          minPresenceAhead={keep.minPresenceAhead}
+          style={{
+            marginBottom: keep.marginBottom,
+            borderTopWidth: pt(1),
+            borderTopColor: ink.light ? mixHex(WHITE, 35, ink.surface) : mixHex(accent, 40, ink.surface),
+            paddingTop: pt(12),
+          }}
+        >
+          <Text
+            style={{
+              ...text(13.5),
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: pt(13.5) * 0.04,
+              color,
+            }}
+          >
+            {title}
+          </Text>
+        </View>
+      );
+    case "pill":
+      return (
+        <View
+          minPresenceAhead={keep.minPresenceAhead}
+          style={{
+            marginBottom: pt(10),
+            alignSelf: "flex-start",
+            backgroundColor: ink.light ? mixHex(WHITE, 16, ink.surface) : mixHex(accent, 14, ink.surface),
+            paddingHorizontal: pt(14),
+            paddingVertical: pt(4),
+            borderRadius: pt(12),
+          }}
+        >
+          <Text
+            style={{
+              ...text(12),
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: pt(12) * 0.1,
+              color,
+            }}
+          >
+            {title}
+          </Text>
+        </View>
+      );
+    case "band":
+      return (
+        <View
+          minPresenceAhead={keep.minPresenceAhead}
+          style={{
+            marginBottom: pt(10),
+            backgroundColor: ink.light ? WHITE : accent,
+            paddingHorizontal: pt(8),
+            paddingVertical: pt(4),
+            alignItems: "center",
+          }}
+        >
+          <Text
+            style={{
+              ...text(12),
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: pt(12) * 0.14,
+              textAlign: "center",
+              color: ink.light ? ink.surface : WHITE,
             }}
           >
             {title}

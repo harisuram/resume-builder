@@ -24,7 +24,11 @@ const TARGET_END_PX = 1050;
  * components/pdf/ResumePdfDocument.test.tsx ("no trailing space after the
  * last section"); not every template can be steered into the band this way —
  * one whose last section is kept whole jumps straight to a new page. */
-const CASES = ["ledger"];
+const CASES = ["ledger", "fern", "dune"];
+/* Vellum, Linen and Orchid were tried too: no size up to 40 extra lines
+ * produced a blank page, but none ended inside the band either (their last
+ * section is kept whole), so they can't exercise this case — the structural
+ * unit test covers them. */
 
 function withExtraLines(templateId: string, lines: number): ResumeData {
   const data = nearBottomResume(templateId);
@@ -45,7 +49,7 @@ async function download(page: Page, data: ResumeData): Promise<PdfPage[]> {
     [JSON.stringify(data), TOUR_DISMISSED_KEY] as const,
   );
   await page.goto(`/builder?template=${encodeURIComponent(data.templateId)}`);
-  await page.getByRole("button", { name: "Preview & download" }).click();
+  await page.getByRole("button", { name: "Download", exact: true }).click();
   await expect(page.getByTestId("pdf-engine-preview").getByRole("status")).toHaveText(/^\d+ pages?$/, {
     timeout: 60_000,
   });

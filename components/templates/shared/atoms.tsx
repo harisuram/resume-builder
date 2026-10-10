@@ -208,7 +208,14 @@ export function bulletKind(theme: TemplateTheme): BulletKind {
       return "diamond";
     case "bar":
     case "tile":
+    case "marker":
+    case "band":
       return "square";
+    case "diamond":
+      return "diamond";
+    case "divider":
+    case "pill":
+      return "dash";
     case "code":
     case "icon":
     case "plain":

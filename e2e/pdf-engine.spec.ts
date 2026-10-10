@@ -136,7 +136,7 @@ for (const templateId of ["atlas", "ember", "twin", "dossier"]) {
     // No HTML sheets with their own page lines alongside it.
     await expect(page.locator("[data-page-sheet]")).toHaveCount(0);
 
-    await page.getByRole("button", { name: "Preview & download" }).click();
+    await page.getByRole("button", { name: "Download", exact: true }).click();
     await useNewEngine(page);
     const pdf = await pdfPageTexts(await downloadPdf(page));
     expect(pdf).toHaveLength(livePages);

@@ -38,7 +38,21 @@ function ErrorIcon() {
   );
 }
 
-/** Fixed top-right stack for failed actions (export, save, photo, AI). Lives
+function SuccessIcon() {
+  return (
+    <span
+      className="mt-px flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[var(--color-success)] text-[var(--color-surface)]"
+      aria-hidden="true"
+    >
+      <svg viewBox="0 0 12 12" className="h-2.5 w-2.5" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+        <path className="toast-check" d="m3 6.2 2 2 4-4.4" />
+      </svg>
+    </span>
+  );
+}
+
+/** Fixed top-center stack for failed actions (export, save, photo, AI) and
+ * short confirmations (section reorder). Lives
  * outside any overflow pane so a toast can't be clipped by the form. */
 export function ToastHost() {
   const toasts = useToastStore((s) => s.toasts);
@@ -47,17 +61,17 @@ export function ToastHost() {
 
   return (
     <div
-      className="no-print pointer-events-none fixed right-4 top-[calc(4.25rem+env(safe-area-inset-top))] z-[60] flex w-[min(22rem,calc(100vw-2rem))] flex-col gap-2"
+      className="no-print pointer-events-none fixed left-1/2 top-[calc(4.25rem+env(safe-area-inset-top))] z-[60] flex w-[min(22rem,calc(100vw-2rem))] -translate-x-1/2 flex-col items-center gap-2"
       role="region"
       aria-label="Notifications"
     >
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          role="alert"
-          className="pointer-events-auto flex items-start gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2.5 shadow-card"
+          role={toast.tone === "success" ? "status" : "alert"}
+          className="toast-in pointer-events-auto flex w-full items-start gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2.5 shadow-card"
         >
-          <ErrorIcon />
+          {toast.tone === "success" ? <SuccessIcon /> : <ErrorIcon />}
           <p className="flex-1 text-[13px] leading-snug text-[var(--color-ink)]">{toast.message}</p>
           <button
             type="button"

@@ -1,11 +1,13 @@
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useBuilderStore } from "@/lib/store";
+import { useToastStore } from "@/lib/toast";
 import { SectionNav } from "./SectionNav";
 
 beforeEach(() => {
   act(() => {
     useBuilderStore.getState().resetStore();
+    useToastStore.getState().clear();
   });
 });
 
@@ -18,7 +20,7 @@ function expectBadgesHiddenUntilMd(badges: string[]) {
 }
 
 describe("SectionNav", () => {
-  it("lists Basic info, Summary, Photo, the content sections, then Preview & download", () => {
+  it("lists Basic info, Summary, Photo, the content sections, then Download", () => {
     render(<SectionNav active="basicInfo" onSelect={() => {}} />);
 
     const buttons = screen.getAllByRole("button").map((b) => b.textContent ?? "");
@@ -27,13 +29,13 @@ describe("SectionNav", () => {
     const photo = buttons.findIndex((t) => t.includes("Photo"));
     const keyAchievements = buttons.findIndex((t) => t.includes("Key achievements"));
     const additional = buttons.findIndex((t) => t.includes("Additional"));
-    const exportIdx = buttons.findIndex((t) => t.includes("Preview & download"));
+    const exportIdx = buttons.findIndex((t) => t.includes("Download"));
     expect(summary).toBeGreaterThan(0);
     expect(photo).toBeGreaterThan(summary);
     expect(keyAchievements).toBeGreaterThan(photo);
     expect(additional).toBeGreaterThan(keyAchievements);
     expect(exportIdx).toBeGreaterThan(additional);
-    expect(buttons[buttons.length - 1]).toContain("Preview & download");
+    expect(buttons[buttons.length - 1]).toContain("Download");
   });
 
   it("places a meaningful icon before every section label", () => {
@@ -56,7 +58,6 @@ describe("SectionNav", () => {
       ["Hobbies", "hobbies"],
       ["Soft skills", "softSkills"],
       ["Additional", "additional"],
-      ["Preview & download", "export"],
     ];
 
     for (const [label, key] of expected) {
@@ -69,6 +70,8 @@ describe("SectionNav", () => {
     }
 
     expect(nav.querySelectorAll("[data-nav-icon]")).toHaveLength(expected.length);
+    // Download is text-only while the sidebar is open.
+    expect(nav.querySelector('[data-nav-icon="export"]')).toBeNull();
     expect(nav.querySelector('[data-nav-icon="experience"]')).toHaveAttribute("data-active", "true");
     expect(nav.querySelector('[data-nav-icon="experience"] svg')).toHaveAttribute("fill", "currentColor");
     expect(nav.querySelector('[data-nav-icon="basicInfo"]')).not.toHaveAttribute("data-active");
@@ -209,6 +212,38 @@ describe("SectionNav", () => {
       handle.focus();
       await userEvent.keyboard("{ArrowDown}");
       expect(onSelect).not.toHaveBeenCalled();
+    });
+
+    it("confirms a reorder with a success toast", async () => {
+      render(<SectionNav active="basicInfo" onSelect={() => {}} />);
+      screen.getByRole("button", { name: "Reorder Key achievements" }).focus();
+      await userEvent.keyboard("{ArrowDown}");
+      expect(useToastStore.getState().toasts).toEqual([
+        expect.objectContaining({ message: "Key achievements moved below Experience", tone: "success" }),
+      ]);
+    });
+
+    it("says when a section moves to the top", async () => {
+      render(<SectionNav active="basicInfo" onSelect={() => {}} />);
+      screen.getByRole("button", { name: "Reorder Experience" }).focus();
+      await userEvent.keyboard("{ArrowUp}");
+      expect(useToastStore.getState().toasts).toEqual([
+        expect.objectContaining({ message: "Experience moved to the top", tone: "success" }),
+      ]);
+    });
+
+    it("shows no toast when the order doesn't change", async () => {
+      render(<SectionNav active="basicInfo" onSelect={() => {}} />);
+      screen.getByRole("button", { name: "Reorder Key achievements" }).focus();
+      await userEvent.keyboard("{ArrowUp}");
+      expect(useToastStore.getState().toasts).toEqual([]);
+    });
+
+    it("hides labels and row controls in the collapsed rail, keeping the label as the button name", () => {
+      render(<SectionNav active="basicInfo" onSelect={() => {}} collapsed />);
+      expect(screen.queryByRole("switch")).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /^Reorder / })).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Download" }).querySelector('[data-nav-icon="export"] svg')).not.toBeNull();
     });
 
     it("disables the reorder handle on a skipped section", async () => {

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type ToastTone = "error";
+export type ToastTone = "error" | "success";
 
 export interface Toast {
   id: number;
@@ -9,6 +9,8 @@ export interface Toast {
 }
 
 const DISMISS_MS = 5000;
+/** Confirmations are glanceable — they clear sooner than errors. */
+const SUCCESS_DISMISS_MS = 2500;
 
 let nextId = 1;
 
@@ -24,8 +26,13 @@ export const useToastStore = create<ToastState>((set, get) => ({
   toasts: [],
   timers: {},
   show: (message, tone = "error") => {
+    // Only one confirmation at a time: a new one (e.g. the next of several
+    // reorders) replaces the one on screen instead of stacking under it.
+    if (tone === "success") {
+      for (const t of get().toasts) if (t.tone === "success") get().dismiss(t.id);
+    }
     const id = nextId++;
-    const timeout = window.setTimeout(() => get().dismiss(id), DISMISS_MS);
+    const timeout = window.setTimeout(() => get().dismiss(id), tone === "success" ? SUCCESS_DISMISS_MS : DISMISS_MS);
     const { toasts, timers } = get();
     set({
       toasts: [...toasts, { id, message, tone }],

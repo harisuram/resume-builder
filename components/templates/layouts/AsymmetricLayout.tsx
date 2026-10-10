@@ -5,7 +5,7 @@ import type { NameHeadingLevel } from "../registry";
 import { Avatar, ContactLine, hasAvatar, SummaryText, visiblePhoto } from "../shared/atoms";
 import { NARROW_SECTION_KEYS, ResumeSection } from "../shared/ResumeSection";
 import { SectionHeading } from "../shared/SectionHeading";
-import { headerColor, type TemplateTheme } from "../shared/theme";
+import { headerColor, paperStyle, type TemplateTheme } from "../shared/theme";
 
 /** Dense two-column CV: a brief narrow column (education, skills,
  * languages, and other compact lists) beside a dominant wide column carrying
@@ -28,7 +28,7 @@ export function AsymmetricLayout({
   const wide = sections.filter((k) => !NARROW_SECTION_KEYS.has(k));
 
   return (
-    <div className="resume-surface resume-split-page min-h-full px-8 py-7" data-layout={theme.layout}>
+    <div className="resume-surface resume-split-page min-h-full px-8 py-7" data-layout={theme.layout} style={paperStyle(theme)}>
       <div className="flex items-center gap-5 border-b-2 pb-3" style={{ borderColor: theme.accent }}>
         <div className="min-w-0 flex-1">
           <NameHeading className="text-[25px] font-semibold tracking-tight" style={{ color: headerColor(theme) }}>

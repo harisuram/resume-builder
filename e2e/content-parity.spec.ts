@@ -105,7 +105,7 @@ async function compare(page: Page, id: string, data = makeLongResume(id)) {
   const live = await pageLines(await previewPdf(page));
 
   // The export step's preview, then the file the button saves.
-  await page.getByRole("button", { name: "Preview & download" }).click();
+  await page.getByRole("button", { name: "Download", exact: true }).click();
   const exported = await pageLines(await previewPdf(page));
   const saved = await pageLines(await downloadedPdf(page));
 

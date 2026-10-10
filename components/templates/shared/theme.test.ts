@@ -14,8 +14,8 @@ import {
 } from "./theme";
 
 describe("TEMPLATES", () => {
-  it("has 48 templates", () => {
-    expect(TEMPLATES).toHaveLength(48);
+  it("has 53 templates", () => {
+    expect(TEMPLATES).toHaveLength(53);
   });
 
   it("has a unique id for every template", () => {
