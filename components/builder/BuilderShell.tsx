@@ -578,7 +578,6 @@ export function BuilderShell() {
                     onSkip={goSkip}
                     onClear={goClear}
                     onPreview={previewOpen ? undefined : () => setPreviewOpen(true)}
-                    onDownload={() => selectSection("export")}
                   />
                   {/* Mobile's one unit on form steps. Save & Next is fixed to
                       the viewport bottom there, and the pane's bottom padding

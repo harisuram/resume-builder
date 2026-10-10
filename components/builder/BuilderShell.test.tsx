@@ -45,6 +45,13 @@ describe("BuilderShell", () => {
     expect(screen.getByRole("button", { name: "Start new resume" })).toBeInTheDocument();
   });
 
+  it("has no Download shortcut over Save & Next on phones — the ☰ menu's Download item is the way there", async () => {
+    render(<BuilderShell />);
+    await screen.findByRole("heading", { name: "Basic info" });
+    expect(screen.queryByRole("button", { name: /preview and download/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Preview resume" })).toBeInTheDocument();
+  });
+
   it("switches the active form panel via the section nav", async () => {
     render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });

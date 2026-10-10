@@ -297,7 +297,6 @@ export function CoverLetterShell() {
                     onSkip={goSkip}
                     onClear={goClear}
                     onPreview={previewOpen ? undefined : () => setPreviewOpen(true)}
-                    onDownload={() => selectSection("export")}
                   />
                   {/* Mobile's one unit on form steps, below the footer and
                       clear of the fixed Save & Next. Desktop shows the

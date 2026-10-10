@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { AnimatedDownloadIcon, AnimatedEyeIcon } from "./AnimatedIcons";
+import { AnimatedEyeIcon } from "./AnimatedIcons";
 
 function SkipIcon() {
   return (
@@ -48,7 +48,6 @@ export function SectionFooterNav({
   onSkip,
   onClear,
   onPreview,
-  onDownload,
 }: {
   canGoBack: boolean;
   canGoNext: boolean;
@@ -70,9 +69,6 @@ export function SectionFooterNav({
   /** Mobile-only: open the live preview over this step. Omitted on desktop
    * (the side pane is already there) and while the sheet is open. */
   onPreview?: () => void;
-  /** Below md: jump to the download step. From md up the sidebar's
-   * pinned Download item does this instead. */
-  onDownload?: () => void;
 }) {
   const [confirming, setConfirming] = useState(false);
   const [celebration, setCelebration] = useState(0);
@@ -112,21 +108,8 @@ export function SectionFooterNav({
           Preview riding just above it. From md up it
           flattens back into the inline footer row. */}
       <div className="no-print pointer-events-none fixed inset-x-0 bottom-0 z-40 flex flex-col gap-2 px-3 pb-[max(0.625rem,env(safe-area-inset-bottom))] md:pointer-events-auto md:static md:z-0 md:flex-row md:items-center md:gap-3 md:p-0">
-        {onPreview || onDownload ? (
+        {onPreview ? (
           <div className="flex items-end justify-end gap-2 px-1 lg:hidden">
-            {onDownload ? (
-              <button
-                type="button"
-                onClick={onDownload}
-                aria-label="Preview and download your resume"
-                className="pointer-events-auto flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full bg-[var(--color-accent)] pl-1 pr-3 text-[13px] font-semibold text-[var(--color-accent-ink)] shadow-[0_8px_22px_-8px_var(--accent-glow),inset_0_1px_0_rgb(255_255_255_/_0.22)] transition duration-200 ease-out hover:brightness-110 active:scale-95 active:brightness-95 md:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]"
-              >
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--color-accent-ink)_20%,transparent)]">
-                  <AnimatedDownloadIcon className="h-3.5 w-3.5" />
-                </span>
-                <span aria-hidden="true">Download</span>
-              </button>
-            ) : null}
             {onPreview ? (
               <button
                 type="button"

@@ -239,6 +239,11 @@ describe("CoverLetterShell", () => {
     expect(within(menu).queryByRole("navigation", { name: "Resume sections" })).not.toBeInTheDocument();
   });
 
+  it("has no Download shortcut over Save & Next on phones", async () => {
+    await renderWithResume();
+    expect(screen.queryByRole("button", { name: /preview and download/i })).not.toBeInTheDocument();
+  });
+
   it("opens the preview sheet on the letter's preview", async () => {
     await renderWithResume();
     await userEvent.click(screen.getByRole("button", { name: "Preview resume" }));
