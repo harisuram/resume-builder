@@ -35,4 +35,11 @@ describe("TemplateRail", () => {
       expect(preview.closest("[inert]")).not.toBeNull();
     }
   });
+
+  it("speaks to the resume by default and takes another document's hint", () => {
+    const { rerender } = render(<TemplateRail value="atlas" onChange={() => {}} />);
+    expect(screen.getByText("Tap any design to restyle your resume instantly.")).toBeInTheDocument();
+    rerender(<TemplateRail value="atlas" onChange={() => {}} hint="Restyle your letter." />);
+    expect(screen.getByText("Restyle your letter.")).toBeInTheDocument();
+  });
 });

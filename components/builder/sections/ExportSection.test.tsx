@@ -4,7 +4,7 @@ import { useBuilderStore } from "@/lib/store";
 import { useToastStore } from "@/lib/toast";
 import { ToastHost } from "@/components/ui/Toast";
 import type { ResumeData } from "@/lib/types";
-import { ExportSection } from "./ExportSection";
+import { ExportSection, slugifyName } from "./ExportSection";
 
 const renderedPdf = async (): Promise<Blob> => new Blob(["%PDF-engine"], { type: "application/pdf" });
 const mockRenderResumePdf = jest.fn<Promise<Blob>, [ResumeData]>(renderedPdf);
@@ -276,5 +276,23 @@ describe("ExportSection", () => {
       await userEvent.tab();
       expect(input).toHaveValue("resume");
     });
+  });
+
+  it("offers a matching cover letter once there's something to download, saving the resume on the way", async () => {
+    act(() => {
+      useBuilderStore.getState().updateBasicInfo({ name: "Ada Lovelace", email: "ada@example.com", location: "London" });
+    });
+    render(<ExportSection />);
+    const link = screen.getByRole("link", { name: /Write a matching cover letter/ });
+    expect(link).toHaveAttribute("href", "/cover-letter/builder");
+    link.addEventListener("click", (event) => event.preventDefault());
+    await userEvent.click(link);
+    expect(JSON.parse(localStorage.getItem("resumeData")!).basicInfo.name).toBe("Ada Lovelace");
+  });
+
+  it("slugifies file names, with a fallback for an empty one", () => {
+    expect(slugifyName("  Ada  Lovelace! ")).toBe("ada_lovelace");
+    expect(slugifyName("!!!")).toBe("resume");
+    expect(slugifyName("", "cover_letter")).toBe("cover_letter");
   });
 });

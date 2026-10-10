@@ -30,10 +30,10 @@ export const ALTERNATE_NAMES = [
   "AI Resume Maker",
 ] as const;
 
-export const HOME_TITLE = "Free Resume Builder — No Sign-up, ATS-Friendly PDF";
+export const HOME_TITLE = "Free Resume Builder & Cover Letter — No Sign-up, ATS-Friendly";
 /** Shown under the link in search results and browser/social previews. */
 export const HOME_DESCRIPTION =
-  "Build your resume free — no sign-up, no payment, no watermark. ATS-friendly templates, an optional AI-powered rewrite, and unlimited PDF downloads.";
+  "Build a resume and a matching cover letter free — no sign-up, no watermark. ATS-friendly templates, AI-powered help and unlimited PDF downloads.";
 
 export const SITE_KEYWORDS = [
   "free resume builder",
@@ -43,6 +43,8 @@ export const SITE_KEYWORDS = [
   "best AI-powered resume builder",
   "AI resume maker",
   "free CV maker",
+  "free cover letter builder",
+  "cover letter that matches resume",
 ] as const;
 
 export const FEATURES = [
@@ -84,6 +86,7 @@ export const FEATURE_LIST = [
   "Suggestions for roles and skills across software, data, IT, pharmacy, architecture, and construction",
   `${TEMPLATE_COUNT_WORDS} resume templates with a live preview`,
   "Download a PDF of the same preview",
+  "Cover letter builder in the same templates, with your resume's details filled in",
   "No account — drafts stay in this browser’s local storage, not on a resume hosting account",
 ] as const;
 
@@ -129,6 +132,16 @@ export const HOME_FAQS: FaqItem[] = [
       "Yes. The PDF is generated right in your browser and saved as a file. The preview you look at while editing is that same PDF, so what you download matches what you reviewed.",
   },
   {
+    question: "Can I make a cover letter too?",
+    answer:
+      "Yes. The cover letter builder walks you through the recipient, a greeting, each paragraph and the sign-off, with optional AI help on every paragraph. Your name and contact details come from your resume, and it downloads as a PDF — free, with no account.",
+  },
+  {
+    question: "Will my cover letter match my resume?",
+    answer:
+      "By default it uses your resume's template, so the two share the same header, colours and fonts. You can pick a different template for the letter at any time; your resume keeps its own.",
+  },
+  {
     question: "Can I make a CV or a free curriculum vitae?",
     answer:
       "Yes. Resume and curriculum vitae use the same editor. If you call it a CV, pick a template and download a PDF the same way — including a free curriculum vitae with no account.",
@@ -172,6 +185,88 @@ export const HOW_TO_STEPS: HowToStep[] = [
   },
 ];
 
+/** Steps and FAQ for the /cover-letter landing page. Kept here, next to the
+ * homepage copy, so the visible answers and the FAQPage JSON-LD share one source. */
+export const COVER_LETTER_STEPS: HowToStep[] = [
+  {
+    name: "Start from your resume",
+    text: "Your name, contact details, and photo come from the resume you already made here, and the letter uses the same template — so the two look like a set.",
+  },
+  {
+    name: "Write it one paragraph at a time",
+    text: "Guided steps cover the recipient, greeting, opening and position, why you’re interested, skills and experience, achievements, why you’re a good fit, and a closing statement with your sign-off. Add custom paragraphs if you need more.",
+  },
+  {
+    name: "Arrange, check, and download",
+    text: "Reorder paragraphs by dragging or with the arrows, switch off any you don’t need, then download the PDF you’ve been looking at in the live preview.",
+  },
+];
+
+export const COVER_LETTER_FEATURES = [
+  {
+    title: "Matches your resume",
+    body: "The letter uses the same templates as the resume and starts on the template your resume uses. Prefer a different look for the letter? Switch it to any other template.",
+  },
+  {
+    title: "Your details, filled in",
+    body: "Name, contact details, and photo come straight from your resume, so you never type them twice and they never drift out of sync.",
+  },
+  {
+    title: "Guided paragraphs",
+    body: "Separate steps for the opening, why you’re interested, skills and experience, achievements, why you fit, and the close — plus custom paragraphs for anything else.",
+  },
+  {
+    title: "Reorder or switch off",
+    body: "Drag paragraphs into a different order or use the arrows. Switch a paragraph off and it simply isn’t in the letter.",
+  },
+  {
+    title: "Optional AI enhance",
+    body: "Each paragraph has an optional AI enhance that tightens the wording while keeping your facts. It only runs when you click it.",
+  },
+  {
+    title: "The preview is the PDF",
+    body: "The live preview is the exact file you download, so the layout and line breaks you checked are what the employer gets.",
+  },
+] as const;
+
+export const COVER_LETTER_FAQS: FaqItem[] = [
+  {
+    question: "Is the cover letter builder free?",
+    answer:
+      "Yes. It is free, with no account, no sign-up, and no email gate. Write your cover letter and download it as a PDF without paying.",
+  },
+  {
+    question: "Will my cover letter match my resume?",
+    answer:
+      "Yes. The cover letter uses the same templates as the resume and matches the template your resume uses by default. Your name, contact details, and photo come from the resume automatically. You can switch the letter to a different template if you want.",
+  },
+  {
+    question: "What does the builder walk me through?",
+    answer:
+      "The recipient, greeting, opening and the position you’re applying for, why you’re interested, your skills and experience, achievements, why you’re a good fit, any custom paragraphs, and a closing statement with your sign-off.",
+  },
+  {
+    question: "Can I change the order of paragraphs or leave some out?",
+    answer:
+      "Yes. Drag paragraphs into a new order or move them with the arrows, and switch off any paragraph you don’t want in the letter.",
+  },
+  {
+    question: "Does the AI write my cover letter for me?",
+    answer:
+      "No. AI enhance is optional and works one paragraph at a time: it tightens the wording of what you wrote and keeps your facts. It only runs when you click it, and that paragraph’s text is sent to an AI service to do it.",
+  },
+  {
+    question: "Where is my cover letter stored?",
+    answer:
+      "In your browser’s local storage on this device, alongside your resume. There is no account and no hosted copy.",
+  },
+  {
+    question: "Can I download my cover letter as a PDF?",
+    answer:
+      "Yes. The live preview is the exact PDF you download, so what you see while editing is what you send.",
+  },
+];
+
 export const FOOTER_LINKS: { href: IndexablePath; label: string }[] = [
   { href: "/", label: "Home" },
   { href: "/how-to-make-a-resume", label: "How to make a resume" },
@@ -193,7 +288,14 @@ export const FOOTER_NOTE = "Free · Unlimited · AI-powered · No account";
 
 export const PAGE_META: Record<
   Exclude<IndexablePath, "/">,
-  { title: string; description: string }
+  {
+    title: string;
+    description: string;
+    /** Use the title as-is in search results, without the " — Free Resume
+     * Builder" suffix — for a title that would otherwise run past the ~60
+     * characters Google shows. Social previews keep the brand. */
+    absoluteTitle?: boolean;
+  }
 > = {
   "/how-to-make-a-resume": {
     title: "How to Make a Resume Free (No Account)",
@@ -214,6 +316,12 @@ export const PAGE_META: Record<
     title: "Free Resume Templates",
     description:
       `${TEMPLATE_COUNT_WORDS} free, unlimited resume templates. Preview the best AI-powered layouts, switch designs live, and download a PDF — no account.`,
+  },
+  "/cover-letter": {
+    title: "Free Cover Letter Builder That Matches Your Resume",
+    absoluteTitle: true,
+    description:
+      "Free cover letter builder with no sign-up. It matches your resume’s template and contact details, guides you paragraph by paragraph, and downloads as a PDF.",
   },
   "/ats": {
     title: "Free ATS-Friendly Resume Builder",
@@ -249,6 +357,7 @@ export const PAGE_META: Record<
 
 export function pageMetadata(path: IndexablePath): Metadata {
   const title = path === "/" ? HOME_TITLE : PAGE_META[path].title;
+  const absolute = path === "/" || Boolean(PAGE_META[path as Exclude<IndexablePath, "/">]?.absoluteTitle);
   const description = path === "/" ? HOME_DESCRIPTION : PAGE_META[path].description;
   const url = absoluteUrl(path);
   const branded = path === "/" ? title : `${title} — ${SITE_NAME}`;
@@ -262,7 +371,7 @@ export function pageMetadata(path: IndexablePath): Metadata {
   };
 
   return {
-    title: path === "/" ? { absolute: title } : title,
+    title: absolute ? { absolute: title } : title,
     description,
     robots: { index: true, follow: true },
     alternates: { canonical: path },
@@ -387,6 +496,29 @@ export function articleJsonLd(guide: Guide) {
     url,
     author: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
     publisher: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+  };
+}
+
+/** The cover letter builder as its own free web app, for /cover-letter. */
+export function coverLetterAppJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "Free Cover Letter Builder",
+    url: absoluteUrl("/cover-letter"),
+    image: absoluteUrl("/og.png"),
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Any",
+    description: PAGE_META["/cover-letter"].description,
+    featureList: [
+      "Uses your resume's template, name and contact details",
+      "Guided paragraphs you can reorder or switch off",
+      "Optional AI help on every paragraph",
+      "Live preview of the PDF you download",
+      "No account — drafts stay in this browser",
+    ],
+    isPartOf: { "@type": "WebSite", name: SITE_NAME, url: SITE_URL },
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
   };
 }
 

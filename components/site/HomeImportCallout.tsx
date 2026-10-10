@@ -2,6 +2,7 @@
 
 import { useRef, useState, type DragEvent } from "react";
 import { useRouter } from "next/navigation";
+import { ctaGhost } from "@/components/ui/cta";
 import { ACCEPT_RESUME_FILES, validateResumeFile } from "@/lib/resumeImport/extractText";
 import { setPendingImport } from "@/lib/resumeImport/pendingImport";
 
@@ -15,8 +16,10 @@ function UploadIcon() {
 }
 
 /** "Already have a resume?" — the whole card opens the file picker (or takes
- * a dropped file); once a file is chosen the builder opens and imports it. */
-export function HomeImportCallout() {
+ * a dropped file); once a file is chosen the builder opens and imports it.
+ * `variant="button"` draws the same picker as a secondary pill, for the
+ * homepage's Resume card. */
+export function HomeImportCallout({ variant = "card" }: { variant?: "card" | "button" }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -41,6 +44,57 @@ export function HomeImportCallout() {
     event.preventDefault();
     setDragging(false);
     take(event.dataTransfer.files?.[0]);
+  }
+
+  const fileInput = (
+    <input
+      ref={inputRef}
+      type="file"
+      accept={ACCEPT_RESUME_FILES}
+      className="hidden"
+      data-testid="home-import-input"
+      onChange={(event) => {
+        take(event.target.files?.[0]);
+        event.target.value = "";
+      }}
+    />
+  );
+  const errorText = error ? (
+    <p
+      id="home-import-error"
+      role="alert"
+      className={`mt-2 text-[12.5px] font-medium text-[var(--color-undo)] ${variant === "card" ? "text-center" : ""}`}
+    >
+      {error}
+    </p>
+  ) : null;
+
+  if (variant === "button") {
+    return (
+      <div className="min-w-0">
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          onDragOver={(event) => {
+            event.preventDefault();
+            setDragging(true);
+          }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={onDrop}
+          disabled={opening}
+          title="Fill the builder from a PDF, Word or text resume"
+          aria-describedby={error ? "home-import-error" : undefined}
+          className={`${ctaGhost} w-full gap-2 disabled:cursor-progress sm:w-auto ${
+            dragging ? "border-[var(--color-accent)] text-[var(--color-accent)]" : ""
+          }`}
+        >
+          <UploadIcon />
+          {opening ? "Opening…" : dragging ? "Drop to import" : "Import my resume"}
+        </button>
+        {fileInput}
+        {errorText}
+      </div>
+    );
   }
 
   return (
@@ -79,22 +133,8 @@ export function HomeImportCallout() {
         </span>
         <span className="sr-only">Import my resume</span>
       </button>
-      <input
-        ref={inputRef}
-        type="file"
-        accept={ACCEPT_RESUME_FILES}
-        className="hidden"
-        data-testid="home-import-input"
-        onChange={(event) => {
-          take(event.target.files?.[0]);
-          event.target.value = "";
-        }}
-      />
-      {error ? (
-        <p id="home-import-error" role="alert" className="mt-2 text-center text-[12.5px] font-medium text-[var(--color-undo)]">
-          {error}
-        </p>
-      ) : null}
+      {fileInput}
+      {errorText}
     </div>
   );
 }

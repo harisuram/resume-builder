@@ -1,3 +1,4 @@
+import type { LetterContent } from "@/lib/coverLetter";
 import type { ResumeData } from "@/lib/types";
 import { PDF_FONT_BASE_URL, pdfSafeImage, renderResumePdf } from "./renderResumePdf";
 
@@ -38,9 +39,9 @@ function getWorker(): Worker | null {
 /** Renders the resume PDF in a Web Worker when one is available, so layout
  * never blocks typing; otherwise (or if the worker fails) on the main thread.
  * Same document either way, so the preview is still the downloaded bytes. */
-export async function renderResumePdfOffThread(data: ResumeData): Promise<Blob> {
+export async function renderResumePdfOffThread(data: ResumeData, letter?: LetterContent): Promise<Blob> {
   const target = getWorker();
-  if (!target) return renderResumePdf(data);
+  if (!target) return renderResumePdf(data, undefined, letter);
   // Re-encoding a photo needs a canvas, which only the page has.
   const prepared = { ...data, photo: await pdfSafeImage(data.photo) };
   const id = ++nextId;
@@ -48,9 +49,9 @@ export async function renderResumePdfOffThread(data: ResumeData): Promise<Blob> 
   try {
     return await new Promise<Blob>((resolve, reject) => {
       waiting.set(id, { resolve, reject });
-      target.postMessage({ id, data: prepared, fontBaseUrl });
+      target.postMessage({ id, data: prepared, fontBaseUrl, letter });
     });
   } catch {
-    return renderResumePdf(data);
+    return renderResumePdf(data, undefined, letter);
   }
 }

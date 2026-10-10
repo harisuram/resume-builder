@@ -29,6 +29,10 @@ describe("ads config", () => {
       "builderPreview",
       "builderPreviewTop",
       "builderExport",
+      "coverLanding",
+      "coverBuilder",
+      "coverBuilderTop",
+      "coverExport",
     ]);
   });
 });

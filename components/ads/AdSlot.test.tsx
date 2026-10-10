@@ -100,4 +100,42 @@ describe("AdSlot", () => {
     expect(queryByText("Advertisement")).not.toBeInTheDocument();
     expect(container.querySelector("ins.adsbygoogle")).toBeInTheDocument();
   });
+
+  it("keeps breakpoint hides like md:hidden while pending, so it is never filled then hidden", () => {
+    setClientId("ca-pub-123");
+    const { container } = render(<AdSlot slot="9876" className="mt-12 flex md:hidden" />);
+    expect(container.firstElementChild).toHaveClass("h-0", "overflow-hidden", "md:hidden");
+    expect(container.firstElementChild).not.toHaveClass("mt-12");
+  });
+
+  it("does not request an ad while the unit is display:none, and requests once it is shown", () => {
+    setClientId("ca-pub-123");
+    window.adsbygoogle = [];
+    const pushSpy = jest.spyOn(window.adsbygoogle, "push");
+    let onResize: () => void = () => {};
+    const OriginalRO = window.ResizeObserver;
+    window.ResizeObserver = class {
+      constructor(cb: () => void) {
+        onResize = cb;
+      }
+      observe() {}
+      disconnect() {}
+      unobserve() {}
+    } as unknown as typeof ResizeObserver;
+
+    try {
+      const host = document.createElement("div");
+      host.style.display = "none";
+      document.body.appendChild(host);
+      render(<AdSlot slot="9876" />, { container: host });
+      expect(pushSpy).not.toHaveBeenCalled();
+
+      host.style.display = "block";
+      onResize();
+      onResize();
+      expect(pushSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      window.ResizeObserver = OriginalRO;
+    }
+  });
 });

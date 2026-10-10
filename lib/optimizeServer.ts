@@ -10,6 +10,8 @@ export const MAX_BULLET_LEN = 300;
 export const MAX_SUMMARY_LEN = 800;
 /** Matches `MAX_DESCRIPTION_LENGTH` in validation.ts. */
 export const MAX_PROJECT_DESCRIPTION_LEN = 600;
+/** One cover letter paragraph — the opening, the "why", the close. */
+export const MAX_LETTER_PARAGRAPH_LEN = 1200;
 
 export interface OptimizeEnv {
   GROQ_API_KEY?: string;
@@ -37,6 +39,15 @@ const PROJECT_SYSTEM_PROMPT =
   "listed when they fit naturally. Keep any numbers already present; never " +
   "invent features, metrics, or outcomes that aren't implied by the input. " +
   "Stay under 600 characters. Return strict JSON: {\"description\": \"...\"}.";
+
+const COVER_LETTER_SYSTEM_PROMPT =
+  "You rewrite ONE paragraph of a cover letter to be clear, confident, and " +
+  "specific. First person (I/me/my) is expected here, unlike resume text. Keep " +
+  "a warm, professional tone; plain text with no markdown, no greeting or " +
+  "sign-off, and no placeholders like [Company]. Keep every fact and number " +
+  "already present; never invent employers, skills, metrics, or outcomes that " +
+  "aren't implied by the input. Keep it a similar length to the input and under " +
+  '1200 characters. Return strict JSON: {"text": "..."}.';
 
 /** A failed rewrite: the HTTP status, a stable `code` the browser branches on,
  * and the user-facing `error` message shown in the toast. */
@@ -100,6 +111,21 @@ export function parseProjectDescription(content: string | undefined): string | n
   }
 }
 
+export function parseCoverLetterText(content: string | undefined): string | null {
+  if (!content) return null;
+  const jsonText = extractJsonObject(content);
+  if (!jsonText) return null;
+  try {
+    const parsed = JSON.parse(jsonText) as { text?: unknown };
+    if (typeof parsed.text !== "string") return null;
+    const text = parsed.text.trim();
+    if (!text) return null;
+    return text.length > MAX_LETTER_PARAGRAPH_LEN ? text.slice(0, MAX_LETTER_PARAGRAPH_LEN) : text;
+  } catch {
+    return null;
+  }
+}
+
 export function extractJsonObject(content: string): string | null {
   const trimmed = content.trim();
   const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
@@ -151,6 +177,36 @@ export function parseProjectBody(
     ? technologies.filter((t): t is string => typeof t === "string" && t.trim().length > 0).map((t) => t.trim())
     : [];
   return { name: name.trim(), description: description.trim(), technologies: techs };
+}
+
+export interface CoverLetterInput {
+  section: string;
+  text: string;
+  position?: string;
+  company?: string;
+}
+
+/** `position` and `company` are optional context — a blank one is dropped
+ * rather than sent as an empty line. */
+export function parseCoverLetterBody(body: unknown): CoverLetterInput | { error: string } {
+  const { section, text, position, company } = (body ?? {}) as {
+    section?: unknown;
+    text?: unknown;
+    position?: unknown;
+    company?: unknown;
+  };
+  if (
+    typeof section !== "string" ||
+    typeof text !== "string" ||
+    text.trim().length === 0 ||
+    text.length > MAX_LETTER_PARAGRAPH_LEN
+  ) {
+    return { error: "Write this paragraph first (up to 1200 characters), then try the AI rewrite." };
+  }
+  const cleaned: CoverLetterInput = { section: section.trim(), text: text.trim() };
+  if (typeof position === "string" && position.trim()) cleaned.position = position.trim();
+  if (typeof company === "string" && company.trim()) cleaned.company = company.trim();
+  return cleaned;
 }
 
 export interface GroqChatOptions {
@@ -297,6 +353,22 @@ export async function rewriteProjectWithGroq(
   return { description: parsed };
 }
 
+export async function rewriteCoverLetterWithGroq(
+  env: OptimizeEnv,
+  input: CoverLetterInput,
+): Promise<{ text: string } | AiFailure> {
+  const userPrompt =
+    `Paragraph purpose: ${input.section || "Cover letter paragraph"}\n` +
+    (input.position ? `Position: ${input.position}\n` : "") +
+    (input.company ? `Company: ${input.company}\n` : "") +
+    `Paragraph:\n${input.text}`;
+  const result = await callGroqChat(env, COVER_LETTER_SYSTEM_PROMPT, userPrompt);
+  if ("error" in result) return result;
+  const parsed = parseCoverLetterText(result.content);
+  if (!parsed) return fail(502, "malformed");
+  return { text: parsed };
+}
+
 export async function handleOptimizePost(request: Request, env: OptimizeEnv): Promise<Response> {
   let body: unknown;
   try {
@@ -320,6 +392,14 @@ export async function handleOptimizePost(request: Request, env: OptimizeEnv): Pr
     const result = await rewriteProjectWithGroq(env, parsed);
     if ("error" in result) return failureResponse(result);
     return jsonResponse({ description: result.description }, 200);
+  }
+
+  if (kind === "coverLetter") {
+    const parsed = parseCoverLetterBody(body);
+    if ("error" in parsed) return jsonResponse({ error: parsed.error, code: "invalid" }, 400);
+    const result = await rewriteCoverLetterWithGroq(env, parsed);
+    if ("error" in result) return failureResponse(result);
+    return jsonResponse({ text: result.text }, 200);
   }
 
   const parsed = parseExperienceBody(body);

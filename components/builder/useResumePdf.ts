@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { LetterContent } from "@/lib/coverLetter";
 import type { ResumeData } from "@/lib/types";
 
 /** `templateId` is the template `blob` was rendered with, so a preview can
@@ -14,31 +15,45 @@ export type ResumePdfState =
  * keystroke render would re-lay the whole document on every letter. */
 export const PDF_RENDER_DEBOUNCE_MS = 350;
 
-async function render(data: ResumeData): Promise<Blob> {
+/** What one render draws: the resume, or a cover letter in its template. */
+interface PdfInput {
+  data: ResumeData;
+  letter?: LetterContent;
+}
+
+async function render({ data, letter }: PdfInput): Promise<Blob> {
   // Loaded on demand (next/dist/docs: lazy-loading → external libraries), so
   // react-pdf and its layout engine never ship in the builder's first load.
   const { renderResumePdfOffThread } = await import("@/components/pdf/renderInWorker");
-  return renderResumePdfOffThread(data);
+  return renderResumePdfOffThread(data, letter);
 }
 
 /** Keeps a PDF of `data` rendered in the background. `latestBlob()` resolves
  * to the PDF of the data as it is right now — the download uses it, so the
- * saved file is always the same bytes as a preview of the current edits. */
-export function useResumePdf(data: ResumeData, enabled: boolean, debounceMs = PDF_RENDER_DEBOUNCE_MS) {
+ * saved file is always the same bytes as a preview of the current edits.
+ * With `letter` (memoized by the caller) it renders that cover letter in the
+ * resume's template instead. */
+export function useResumePdf(
+  data: ResumeData,
+  enabled: boolean,
+  debounceMs = PDF_RENDER_DEBOUNCE_MS,
+  letter?: LetterContent,
+) {
+  const input = useMemo<PdfInput>(() => ({ data, letter }), [data, letter]);
   const [state, setState] = useState<ResumePdfState>({ status: "idle", blob: null, templateId: null, error: null });
   // Each render is tagged with the data it was made from. Only the newest
   // one may publish, so a slow render finishing after a faster, newer one
   // can't overwrite the preview with stale content.
-  const latest = useRef<{ data: ResumeData; promise: Promise<Blob> } | null>(null);
+  const latest = useRef<{ input: PdfInput; promise: Promise<Blob> } | null>(null);
 
-  const start = useCallback((next: ResumeData) => {
+  const start = useCallback((next: PdfInput) => {
     const promise = render(next);
-    latest.current = { data: next, promise };
+    latest.current = { input: next, promise };
     setState((prev) => ({ status: "rendering", blob: prev.blob, templateId: prev.templateId, error: null }));
     promise.then(
       (blob) => {
         if (latest.current?.promise === promise) {
-          setState({ status: "ready", blob, templateId: next.templateId, error: null });
+          setState({ status: "ready", blob, templateId: next.data.templateId, error: null });
         }
       },
       (error: unknown) => {
@@ -61,19 +76,19 @@ export function useResumePdf(data: ResumeData, enabled: boolean, debounceMs = PD
     if (!enabled) return;
     // The quiet period is for typing. A template switch is one deliberate
     // click — render it straight away rather than add to the wait.
-    const previous = latest.current?.data;
-    const immediate = !previous || previous.templateId !== data.templateId;
+    const previous = latest.current?.input.data;
+    const immediate = !previous || previous.templateId !== input.data.templateId;
     const timer = window.setTimeout(() => {
       // A download may already have started this exact render (latestBlob).
-      if (latest.current?.data !== data) start(data);
+      if (latest.current?.input !== input) start(input);
     }, immediate ? 0 : debounceMs);
     return () => window.clearTimeout(timer);
-  }, [data, enabled, start, debounceMs]);
+  }, [input, enabled, start, debounceMs]);
 
   const latestBlob = useCallback((): Promise<Blob> => {
-    if (latest.current?.data === data) return latest.current.promise;
-    return start(data);
-  }, [data, start]);
+    if (latest.current?.input === input) return latest.current.promise;
+    return start(input);
+  }, [input, start]);
 
   return { ...state, latestBlob };
 }

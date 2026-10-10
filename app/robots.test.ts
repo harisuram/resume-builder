@@ -17,4 +17,14 @@ describe("robots.txt", () => {
     ]);
     expect(result.sitemap).toBe(`${SITE_URL}/sitemap.xml`);
   });
+
+  it("leaves both cover letter pages crawlable — the landing page to index, the builder for its noindex", () => {
+    const rules = robots().rules;
+    for (const rule of Array.isArray(rules) ? rules : [rules]) {
+      const disallowed = [rule.disallow ?? []].flat();
+      for (const path of ["/cover-letter", "/cover-letter/builder"]) {
+        expect(disallowed.some((prefix) => path.startsWith(prefix))).toBe(false);
+      }
+    }
+  });
 });

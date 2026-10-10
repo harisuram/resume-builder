@@ -6,7 +6,15 @@ import { TEMPLATE_LIST } from "@/components/templates/registry";
 
 /** Scrollable column of template thumbnails for the export step on desktop —
  * the dropdown picker hides there since every look is already on screen. */
-export function TemplateRail({ value, onChange }: { value: string; onChange: (id: string) => void }) {
+export function TemplateRail({
+  value,
+  onChange,
+  hint = "Tap any design to restyle your resume instantly.",
+}: {
+  value: string;
+  onChange: (id: string) => void;
+  hint?: string;
+}) {
   const listRef = useRef<HTMLUListElement>(null);
 
   useLayoutEffect(() => {
@@ -24,7 +32,7 @@ export function TemplateRail({ value, onChange }: { value: string; onChange: (id
       <div className="shrink-0 px-1 pb-3">
         <h3 className="font-display text-[14px] font-semibold leading-tight text-[var(--color-ink)]">Choose a template</h3>
         <p className="mt-0.5 text-[11px] leading-snug text-[var(--color-ink-faint)]">
-          Tap any design to restyle your resume instantly.
+          {hint}
         </p>
       </div>
       <ul

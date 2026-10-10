@@ -1,6 +1,8 @@
 import { TEMPLATES } from "@/components/templates/shared/theme";
 import { capitalizedNumberWords } from "./numberWords";
 import {
+  COVER_LETTER_FAQS,
+  coverLetterAppJsonLd,
   FEATURE_LIST,
   FEATURES,
   HOME_DESCRIPTION,
@@ -9,6 +11,7 @@ import {
   howToJsonLd,
   PAGE_META,
   pageMetadata,
+  SITE_NAME,
   TEMPLATE_COUNT_WORDS,
   webApplicationJsonLd,
 } from "./seo";
@@ -72,6 +75,32 @@ describe("JSON-LD", () => {
 describe("indexable paths", () => {
   it("does not include the builder", () => {
     expect(INDEXABLE_PATHS).not.toContain("/builder");
+    expect(INDEXABLE_PATHS).not.toContain("/cover-letter/builder");
+  });
+
+  it("registers the cover letter landing page with targeted copy", () => {
+    expect(INDEXABLE_PATHS).toContain("/cover-letter");
+    const meta = pageMetadata("/cover-letter");
+    expect(meta.title).toEqual({ absolute: PAGE_META["/cover-letter"].title });
+    expect(PAGE_META["/cover-letter"].title).toMatch(/free cover letter builder/i);
+    expect(PAGE_META["/cover-letter"].title).toMatch(/matches your resume/i);
+    expect(meta.alternates).toEqual({ canonical: "/cover-letter" });
+    expect(PAGE_META["/cover-letter"].description.length).toBeLessThanOrEqual(160);
+    expect(COVER_LETTER_FAQS.length).toBeGreaterThanOrEqual(5);
+  });
+
+  it("keeps every indexable page's search title short enough for Google to show whole", () => {
+    for (const path of INDEXABLE_PATHS) {
+      const { title } = pageMetadata(path);
+      const shown = typeof title === "object" && title && "absolute" in title ? title.absolute : `${title} — ${SITE_NAME}`;
+      expect([path, shown.length <= 62]).toEqual([path, true]);
+    }
+  });
+
+  it("gives the cover letter page its own free web app and a breadcrumb back home", () => {
+    const app = coverLetterAppJsonLd();
+    expect(app).toMatchObject({ "@type": "WebApplication", url: absoluteUrl("/cover-letter"), offers: { price: "0" } });
+    expect(app.description).toBe(PAGE_META["/cover-letter"].description);
   });
 });
 

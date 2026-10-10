@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { AdSlot } from "@/components/ads/AdSlot";
 import { Button } from "@/components/ui/Button";
@@ -13,17 +14,17 @@ import { hasAnyResumeValue, isBasicInfoComplete, useBuilderStore, useResumeData 
 import { showToast } from "@/lib/toast";
 import type { BasicInfo } from "@/lib/types";
 
-function slugifyName(name: string): string {
+export function slugifyName(name: string, fallback = "resume"): string {
   const slug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
-  return slug || "resume";
+  return slug || fallback;
 }
 
 /** How long the button holds its ✓ after a download before it resets. */
-const DOWNLOADED_HOLD_MS = 2000;
+export const DOWNLOADED_HOLD_MS = 2000;
 
 /** Saves `blob` as `fileName` through a temporary link. The URL is revoked
  * on the next tick, after the browser has started the download. */
-function saveBlob(blob: Blob, fileName: string) {
+export function saveBlob(blob: Blob, fileName: string) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
@@ -131,6 +132,17 @@ export function ExportSection() {
               {phase === "building" ? "Preparing PDF…" : phase === "done" ? "Downloaded" : "Download PDF"}
             </Button>
           </div>
+
+          <p className="mt-4 border-t border-[var(--color-border)] pt-3 text-[12.5px] text-[var(--color-ink-soft)]">
+            Applying somewhere?{" "}
+            <Link
+              href="/cover-letter/builder"
+              onClick={() => persistCurrentResume()}
+              className="font-medium text-[var(--color-accent)] underline-offset-2 hover:underline"
+            >
+              Write a matching cover letter &rarr;
+            </Link>
+          </p>
         </div>
       )}
 

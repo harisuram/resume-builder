@@ -49,4 +49,15 @@ describe("MobilePreviewSheet", () => {
     expect(screen.getByRole("dialog", { name: "Resume preview" })).toBeInTheDocument();
     expect(onClose).not.toHaveBeenCalled();
   });
+
+  it("can hold another document's preview under its own title", () => {
+    render(
+      <MobilePreviewSheet title="Cover letter preview" onClose={jest.fn()}>
+        <p>letter pane</p>
+      </MobilePreviewSheet>,
+    );
+    const dialog = screen.getByRole("dialog", { name: "Cover letter preview" });
+    expect(within(dialog).getByText("letter pane")).toBeInTheDocument();
+    expect(within(dialog).queryByRole("button", { name: "Choose a template" })).not.toBeInTheDocument();
+  });
 });

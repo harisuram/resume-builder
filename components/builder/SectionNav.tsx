@@ -67,7 +67,7 @@ function clearRowDragStyles(el: HTMLElement) {
  * connector line and the whole thing reads as one step-to-step run. Stacked
  * from md up that would just be clutter, so only the two group boundaries
  * survive there, as the full-width rules they've always been. */
-function RowDivider({ group = false, drawer = false }: { group?: boolean; drawer?: boolean }) {
+export function RowDivider({ group = false, drawer = false }: { group?: boolean; drawer?: boolean }) {
   if (drawer && !group) return null;
   return (
     <div
@@ -426,7 +426,7 @@ export function SectionNav({
 
 /** Status dot; in the mobile side menu a finished section gets a green
  * tick instead, which reads at a glance on a small screen. */
-function StatusMark({ status, drawer }: { status: SectionStatus; drawer: boolean }) {
+export function StatusMark({ status, drawer }: { status: SectionStatus; drawer: boolean }) {
   if (drawer && status === "complete") {
     return (
       <span
@@ -453,7 +453,7 @@ function StatusMark({ status, drawer }: { status: SectionStatus; drawer: boolean
  * there's no room for it. Skipped sections stay in the list as drop
  * targets but cannot be picked up. Arrow keys on the handle still nudge
  * one slot for keyboard use. */
-function ReorderHandle({
+export function ReorderHandle({
   label,
   skipped,
   dragging,

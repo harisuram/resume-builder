@@ -70,6 +70,13 @@ export interface OptimizeProjectInput {
   technologies?: string[];
 }
 
+export interface EnhanceLetterInput {
+  section: string;
+  text: string;
+  position?: string;
+  company?: string;
+}
+
 const isAiErrorCode = (value: unknown): value is AiErrorCode =>
   typeof value === "string" && Object.hasOwn(AI_MESSAGES, value);
 
@@ -136,4 +143,15 @@ export async function optimizeProjectDescription({
     throw new AiError(AI_MESSAGES.malformed, "malformed");
   }
   return body.description;
+}
+
+/** Rewrites one cover letter paragraph the same way as the summary, keeping
+ * the first-person voice a letter needs. `section` says what the paragraph is
+ * for; `position` and `company` give the AI context without inventing any. */
+export async function enhanceCoverLetterParagraph(input: EnhanceLetterInput): Promise<string> {
+  const body = await postOptimize({ kind: "coverLetter", ...input });
+  if (typeof body.text !== "string" || !body.text.trim()) {
+    throw new AiError(AI_MESSAGES.malformed, "malformed");
+  }
+  return body.text;
 }

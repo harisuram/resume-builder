@@ -122,3 +122,48 @@ export interface ResumeData {
    * Summary is intentionally not part of this — see getNavSectionOrder. */
   sectionOrder?: SectionKey[];
 }
+
+/** The guided body paragraphs every cover letter starts with. Custom
+ * paragraphs the user adds get a `custom-…` id instead. */
+export const LETTER_PARAGRAPH_KINDS = ["opening", "interest", "skills", "achievements", "fit"] as const;
+export type LetterParagraphKind = (typeof LETTER_PARAGRAPH_KINDS)[number];
+
+/** One body paragraph. Its place in `CoverLetterData.paragraphs` is its place
+ * in the letter; `label` names a custom paragraph in the builder only — it is
+ * never printed. */
+export interface LetterParagraph {
+  id: LetterParagraphKind | `custom-${string}`;
+  label?: string;
+  text: string;
+  skipped?: boolean;
+}
+
+/** A short labelled line printed under the subject, e.g. "Job reference:
+ * ENG-2041". */
+export interface LetterField {
+  label: string;
+  value: string;
+}
+
+/** A cover letter drawn in one of the resume templates. The sender's name,
+ * contact details and photo always come from the resume; everything else is
+ * the letter's own and is saved separately on this device. */
+export interface CoverLetterData {
+  /** Free text, prefilled with today ("10 October 2026"). */
+  date: string;
+  recipientName: string;
+  recipientTitle: string;
+  company: string;
+  /** One address line per line. */
+  companyAddress: string;
+  /** The role applied for — printed as the subject line. */
+  position: string;
+  fields: LetterField[];
+  greeting: string;
+  paragraphs: LetterParagraph[];
+  /** The closing statement paragraph, printed after the body. */
+  closing: string;
+  signOff: string;
+  /** Template the letter is drawn in. null follows the resume's template. */
+  templateId: TemplateId | null;
+}

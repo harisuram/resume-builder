@@ -1,4 +1,5 @@
 import { pdf } from "@react-pdf/renderer";
+import type { LetterContent } from "@/lib/coverLetter";
 import type { ResumeData } from "@/lib/types";
 import { registerPdfFonts } from "./fonts";
 import { ResumePdfDocument } from "./ResumePdfDocument";
@@ -31,16 +32,25 @@ export async function pdfSafeImage(src: string | undefined): Promise<string | un
   }
 }
 
-/** Renders the resume to a PDF blob. The builder previews this exact blob
- * and downloads the same bytes, so what's on screen is what's saved. */
-export async function renderResumePdf(data: ResumeData, fontBaseUrl = PDF_FONT_BASE_URL): Promise<Blob> {
+/** Renders the resume — or, given `letter`, a cover letter in the same
+ * template — to a PDF blob. The builder previews this exact blob and
+ * downloads the same bytes, so what's on screen is what's saved. */
+export async function renderResumePdf(
+  data: ResumeData,
+  fontBaseUrl = PDF_FONT_BASE_URL,
+  letter?: LetterContent,
+): Promise<Blob> {
   const photo = await pdfSafeImage(data.photo);
-  return renderPreparedResumePdf({ ...data, photo }, fontBaseUrl);
+  return renderPreparedResumePdf({ ...data, photo }, fontBaseUrl, letter);
 }
 
 /** The layout step alone, for data whose photo is already JPEG/PNG. Safe to
  * run in a Web Worker (no DOM) — see renderResumePdf.worker.tsx. */
-export function renderPreparedResumePdf(data: ResumeData, fontBaseUrl = PDF_FONT_BASE_URL): Promise<Blob> {
+export function renderPreparedResumePdf(
+  data: ResumeData,
+  fontBaseUrl = PDF_FONT_BASE_URL,
+  letter?: LetterContent,
+): Promise<Blob> {
   registerPdfFonts(fontBaseUrl);
-  return pdf(<ResumePdfDocument data={data} />).toBlob();
+  return pdf(<ResumePdfDocument data={data} letter={letter} />).toBlob();
 }

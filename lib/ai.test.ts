@@ -1,4 +1,12 @@
-import { AI_MESSAGES, AiError, AiLimitError, optimizeExperienceBullets, optimizeProjectDescription, optimizeSummary } from "./ai";
+import {
+  AI_MESSAGES,
+  AiError,
+  AiLimitError,
+  enhanceCoverLetterParagraph,
+  optimizeExperienceBullets,
+  optimizeProjectDescription,
+  optimizeSummary,
+} from "./ai";
 
 function mockFetch(response: Partial<Response> & { json: () => Promise<unknown> }) {
   global.fetch = jest.fn().mockResolvedValue(response) as unknown as typeof fetch;
@@ -107,5 +115,38 @@ describe("optimizeProjectDescription", () => {
   it("throws AiLimitError on 429", async () => {
     mockFetch({ ok: false, status: 429, json: async () => ({}) });
     await expect(optimizeProjectDescription(input)).rejects.toBeInstanceOf(AiLimitError);
+  });
+});
+
+describe("enhanceCoverLetterParagraph", () => {
+  const input = {
+    section: "Why you're interested",
+    text: "I want to work at Acme.",
+    position: "Backend Engineer",
+    company: "Acme",
+  };
+
+  it("returns the rewritten paragraph on success", async () => {
+    mockFetch({ ok: true, status: 200, json: async () => ({ text: "I would love to bring my backend work to Acme." }) });
+    await expect(enhanceCoverLetterParagraph(input)).resolves.toBe("I would love to bring my backend work to Acme.");
+    expect(global.fetch).toHaveBeenCalledWith(
+      "/api/optimize",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ kind: "coverLetter", ...input }),
+      }),
+    );
+  });
+
+  it("says the rewrite came back unusable when text is missing or empty", async () => {
+    mockFetch({ ok: true, status: 200, json: async () => ({ summary: "wrong key" }) });
+    await expect(enhanceCoverLetterParagraph(input)).rejects.toMatchObject({ code: "malformed", message: AI_MESSAGES.malformed });
+    mockFetch({ ok: true, status: 200, json: async () => ({ text: "   " }) });
+    await expect(enhanceCoverLetterParagraph(input)).rejects.toMatchObject({ code: "malformed", message: AI_MESSAGES.malformed });
+  });
+
+  it("throws AiLimitError on 429", async () => {
+    mockFetch({ ok: false, status: 429, json: async () => ({}) });
+    await expect(enhanceCoverLetterParagraph(input)).rejects.toBeInstanceOf(AiLimitError);
   });
 });

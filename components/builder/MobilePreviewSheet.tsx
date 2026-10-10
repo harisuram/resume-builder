@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { PreviewPane } from "./PreviewPane";
 
@@ -23,7 +23,16 @@ function CloseIcon() {
   );
 }
 
-export function MobilePreviewSheet({ onClose }: { onClose: () => void }) {
+export function MobilePreviewSheet({
+  onClose,
+  title = "Resume preview",
+  children,
+}: {
+  onClose: () => void;
+  title?: string;
+  /** The pane to show — the resume's PreviewPane unless given another. */
+  children?: ReactNode;
+}) {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ id: number; startY: number; y: number; t: number; vy: number } | null>(null);
@@ -148,7 +157,7 @@ export function MobilePreviewSheet({ onClose }: { onClose: () => void }) {
           <div className="flex items-center justify-between gap-3 px-4 pt-1 pb-3">
             <div className="min-w-0">
               <h2 id={titleId} className="font-display text-[17px] font-semibold tracking-tight text-[var(--color-ink)]">
-                Resume preview
+                {title}
               </h2>
             </div>
             <button
@@ -163,7 +172,7 @@ export function MobilePreviewSheet({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="min-h-0 flex-1 overflow-hidden bg-[color-mix(in_srgb,var(--color-ink)_3.5%,var(--color-paper))] px-3 pt-1">
-          <PreviewPane />
+          {children ?? <PreviewPane />}
         </div>
 
         <div className="shrink-0 border-t border-[var(--color-border)] px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">

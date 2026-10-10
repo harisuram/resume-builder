@@ -18,7 +18,9 @@ import { PAGE_INSET_PX, PAGE_PAD_X_PX, PAGE_PAD_Y_PX } from "@/lib/page";
 import { mixHex, tintHex } from "@/lib/pdf/color";
 import { SUMMARY_COPY, resumeSectionTitle } from "@/lib/persona";
 import { NARROW_SECTION_KEYS, getRenderableSections, hasSummary } from "@/lib/resume";
+import type { LetterContent } from "@/lib/coverLetter";
 import type { BasicInfo, ResumeData, SectionKey } from "@/lib/types";
+import { CoverLetterBody } from "./CoverLetterBody";
 import { PDF_DISPLAY, PDF_SANS, PDF_SERIF } from "./fonts";
 import { VariantPages } from "./variantPages";
 import { PdfBullet, PdfIcon } from "./PdfIcon";
@@ -76,19 +78,27 @@ const onRail = (rail: string): Ink => ({
   surface: rail,
 });
 
-export function ResumePdfDocument({ data }: { data: ResumeData }) {
+/** With `letter`, the same template draws a cover letter instead: each
+ * layout keeps its own header (name, contact, photo, band or rail) and sets
+ * the letter where the resume's sections would go. */
+export function ResumePdfDocument({ data, letter }: { data: ResumeData; letter?: LetterContent }) {
   const theme = getTheme(data.templateId);
   const name = data.basicInfo.name || "Your Name";
   return (
-    <Document title={name} author={name} creator="Free Resume Builder" producer="Free Resume Builder">
+    <Document
+      title={letter ? `${name} - Cover letter` : name}
+      author={name}
+      creator="Free Resume Builder"
+      producer="Free Resume Builder"
+    >
       {theme.layout === "sidebar" ? (
-        <SidebarPages data={data} theme={theme} />
+        <SidebarPages data={data} theme={theme} letter={letter} />
       ) : theme.layout === "asymmetric" ? (
-        <TwoColumnPages data={data} theme={theme} />
+        <TwoColumnPages data={data} theme={theme} letter={letter} />
       ) : theme.layout === "labeled" ? (
-        <LabeledPages data={data} theme={theme} />
+        <LabeledPages data={data} theme={theme} letter={letter} />
       ) : (
-        <SingleColumnPages data={data} theme={theme} />
+        <SingleColumnPages data={data} theme={theme} letter={letter} />
       )}
     </Document>
   );
@@ -98,10 +108,10 @@ export const pageBase: Style = { fontFamily: PDF_SANS, ...text(12), color: INK, 
 
 /* ---------------------------------------------------------------- single */
 
-function SingleColumnPages({ data, theme }: { data: ResumeData; theme: TemplateTheme }) {
+function SingleColumnPages({ data, theme, letter }: { data: ResumeData; theme: TemplateTheme; letter?: LetterContent }) {
   // The bespoke single-column templates draw their own header and a few
   // section treatments (components/pdf/variantPages.tsx).
-  if (theme.variant) return <VariantPages data={data} theme={{ ...theme, variant: theme.variant }} />;
+  if (theme.variant) return <VariantPages data={data} theme={{ ...theme, variant: theme.variant }} letter={letter} />;
   const band = theme.darkHeader ? headerColor(theme) : undefined;
   const sections = getRenderableSections(data);
   const ink = onPaper(theme);
@@ -172,12 +182,18 @@ function SingleColumnPages({ data, theme }: { data: ResumeData; theme: TemplateT
           gap: pt(theme.density === "compact" ? 16 : 20),
         }}
       >
-        <Summary data={data} theme={theme} ink={ink} />
-        {sections.map((key) => (
-          <View key={key}>
-            <PdfSection section={key} data={data} theme={theme} ink={ink} />
-          </View>
-        ))}
+        {letter ? (
+          <CoverLetterBody letter={letter} name={data.basicInfo.name || "Your Name"} theme={theme} ink={ink} />
+        ) : (
+          <>
+            <Summary data={data} theme={theme} ink={ink} />
+            {sections.map((key) => (
+              <View key={key}>
+                <PdfSection section={key} data={data} theme={theme} ink={ink} />
+              </View>
+            ))}
+          </>
+        )}
       </View>
     </Page>
   );
@@ -189,7 +205,7 @@ function SingleColumnPages({ data, theme }: { data: ResumeData; theme: TemplateT
 const RAIL_SHARE = 0.34;
 const PAGE_WIDTH_PT = 595.28;
 
-function SidebarPages({ data, theme }: { data: ResumeData; theme: TemplateTheme }) {
+function SidebarPages({ data, theme, letter }: { data: ResumeData; theme: TemplateTheme; letter?: LetterContent }) {
   const sections = getRenderableSections(data);
   const railSections = sections.filter((k) => NARROW_SECTION_KEYS.has(k));
   const mainSections = sections.filter((k) => !NARROW_SECTION_KEYS.has(k));
@@ -292,19 +308,26 @@ function SidebarPages({ data, theme }: { data: ResumeData; theme: TemplateTheme 
               <ContactLine info={data.basicInfo} color={solid ? mixHex(WHITE, 85, railFill) : INK_SOFT} stacked />
             </View>
           )}
-          {railSections.map((key) => (
+          {/* A letter keeps the rail's name and contact, not its sections. */}
+          {!letter && railSections.map((key) => (
             <View key={key}>
               <PdfSection section={key} data={data} theme={theme} ink={railInk} />
             </View>
           ))}
         </View>
         <View style={{ width: PAGE_WIDTH_PT - railWidth, ...colPad, gap: pt(20) }}>
-          <Summary data={data} theme={theme} ink={mainInk} />
-          {mainSections.map((key) => (
-            <View key={key}>
-              <PdfSection section={key} data={data} theme={theme} ink={mainInk} />
-            </View>
-          ))}
+          {letter ? (
+            <CoverLetterBody letter={letter} name={data.basicInfo.name || "Your Name"} theme={theme} ink={mainInk} />
+          ) : (
+            <>
+              <Summary data={data} theme={theme} ink={mainInk} />
+              {mainSections.map((key) => (
+                <View key={key}>
+                  <PdfSection section={key} data={data} theme={theme} ink={mainInk} />
+                </View>
+              ))}
+            </>
+          )}
         </View>
       </View>
     </Page>
@@ -319,7 +342,7 @@ function SidebarPages({ data, theme }: { data: ResumeData; theme: TemplateTheme 
 const SPLIT_BAND_PX = 56;
 const SPLIT_TOP_PX = 28;
 
-function TwoColumnPages({ data, theme }: { data: ResumeData; theme: TemplateTheme }) {
+function TwoColumnPages({ data, theme, letter }: { data: ResumeData; theme: TemplateTheme; letter?: LetterContent }) {
   const sections = getRenderableSections(data);
   const narrow = sections.filter((k) => NARROW_SECTION_KEYS.has(k));
   const wide = sections.filter((k) => !NARROW_SECTION_KEYS.has(k));
@@ -360,6 +383,11 @@ function TwoColumnPages({ data, theme }: { data: ResumeData; theme: TemplateThem
         )}
       </View>
 
+      {letter ? (
+        <View style={{ marginTop: pt(24) }}>
+          <CoverLetterBody letter={letter} name={data.basicInfo.name || "Your Name"} theme={theme} ink={ink} />
+        </View>
+      ) : (
       <View style={{ marginTop: pt(20), flexDirection: "row" }}>
         <View style={{ width: "32%", borderRightWidth: pt(1), borderRightColor: RULE, paddingRight: pt(20), gap: pt(16) }}>
           {narrow.map((key) => (
@@ -377,6 +405,7 @@ function TwoColumnPages({ data, theme }: { data: ResumeData; theme: TemplateThem
           ))}
         </View>
       </View>
+      )}
     </Page>
   );
 }
@@ -386,7 +415,7 @@ function TwoColumnPages({ data, theme }: { data: ResumeData; theme: TemplateThem
 /** Label column: `minmax(7.5rem, 22%)` of the 730px content width. */
 const LABEL_COLUMN_PX = Math.max(120, (794 - 64) * 0.22);
 
-function LabeledPages({ data, theme }: { data: ResumeData; theme: TemplateTheme }) {
+function LabeledPages({ data, theme, letter }: { data: ResumeData; theme: TemplateTheme; letter?: LetterContent }) {
   const sections = getRenderableSections(data);
   const ink = onPaper(theme);
   const info = data.basicInfo;
@@ -395,14 +424,14 @@ function LabeledPages({ data, theme }: { data: ResumeData; theme: TemplateTheme 
   );
   const rows: { key: string; title: string; body: ReactNode }[] = [];
   if (hasContact) rows.push({ key: "contact", title: "Personal Information", body: <ContactGrid info={info} /> });
-  if (hasSummary(data)) {
+  if (!letter && hasSummary(data)) {
     rows.push({
       key: "summary",
       title: "Profile",
       body: <Text style={{ ...text(12.5), lineHeight: 1.625 }}>{data.sections.summary}</Text>,
     });
   }
-  for (const key of sections) {
+  for (const key of letter ? [] : sections) {
     rows.push({
       key,
       title: key === "experience" ? "Work experience" : resumeSectionTitle(key, data),
@@ -452,6 +481,11 @@ function LabeledPages({ data, theme }: { data: ResumeData; theme: TemplateTheme 
             </View>
           </View>
         ))}
+        {letter && (
+          <View style={rows.length > 0 ? { borderTopWidth: pt(1), borderTopColor: INK_FAINT, paddingTop: pt(20) } : undefined}>
+            <CoverLetterBody letter={letter} name={info.name || "Your Name"} theme={theme} ink={ink} />
+          </View>
+        )}
       </View>
     </Page>
   );

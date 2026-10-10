@@ -7,10 +7,54 @@ import { HOME_FAQS, TEMPLATE_COUNT_WORDS } from "@/lib/seo";
 jest.mock("next/navigation", () => ({ useRouter: () => ({ push: jest.fn() }) }));
 
 describe("homepage", () => {
-  it("tells visitors they can start from their own resume", () => {
+  it("puts resume and cover letter side by side as equals, each with its own way in", () => {
     render(<Home />);
-    expect(screen.getByText("Already have a resume?")).toBeInTheDocument();
-    expect(screen.getByText(/Upload your PDF or Word file/)).toBeInTheDocument();
+    const resume = screen.getByRole("article", { name: "Build your resume" });
+    const letter = screen.getByRole("article", { name: "Write your cover letter" });
+    expect(resume.parentElement).toBe(letter.parentElement);
+    expect(within(resume).getByRole("link", { name: "Build my resume" })).toHaveAttribute("href", "/builder");
+    expect(within(resume).getByRole("button", { name: /Import my resume/ })).toBeInTheDocument();
+    expect(within(letter).getByRole("link", { name: "Write my cover letter" })).toHaveAttribute("href", "/cover-letter/builder");
+    expect(within(letter).getByRole("link", { name: "How it works" })).toHaveAttribute("href", "/cover-letter");
+    // Same shape: a picture, a title, a three-point list, two actions.
+    for (const card of [resume, letter]) {
+      expect(within(card).getAllByRole("listitem")).toHaveLength(3);
+      // Two fanned sheets, decorative — the card's text says what it is.
+      expect(card.querySelectorAll("img")).toHaveLength(2);
+      expect(card.querySelector("img")?.closest("[aria-hidden='true']")).not.toBeNull();
+    }
+    // Not in the header or footer navigation.
+    for (const nav of screen.getAllByRole("navigation")) {
+      expect(within(nav).queryByRole("link", { name: /cover letter/i })).not.toBeInTheDocument();
+    }
+  });
+
+  it("names both products in the heading", () => {
+    render(<Home />);
+    expect(
+      screen.getByRole("heading", { level: 1, name: /free resume & cover letter builder[\s\S]*no sign-up[\s\S]*skip what doesn.t belong/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("shows a resume and its cover letter as a matching set, restyled together", async () => {
+    render(<Home />);
+    const set = screen.getByRole("region", { name: "One look, two documents" });
+    expect(within(set).getByRole("img", { name: "Resume in the Atlas template" })).toBeInTheDocument();
+    expect(within(set).getByRole("img", { name: "Cover letter in the Atlas template" })).toBeInTheDocument();
+    await userEvent.click(within(set).getByRole("radio", { name: "Fern" }));
+    expect(within(set).getByRole("radio", { name: "Fern" })).toHaveAttribute("aria-checked", "true");
+    expect(within(set).getByRole("img", { name: "Resume in the Fern template" })).toBeInTheDocument();
+    expect(within(set).getByRole("img", { name: "Cover letter in the Fern template" })).toBeInTheDocument();
+  });
+
+  it("has no numbered steps strip — the two product cards already say how to start", () => {
+    render(<Home />);
+    expect(screen.queryByRole("heading", { name: "Download both" })).not.toBeInTheDocument();
+    expect(screen.queryByText("01")).not.toBeInTheDocument();
+  });
+
+  it("lets visitors start from the resume they have", () => {
+    render(<Home />);
     expect(screen.getByRole("button", { name: /Import my resume/ })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Can I start from my existing resume?" })).toBeInTheDocument();
   });
@@ -22,13 +66,11 @@ describe("homepage", () => {
     expect(screen.queryByText(/Thirty-one/)).not.toBeInTheDocument();
   });
 
-  it("uses a brand-led heading and the shared FAQ copy", () => {
+  it("keeps the brand in the header and footer and ships the shared FAQ copy, cover letter questions included", () => {
     render(<Home />);
     expect(screen.getAllByText("Free Resume Builder").length).toBeGreaterThanOrEqual(2);
-    expect(
-      screen.getByRole("heading", { level: 1, name: /free resume builder, no sign-up[\s\S]*skip what doesn.t belong/i }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Build my resume" })).toHaveAttribute("href", "/builder");
+    expect(screen.getByRole("heading", { name: "Can I make a cover letter too?" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Will my cover letter match my resume?" })).toBeInTheDocument();
     for (const faq of HOME_FAQS) {
       expect(screen.getByRole("heading", { name: faq.question })).toBeInTheDocument();
       expect(screen.getByText(faq.answer)).toBeInTheDocument();

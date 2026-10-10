@@ -58,4 +58,9 @@ describe("Navbar", () => {
     expect(useBuilderStore.getState().hasSavedCopy).toBe(false);
     expect(screen.getByRole("button", { name: "Start new resume" })).toBeInTheDocument();
   });
+
+  it("doesn't link to the cover letter — that's the home page's and the download step's job", () => {
+    render(<Navbar />);
+    expect(screen.queryByRole("link", { name: /cover letter/i })).not.toBeInTheDocument();
+  });
 });

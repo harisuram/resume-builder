@@ -17,7 +17,9 @@ import { PAGE_INSET_PX, PAGE_PAD_Y_PX } from "@/lib/page";
 import { mixHex, tintHex } from "@/lib/pdf/color";
 import { SUMMARY_COPY, resumeSectionTitle } from "@/lib/persona";
 import { getRenderableSections, hasSummary } from "@/lib/resume";
+import type { LetterContent } from "@/lib/coverLetter";
 import type { BasicInfo, ResumeData, SectionKey } from "@/lib/types";
+import { CoverLetterBody } from "./CoverLetterBody";
 import { PDF_DISPLAY, PDF_SERIF } from "./fonts";
 import { PdfIcon } from "./PdfIcon";
 import {
@@ -47,7 +49,7 @@ const bodyWidth = (sidePx: number) => PAGE_WIDTH_PT - 2 * pt(sidePx);
 
 /** Mirrors components/templates/layouts/VariantLayout.tsx — same headers and
  * the same section treatments globals.css applies under `data-variant`. */
-export function VariantPages({ data, theme }: { data: ResumeData; theme: VariantTheme }) {
+export function VariantPages({ data, theme, letter }: { data: ResumeData; theme: VariantTheme; letter?: LetterContent }) {
   const sections = getRenderableSections(data);
   const ink = onPaper(theme);
   const tessera = theme.variant === "tessera";
@@ -75,13 +77,18 @@ export function VariantPages({ data, theme }: { data: ResumeData; theme: Variant
           gap: pt(tessera ? 14 : 20),
         }}
       >
-        {hasSummary(data) && (
+        {letter ? (
+          <Card on={tessera}>
+            <CoverLetterBody letter={letter} name={data.basicInfo.name || "Your Name"} theme={theme} ink={surface} />
+          </Card>
+        ) : null}
+        {!letter && hasSummary(data) && (
           <Card on={tessera}>
             <SectionHeading theme={theme} section="summary" title={SUMMARY_COPY.label} ink={surface} />
             <VariantSummary text={data.sections.summary ?? ""} theme={theme} />
           </Card>
         )}
-        {sections.map((key) => (
+        {!letter && sections.map((key) => (
           <Card key={key} on={tessera}>
             <VariantSection section={key} data={data} theme={theme} ink={surface} width={bodyWidth(side)} />
           </Card>

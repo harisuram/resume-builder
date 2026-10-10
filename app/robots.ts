@@ -8,14 +8,16 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         // AdSense review/fill crawlers need every page that hosts a slot,
-        // including /builder (which regular bots should crawl but not index).
+        // including /builder and /cover-letter/builder (which regular bots
+        // should crawl but not index).
         userAgent: ["Mediapartners-Google", "AdsBot-Google", "AdsBot-Google-Mobile"],
         allow: "/",
       },
       {
         userAgent: "*",
         allow: "/",
-        // /builder stays crawlable so Google can honor its noindex tag.
+        // /builder and /cover-letter/builder stay crawlable so Google can
+        // honor their noindex tags.
         disallow: ["/api/"],
       },
     ],

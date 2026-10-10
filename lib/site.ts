@@ -12,6 +12,7 @@ export const INDEXABLE_PATHS = [
   "/guides",
   "/private",
   "/templates",
+  "/cover-letter",
   "/ats",
   "/privacy",
   "/about",

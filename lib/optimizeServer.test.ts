@@ -7,12 +7,15 @@ import {
   rewriteSummaryWithGroq,
   handleOptimizePost,
   parseBullets,
+  parseCoverLetterBody,
+  parseCoverLetterText,
   parseExperienceBody,
   parseProjectBody,
   parseProjectDescription,
   parseSummary,
   parseSummaryBody,
   rewriteBulletsWithGroq,
+  rewriteCoverLetterWithGroq,
 } from "./optimizeServer";
 
 describe("parseBullets", () => {
@@ -88,6 +91,60 @@ describe("parseProjectBody", () => {
   });
 });
 
+describe("parseCoverLetterText", () => {
+  it("reads a raw JSON object", () => {
+    expect(parseCoverLetterText('{"text":"I build reliable backends."}')).toBe("I build reliable backends.");
+  });
+
+  it("reads JSON wrapped in a markdown fence and trims it", () => {
+    expect(parseCoverLetterText('```json\n{"text":"  I lead teams.  "}\n```')).toBe("I lead teams.");
+  });
+
+  it("caps an overlong answer at the paragraph limit", () => {
+    expect(parseCoverLetterText(JSON.stringify({ text: "a".repeat(1500) }))).toHaveLength(1200);
+  });
+
+  it("returns null for missing or empty text", () => {
+    expect(parseCoverLetterText('{"summary":"x"}')).toBeNull();
+    expect(parseCoverLetterText('{"text":"  "}')).toBeNull();
+    expect(parseCoverLetterText(undefined)).toBeNull();
+  });
+});
+
+describe("parseCoverLetterBody", () => {
+  const error = "Write this paragraph first (up to 1200 characters), then try the AI rewrite.";
+
+  it("accepts a section and text, with optional position and company", () => {
+    expect(
+      parseCoverLetterBody({
+        kind: "coverLetter",
+        section: " Why you're interested ",
+        text: "  I love your product. ",
+        position: " Backend Engineer ",
+        company: " Acme ",
+      }),
+    ).toEqual({
+      section: "Why you're interested",
+      text: "I love your product.",
+      position: "Backend Engineer",
+      company: "Acme",
+    });
+  });
+
+  it("drops blank or non-string position and company", () => {
+    expect(
+      parseCoverLetterBody({ kind: "coverLetter", section: "Opening", text: "Hello.", position: "  ", company: 3 }),
+    ).toEqual({ section: "Opening", text: "Hello." });
+  });
+
+  it("rejects empty, oversized, or missing input", () => {
+    expect(parseCoverLetterBody({ kind: "coverLetter", section: "Opening", text: "  " })).toEqual({ error });
+    expect(parseCoverLetterBody({ kind: "coverLetter", section: "Opening", text: "a".repeat(1201) })).toEqual({ error });
+    expect(parseCoverLetterBody({ kind: "coverLetter", text: "Hello." })).toEqual({ error });
+    expect(parseCoverLetterBody(null)).toEqual({ error });
+  });
+});
+
 describe("parseExperienceBody", () => {
   it("accepts a role, company, and at least one bullet", () => {
     expect(parseExperienceBody({ role: "Eng", company: "Acme", bullets: [" Did a thing "] })).toEqual({
@@ -128,6 +185,57 @@ describe("rewriteBulletsWithGroq", () => {
       "https://api.groq.com/openai/v1/chat/completions",
       expect.objectContaining({ method: "POST" }),
     );
+  });
+});
+
+describe("rewriteCoverLetterWithGroq", () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it("sends the paragraph's purpose, the job, and the text", async () => {
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ choices: [{ message: { content: '{"text":"I am excited to join Acme."}' } }] }),
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    await expect(
+      rewriteCoverLetterWithGroq(
+        { GROQ_API_KEY: "gsk_test" },
+        { section: "Why you're interested", text: "I like Acme.", position: "Engineer", company: "Acme" },
+      ),
+    ).resolves.toEqual({ text: "I am excited to join Acme." });
+    const sent = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+    expect(sent.messages[1].content).toBe(
+      "Paragraph purpose: Why you're interested\nPosition: Engineer\nCompany: Acme\nParagraph:\nI like Acme.",
+    );
+  });
+
+  it("leaves out position and company lines when they aren't given", async () => {
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ choices: [{ message: { content: '{"text":"Thank you."}' } }] }),
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    await rewriteCoverLetterWithGroq({ GROQ_API_KEY: "gsk_test" }, { section: "Closing", text: "Thanks." });
+    const sent = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+    expect(sent.messages[1].content).toBe("Paragraph purpose: Closing\nParagraph:\nThanks.");
+  });
+
+  it("reports an unusable answer as malformed", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ choices: [{ message: { content: '{"summary":"wrong key"}' } }] }),
+    }) as unknown as typeof fetch;
+
+    await expect(
+      rewriteCoverLetterWithGroq({ GROQ_API_KEY: "gsk_test" }, { section: "Opening", text: "Hi." }),
+    ).resolves.toMatchObject({ status: 502, code: "malformed" });
   });
 });
 
@@ -185,6 +293,50 @@ describe("handleOptimizePost", () => {
     await expect(res.json()).resolves.toEqual({
       description: "Built a browser resume editor with live preview.",
     });
+  });
+
+  it("routes kind=coverLetter to a cover letter paragraph rewrite", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ choices: [{ message: { content: '{"text":"I would love to bring my backend work to Acme."}' } }] }),
+    }) as unknown as typeof fetch;
+
+    const res = await handleOptimizePost(
+      new Request("http://localhost/api/optimize", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          kind: "coverLetter",
+          section: "Why you're interested",
+          text: "I want to work at Acme.",
+          position: "Backend Engineer",
+          company: "Acme",
+        }),
+      }),
+      { GROQ_API_KEY: "gsk_test" },
+    );
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toEqual({ text: "I would love to bring my backend work to Acme." });
+  });
+
+  it("rejects an empty cover letter paragraph before calling Groq", async () => {
+    const fetchMock = jest.fn();
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    const res = await handleOptimizePost(
+      new Request("http://localhost/api/optimize", {
+        method: "POST",
+        body: JSON.stringify({ kind: "coverLetter", section: "Opening", text: "  " }),
+      }),
+      { GROQ_API_KEY: "gsk_test" },
+    );
+    expect(res.status).toBe(400);
+    await expect(res.json()).resolves.toEqual({
+      error: "Write this paragraph first (up to 1200 characters), then try the AI rewrite.",
+      code: "invalid",
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
 

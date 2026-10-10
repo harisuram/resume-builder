@@ -31,6 +31,12 @@ export const ADSENSE_SLOTS = {
   builderPreview: liveId(process.env.NEXT_PUBLIC_ADSENSE_SLOT_BUILDER),
   builderPreviewTop: liveId(process.env.NEXT_PUBLIC_ADSENSE_SLOT_BUILDER_TOP),
   builderExport: liveId(process.env.NEXT_PUBLIC_ADSENSE_SLOT_EXPORT),
+  /** Cover letter units: their own slots so the letter's earnings show up
+   * separately in AdSense. Same placements as the resume builder's. */
+  coverLanding: liveId(process.env.NEXT_PUBLIC_ADSENSE_SLOT_COVER_LANDING),
+  coverBuilder: liveId(process.env.NEXT_PUBLIC_ADSENSE_SLOT_COVER_BUILDER),
+  coverBuilderTop: liveId(process.env.NEXT_PUBLIC_ADSENSE_SLOT_COVER_BUILDER_TOP),
+  coverExport: liveId(process.env.NEXT_PUBLIC_ADSENSE_SLOT_COVER_EXPORT),
 };
 
 export function isAdsenseConfigured(): boolean {

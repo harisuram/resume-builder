@@ -24,4 +24,10 @@ describe("sitemap.xml", () => {
   it("does not list the builder", () => {
     expect(sitemap().some((entry) => entry.url.endsWith("/builder"))).toBe(false);
   });
+
+  it("lists the cover letter landing page but not the cover letter builder", () => {
+    const urls = sitemap().map((entry) => entry.url);
+    expect(urls).toContain(absoluteUrl("/cover-letter"));
+    expect(urls).not.toContain(absoluteUrl("/cover-letter/builder"));
+  });
 });

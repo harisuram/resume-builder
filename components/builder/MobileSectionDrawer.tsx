@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { setMobileMenuOpen, useMobileMenuOpen } from "./mobileMenuStore";
 import type { NavKey } from "./nav";
 import { SectionNav } from "./SectionNav";
@@ -44,18 +44,19 @@ export function MobileMenuButton({ className }: { className: string }) {
 }
 
 /** Mounts the drawer when it's open, or ahead of time once `warm`. */
-export function MobileSectionMenu({
+export function MobileSectionMenu<K extends string = NavKey>({
   warm,
   ...props
 }: {
   warm: boolean;
-  active: NavKey;
-  onSelect: (key: NavKey) => void;
+  active: K;
+  onSelect: (key: K) => void;
   onReplayTour?: () => void;
+  renderNav?: (select: (key: K) => void) => ReactNode;
 }) {
   const open = useMobileMenuOpen();
   if (!open && !warm) return null;
-  return <MobileSectionDrawer open={open} onClose={() => setMobileMenuOpen(false)} {...props} />;
+  return <MobileSectionDrawer<K> open={open} onClose={() => setMobileMenuOpen(false)} {...props} />;
 }
 
 /** Mobile side menu holding the full section list — the same switches,
@@ -65,21 +66,25 @@ export function MobileSectionMenu({
  *
  * It can stay mounted while closed (hidden and inert), so opening only has
  * to start the slide instead of building the whole list on the tap. */
-export function MobileSectionDrawer({
+export function MobileSectionDrawer<K extends string = NavKey>({
   open: requested,
   active,
   onSelect,
   onClose,
   onReplayTour,
+  renderNav,
 }: {
   /** The parent wants the menu open. It flips back via `onClose` once the
    * close animation has finished. */
   open: boolean;
-  active: NavKey;
-  onSelect: (key: NavKey) => void;
+  active: K;
+  onSelect: (key: K) => void;
   onClose: () => void;
   /** Close the menu and walk the phone tour again. */
   onReplayTour?: () => void;
+  /** The list to show — the resume's SectionNav unless another builder (the
+   * cover letter) passes its own drawer-variant nav. */
+  renderNav?: (select: (key: K) => void) => ReactNode;
 }) {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -88,7 +93,7 @@ export function MobileSectionDrawer({
   const swipeRef = useRef<{ id: number; startX: number; x: number; t: number; vx: number } | null>(null);
   // A section picked in the menu is applied once the panel has slid away,
   // so swapping the form doesn't compete with the close animation.
-  const pendingSelectRef = useRef<NavKey | null>(null);
+  const pendingSelectRef = useRef<K | null>(null);
   const [open, setOpen] = useState(false);
   const hidden = !requested && !open;
   const [dragX, setDragX] = useState(0);
@@ -142,6 +147,11 @@ export function MobileSectionDrawer({
     const pending = pendingSelectRef.current;
     onClose();
     if (pending) onSelect(pending);
+  }
+
+  function select(key: K) {
+    if (key !== active) pendingSelectRef.current = key;
+    requestClose();
   }
 
   function requestClose() {
@@ -249,14 +259,15 @@ export function MobileSectionDrawer({
           </button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)]">
-          <SectionNav
-            variant="drawer"
-            active={active}
-            onSelect={(key) => {
-              if (key !== active) pendingSelectRef.current = key;
-              requestClose();
-            }}
-          />
+          {renderNav ? (
+            renderNav(select)
+          ) : (
+            <SectionNav
+              variant="drawer"
+              active={active as NavKey}
+              onSelect={(key) => select(key as K)}
+            />
+          )}
           {onReplayTour ? (
             <div className="px-3 pt-1 pb-4">
               <button
