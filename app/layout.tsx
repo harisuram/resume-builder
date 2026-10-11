@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Fraunces, Geist, Inter, JetBrains_Mono, Playfair_Display, Source_Serif_4, Syne } from "next/font/google";
 import Script from "next/script";
+import { AHREFS_ANALYTICS_KEY, AHREFS_ANALYTICS_SRC, isAhrefsAnalyticsConfigured } from "@/lib/analytics";
 import {
   ADSENSE_CLIENT_ID,
   adsenseClientAttr,
@@ -152,6 +153,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               suppressHydrationWarning
             />
           </>
+        )}
+        {/* Ahrefs Web Analytics — cookieless visit counts. A plain tag as
+            Ahrefs issued it, so its site check finds it in the HTML. */}
+        {isAhrefsAnalyticsConfigured() && (
+          <script src={AHREFS_ANALYTICS_SRC} data-key={AHREFS_ANALYTICS_KEY} async suppressHydrationWarning />
         )}
       </head>
       {/* Extensions (ColorZilla's cz-shortcut-listen, Grammarly, etc.) stamp

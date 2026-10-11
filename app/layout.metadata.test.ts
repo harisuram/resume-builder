@@ -1,6 +1,8 @@
 import { readdirSync } from "fs";
 import { join } from "path";
-import { metadata } from "./layout";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import RootLayout, { metadata } from "./layout";
 
 /* Search Console keeps a property verified only while its proof is still
  * served. This one is a meta tag in the root layout, so it reaches every page
@@ -18,5 +20,20 @@ describe("site verification", () => {
   it("keeps no verification file, which this host would redirect away", () => {
     const publicFiles = readdirSync(join(__dirname, "..", "public"));
     expect(publicFiles.filter((name) => /^google.*\.html$/.test(name))).toEqual([]);
+  });
+});
+
+/* Ahrefs verifies the site, and counts visits, through its analytics tag.
+ * Like the Search Console token, it has to stay in every page's <head> as
+ * Ahrefs issued it — a plain async script with the site's data-key. */
+describe("Ahrefs Web Analytics", () => {
+  it("puts the Ahrefs tag, with the site's key, in the <head> of every page", () => {
+    const html = renderToStaticMarkup(
+      createElement(RootLayout, { children: createElement("main"), params: Promise.resolve({}) } as never),
+    );
+    const head = html.slice(html.indexOf("<head>"), html.indexOf("</head>"));
+    expect(head).toContain(
+      '<script src="https://analytics.ahrefs.com/analytics.js" data-key="bbGTEVcNqkuomWTkVPr0ag" async="">',
+    );
   });
 });

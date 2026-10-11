@@ -34,11 +34,12 @@ export default function PrivatePage() {
           when you open the file.
         </Body>
 
-        <SectionHeading>The three times something leaves your device</SectionHeading>
+        <SectionHeading>When something leaves your device</SectionHeading>
         <Body>Being honest about privacy means listing the exceptions, so here they are:</Body>
         <List
           items={[
             "Ads. The site is paid for by Google AdSense, so Google’s ad script loads on some pages. It sees what any web page sees — like your browser and rough location — but never the contents of your resume.",
+            "Visit counts. Ahrefs Web Analytics counts which pages are visited, without cookies. Like the ads, it sees the page, never your resume.",
             "Importing a resume. If you drop in a PDF, Word, or text file, it’s read in your browser, then the extracted text is sent to the site’s server and an AI service so it can be sorted into the right sections. Don’t want that? Type your resume in instead.",
             "The “Make ATS-friendly” button. It appears on your summary, experience entries, and projects. Clicking it sends the text of that one item to an AI service to be rewritten. If you never click it, nothing is sent.",
           ]}

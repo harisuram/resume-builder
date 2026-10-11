@@ -22,6 +22,7 @@ export default function PrivacyPage() {
             "There are no accounts. I never ask for your name, email, or a password to use the builder.",
             "Your resume draft is saved in your own browser, on your own device. It is not uploaded to a server I run.",
             "The site shows ads from Google AdSense. Google may use cookies to serve and measure those ads.",
+            "Ahrefs Web Analytics counts page visits without cookies, so I can see which pages people use. It never receives your resume.",
             "Two optional features — importing an existing resume and the “Make ATS-friendly” rewrite — send text to an AI service to do their job. Nothing is sent unless you use them.",
             "I don’t sell personal information, and I have none to sell: I don’t keep copies of resumes.",
           ]}
@@ -93,6 +94,14 @@ export default function PrivacyPage() {
           page sees, like your browser type and approximate location.
         </Body>
 
+        <SectionHeading>Visit statistics</SectionHeading>
+        <Body>
+          The site uses Ahrefs Web Analytics to count visits — which pages are viewed, where visitors arrive from, and
+          their browser, device type and approximate country. It doesn’t use cookies and doesn’t identify you, and
+          it only sees the page, never what you type into the builder: your resume and cover letter stay in your
+          browser.
+        </Body>
+
         <SectionHeading>Hosting and security</SectionHeading>
         <Body>
           The site is hosted on Cloudflare. Like any web host, Cloudflare handles your IP address and basic request
@@ -115,7 +124,7 @@ export default function PrivacyPage() {
         <Body>
           Because your resume stays on your device, you already control it completely: you can edit it, export it as a
           PDF, or delete it. Depending on where you live, you may also have legal rights to ask what data is held about
-          you, or to have it corrected or deleted. For data held by Google or Cloudflare, their own privacy tools apply.
+          you, or to have it corrected or deleted. For data held by Google, Ahrefs or Cloudflare, their own privacy tools apply.
           For anything else, email me and I’ll help as far as I can — in practice I hold almost nothing that could be
           linked to you.
         </Body>

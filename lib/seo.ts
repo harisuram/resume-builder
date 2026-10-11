@@ -72,7 +72,7 @@ export const FEATURES = [
   },
   {
     title: "Private by default",
-    body: "Work stays in your browser. Clicking Save & Next or Skip writes a draft to this device’s local storage — nothing is uploaded as a hosted resume. Ads, importing a resume, and the optional AI rewrite are the only times anything leaves your device — the private resume builder page has the details.",
+    body: "Work stays in your browser. Clicking Save & Next or Skip writes a draft to this device’s local storage — nothing is uploaded as a hosted resume. Ads, cookieless visit counts, importing a resume, and the optional AI rewrite are the only times anything leaves your device — the private resume builder page has the details.",
     href: "/private" as const,
     linkLabel: "How private this is",
   },
