@@ -1,5 +1,6 @@
 import { resumeSectionTitle } from "@/lib/persona";
 import { NARROW_SECTION_KEYS } from "@/lib/resume";
+import { renderableSkillGroups } from "@/lib/skillGroups";
 import type { ResumeData, SectionKey } from "@/lib/types";
 import {
   AdditionalList,
@@ -12,6 +13,7 @@ import {
   LanguageList,
   PatentList,
   ProjectList,
+  SkillGroupList,
 } from "./atoms";
 import { SectionHeading } from "./SectionHeading";
 import type { TemplateTheme } from "./theme";
@@ -86,13 +88,19 @@ export function ResumeSection({
           />
         </>
       );
-    case "skills":
+    case "skills": {
+      const groups = renderableSkillGroups(data);
       return (
         <>
           {heading}
-          <ChipOrInline items={data.sections.skills!} accent={theme.accent} compact={compact} light={light} />
+          {groups ? (
+            <SkillGroupList groups={groups} light={light} />
+          ) : (
+            <ChipOrInline items={data.sections.skills!} accent={theme.accent} compact={compact} light={light} />
+          )}
         </>
       );
+    }
     case "certifications":
       return (
         <>

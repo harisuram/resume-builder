@@ -25,6 +25,8 @@ export function ChipInput({
   maxLength,
   itemLabel = "item",
   suggestions,
+  taken,
+  takenMessage,
 }: {
   values: string[];
   onChange: (values: string[]) => void;
@@ -34,6 +36,11 @@ export function ChipInput({
   /** Optional catalog. Already-selected values are hidden; the user can still
    * type anything and press Enter. */
   suggestions?: string[];
+  /** Values that live elsewhere (another skill group) and so can't be added
+   * here either: they're rejected with `takenMessage` and kept out of the
+   * suggestions. */
+  taken?: string[];
+  takenMessage?: string;
 }) {
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | undefined>();
@@ -46,8 +53,8 @@ export function ChipInput({
   const shownPlaceholder = phone ? placeholder?.replace(/,\s*press Enter\.?$/i, "") : placeholder;
 
   const matches = useMemo(
-    () => (suggestions ? filterCatalog(suggestions, draft, values) : []),
-    [suggestions, draft, values],
+    () => (suggestions ? filterCatalog(suggestions, draft, taken ? [...values, ...taken] : values) : []),
+    [suggestions, draft, values, taken],
   );
   const showList = Boolean(suggestions) && open && matches.length > 0;
 
@@ -64,6 +71,10 @@ export function ChipInput({
     }
     if (values.some((existing) => existing.toLowerCase() === next.toLowerCase())) {
       setError(`That ${itemLabel} is already on the list.`);
+      return;
+    }
+    if (taken?.some((existing) => existing.toLowerCase() === next.toLowerCase())) {
+      setError(takenMessage ?? `That ${itemLabel} is already on the list.`);
       return;
     }
     onChange([...values, next]);

@@ -112,3 +112,39 @@ describe("ChipInput", () => {
     });
   });
 });
+
+describe("ChipInput — taken values", () => {
+  function WithTaken({ taken }: { taken: string[] }) {
+    const [values, setValues] = useState<string[]>([]);
+    return (
+      <ChipInput
+        values={values}
+        onChange={setValues}
+        placeholder="Add a skill, press Enter"
+        suggestions={["React", "Redis"]}
+        taken={taken}
+        takenMessage="That skill is already in another group."
+      />
+    );
+  }
+
+  it("rejects a taken value, ignoring case, with the given message", async () => {
+    render(<WithTaken taken={["React"]} />);
+    await userEvent.type(screen.getByPlaceholderText("Add a skill, press Enter"), "react{Enter}");
+    expect(screen.getByText("That skill is already in another group.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Remove react" })).not.toBeInTheDocument();
+  });
+
+  it("leaves taken values out of the suggestions", async () => {
+    render(<WithTaken taken={["React"]} />);
+    await userEvent.click(screen.getByPlaceholderText("Add a skill, press Enter"));
+    expect(screen.queryByRole("option", { name: "React" })).not.toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Redis" })).toBeInTheDocument();
+  });
+
+  it("still accepts anything not taken", async () => {
+    render(<WithTaken taken={["React"]} />);
+    await userEvent.type(screen.getByPlaceholderText("Add a skill, press Enter"), "Vue{Enter}");
+    expect(screen.getByText("Vue")).toBeInTheDocument();
+  });
+});

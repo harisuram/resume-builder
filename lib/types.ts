@@ -70,6 +70,15 @@ export interface AdditionalItem {
   bullets: string[];
 }
 
+/** One titled bundle of skills ("Frontend: React, TypeScript"). Used only
+ * when the user switches Skills to grouped mode (ResumeData.skillsLayout). */
+export interface SkillGroup {
+  title: string;
+  skills: string[];
+}
+
+export type SkillsLayout = "list" | "grouped";
+
 /** One freeform block: a user-named heading plus a list of entries. */
 export interface AdditionalSection {
   heading: string;
@@ -121,6 +130,14 @@ export interface ResumeData {
    * via the section nav. Absent = use the default order (lib/persona.ts).
    * Summary is intentionally not part of this — see getNavSectionOrder. */
   sectionOrder?: SectionKey[];
+  /** How the Skills section is drawn. Absent = "list", the flat chip list
+   * every resume used before groups existed. */
+  skillsLayout?: SkillsLayout;
+  /** The titled groups behind grouped mode. Kept while the user is back on
+   * the flat list so switching modes again doesn't lose their titles. In
+   * grouped mode sections.skills always holds the same skills, flattened —
+   * everything that only asks "are there skills?" keeps reading that. */
+  skillGroups?: SkillGroup[];
 }
 
 /** The guided body paragraphs every cover letter starts with. Custom

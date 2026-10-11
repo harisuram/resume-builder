@@ -9,6 +9,7 @@ import type {
   Project,
   ResumeData,
   SectionKey,
+  SkillGroup,
 } from "@/lib/types";
 import { formatDateRange, formatMonth, isCurrentExperience } from "@/lib/date";
 import { DEFAULT_DIAL_CODE } from "@/lib/countryCodes";
@@ -561,6 +562,28 @@ export function AdditionalList({
             {item.date && <p className={`text-[11.5px] ${tone(light, "faint")}`}>{item.date}</p>}
           </div>
           {item.bullets.length > 0 && <BulletList items={item.bullets} theme={theme} light={light} className="mt-1" />}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Grouped skills, one "Title: a, b, c" line per group. Plain wrapping text
+ * rather than chips so the one style reads in a wide column and a narrow
+ * rail alike, and matches the PDF line for line (SkillGroupLines). A group
+ * never splits across a page: its row is a div, not a p, because print
+ * resets `break-inside` on p. */
+export function SkillGroupList({ groups, light = false }: { groups: SkillGroup[]; light?: boolean }) {
+  return (
+    <div className="space-y-1.5" data-skill-groups="">
+      {groups.map((group, i) => (
+        <div
+          key={i}
+          className={`break-inside-avoid text-[12px] leading-relaxed [overflow-wrap:anywhere] ${tone(light, "strong")}`}
+          data-skill-group={group.title}
+        >
+          {group.title ? <span className="font-semibold">{`${group.title}: `}</span> : null}
+          {group.skills.join(", ")}
         </div>
       ))}
     </div>

@@ -4,6 +4,7 @@ import { canonicalTemplateId } from "@/components/templates/shared/theme";
 import { type ImportedResume } from "./resumeImport/normalize";
 import { placeSectionAt, resolveSectionOrder, SECTION_ORDER } from "./persona";
 import { itemBreakKey, parseItemBreakKey } from "./resume";
+import { flattenSkillGroups, reconcileSkillGroups, sanitizeSkillGroups } from "./skillGroups";
 import { isBasicInfoValid, isSectionValid } from "./validation";
 import type {
   AdditionalItem,
@@ -12,6 +13,8 @@ import type {
   ResumeSections,
   SectionKey,
   SectionStatus,
+  SkillGroup,
+  SkillsLayout,
   TemplateId,
 } from "./types";
 
@@ -138,6 +141,16 @@ interface BuilderState {
 
   setSummary: (text: string) => void;
   setSkills: (skills: string[]) => void;
+  skillsLayout: SkillsLayout;
+  skillGroups: SkillGroup[];
+  /** Switches Skills between the flat list and titled groups. Going to
+   * groups folds the current list into the saved groups (see
+   * reconcileSkillGroups); going back keeps the groups for next time. */
+  setSkillsLayout: (layout: SkillsLayout) => void;
+  /** Replaces the groups and keeps sections.skills equal to their flattened
+   * skills, so status, the cover letter and everything else that reads the
+   * flat list stays right. */
+  setSkillGroups: (groups: SkillGroup[]) => void;
   setHobbies: (items: string[]) => void;
   setSoftSkills: (items: string[]) => void;
   setKeyAchievements: (items: string[]) => void;
@@ -230,6 +243,33 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
     set((state) => {
       const sections = { ...state.sections, skills };
       return {
+        sections,
+        sectionStatus: { ...state.sectionStatus, skills: nextStatus("skills", sections, state.sectionStatus) },
+      };
+    }),
+
+  skillsLayout: "list",
+  skillGroups: [],
+
+  setSkillsLayout: (layout) =>
+    set((state) => {
+      if (layout === state.skillsLayout) return state;
+      if (layout === "list") return { skillsLayout: layout };
+      const skillGroups = reconcileSkillGroups(state.sections.skills ?? [], state.skillGroups);
+      const sections = { ...state.sections, skills: flattenSkillGroups(skillGroups) };
+      return {
+        skillsLayout: layout,
+        skillGroups,
+        sections,
+        sectionStatus: { ...state.sectionStatus, skills: nextStatus("skills", sections, state.sectionStatus) },
+      };
+    }),
+
+  setSkillGroups: (groups) =>
+    set((state) => {
+      const sections = { ...state.sections, skills: flattenSkillGroups(groups) };
+      return {
+        skillGroups: groups,
         sections,
         sectionStatus: { ...state.sectionStatus, skills: nextStatus("skills", sections, state.sectionStatus) },
       };
@@ -368,6 +408,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       delete sections[key];
       return {
         sections,
+        ...(key === "skills" ? { skillGroups: [] } : {}),
         sectionStatus: { ...state.sectionStatus, [key]: "not_started" },
         pageBreakSections: state.pageBreakSections.filter((k) => k !== key),
         pageBreakItems: state.pageBreakItems.filter((id) => parseItemBreakKey(id)?.section !== key),
@@ -437,7 +478,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
     set({
       basicInfo: data.basicInfo,
       photo: data.photo ?? null,
-      sections: data.sections,
+      ...loadedSkills(data),
       sectionStatus: data.sectionStatus,
       // Drafts saved before a template was renamed carry its old id.
       templateId: canonicalTemplateId(data.templateId),
@@ -460,9 +501,12 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
           ? deriveStatus(key, imported.sections)
           : "not_started";
       }
+      const skillGroups = sanitizeSkillGroups(imported.skillGroups);
       return {
         basicInfo: imported.basicInfo,
         sections: imported.sections,
+        skillsLayout: skillGroups.length > 0 ? "grouped" : "list",
+        skillGroups,
         sectionStatus,
         pageBreakSections: [],
         pageBreakItems: [],
@@ -475,6 +519,8 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       photo: null,
       sections: {},
       sectionStatus: {},
+      skillsLayout: "list",
+      skillGroups: [],
       templateId: DEFAULT_TEMPLATE,
       hasSavedCopy: false,
       pageBreakSections: [],
@@ -493,9 +539,37 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       pageBreakSections: state.pageBreakSections,
       pageBreakItems: state.pageBreakItems,
       sectionOrder: state.sectionOrder ?? undefined,
+      ...skillsFields(state.skillsLayout, state.skillGroups),
     };
   },
 }));
+
+/** The skills-mode fields of ResumeData, left off entirely for a resume that
+ * never used groups so its saved JSON is exactly what it was before. */
+function skillsFields(skillsLayout: SkillsLayout, skillGroups: SkillGroup[]): Pick<ResumeData, "skillsLayout" | "skillGroups"> {
+  return {
+    ...(skillsLayout === "grouped" ? { skillsLayout } : {}),
+    ...(skillGroups.length > 0 ? { skillGroups } : {}),
+  };
+}
+
+/** Skills state from a saved resume. Saved JSON is untrusted (older
+ * versions, hand edits), so the groups are sanitized, and in grouped mode
+ * the flat list is re-derived from them — or, if the groups came back
+ * empty, the groups are rebuilt from the flat list — so the two can't
+ * disagree about what the resume contains. */
+function loadedSkills(data: ResumeData): Pick<BuilderState, "sections" | "skillsLayout" | "skillGroups"> {
+  const skillsLayout: SkillsLayout = data.skillsLayout === "grouped" ? "grouped" : "list";
+  let skillGroups = sanitizeSkillGroups(data.skillGroups);
+  let sections = data.sections;
+  if (skillsLayout === "grouped") {
+    if (flattenSkillGroups(skillGroups).length === 0) {
+      skillGroups = reconcileSkillGroups(data.sections.skills ?? [], skillGroups);
+    }
+    sections = { ...data.sections, skills: flattenSkillGroups(skillGroups) };
+  }
+  return { sections, skillsLayout, skillGroups };
+}
 
 /**
  * Reactive equivalent of `getResumeData()` for use during render (the
@@ -513,6 +587,8 @@ export function useResumeData(): ResumeData {
   const pageBreakSections = useBuilderStore((s) => s.pageBreakSections);
   const pageBreakItems = useBuilderStore((s) => s.pageBreakItems);
   const sectionOrder = useBuilderStore((s) => s.sectionOrder);
+  const skillsLayout = useBuilderStore((s) => s.skillsLayout);
+  const skillGroups = useBuilderStore((s) => s.skillGroups);
 
   return useMemo(
     () => ({
@@ -524,7 +600,19 @@ export function useResumeData(): ResumeData {
       pageBreakSections,
       pageBreakItems,
       sectionOrder: sectionOrder ?? undefined,
+      ...skillsFields(skillsLayout, skillGroups),
     }),
-    [basicInfo, photo, sections, sectionStatus, templateId, pageBreakSections, pageBreakItems, sectionOrder],
+    [
+      basicInfo,
+      photo,
+      sections,
+      sectionStatus,
+      templateId,
+      pageBreakSections,
+      pageBreakItems,
+      sectionOrder,
+      skillsLayout,
+      skillGroups,
+    ],
   );
 }

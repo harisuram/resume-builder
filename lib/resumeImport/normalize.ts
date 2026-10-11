@@ -13,6 +13,7 @@ import type {
   Project,
   ResumeSections,
   SectionKey,
+  SkillGroup,
 } from "../types";
 import {
   LANGUAGE_LEVELS,
@@ -27,6 +28,7 @@ import {
   sanitizePhoneDigits,
   validateGpa,
 } from "../validation";
+import { flattenSkillGroups, reconcileSkillGroups, sanitizeSkillGroups } from "../skillGroups";
 import { keyToHeading, resolveSectionHeading, type ImportTarget } from "./synonyms";
 
 function hasSectionContent(key: SectionKey, sections: Partial<ResumeSections>): boolean {
@@ -45,6 +47,9 @@ export interface ImportedResume {
   basicInfo: BasicInfo;
   sections: Partial<ResumeSections>;
   filled: ImportTarget[];
+  /** Titled skill groups, when the source resume grouped its skills
+   * ("Frontend: React, CSS"). sections.skills holds the same skills flat. */
+  skillGroups?: SkillGroup[];
 }
 
 const EMPTY_BASIC: BasicInfo = {
@@ -607,14 +612,21 @@ export function normalizeParsedResume(raw: unknown): ImportedResume {
   const nested = root.sections && typeof root.sections === "object" ? (root.sections as Record<string, unknown>) : {};
   const combined: Record<string, unknown> = { ...nested };
   for (const [key, value] of Object.entries(root)) {
-    if (key === "sections" || key === "basicInfo" || key === "contact" || key === "basic_info" || key === "filled") {
+    if (
+      key === "sections" ||
+      key === "basicInfo" ||
+      key === "contact" ||
+      key === "basic_info" ||
+      key === "filled" ||
+      key === "skillGroups"
+    ) {
       continue;
     }
     if (!(key in combined)) combined[key] = value;
   }
 
   for (const [key, value] of Object.entries(combined)) {
-    if (value == null) continue;
+    if (value == null || key === "skillGroups") continue;
     if (CONTENT_KEYS.includes(key as SectionKey)) {
       assignSection(sections, key as SectionKey, value);
       continue;
@@ -626,11 +638,28 @@ export function normalizeParsedResume(raw: unknown): ImportedResume {
 
   redistributeJobs(sections);
 
+  const skillGroups = importedSkillGroups(root.skillGroups ?? nested.skillGroups, sections.skills ?? []);
+  if (skillGroups) sections.skills = flattenSkillGroups(skillGroups);
+
   return {
     basicInfo,
     sections,
     filled: filledTargetsOf(basicInfo, sections),
+    ...(skillGroups ? { skillGroups } : {}),
   };
+}
+
+/** Groups worth importing: at least one titled group with skills in it.
+ * Anything less is just the flat skills list, which `skills` already holds.
+ * Flat skills that no group mentions are kept in an untitled group, so
+ * switching to groups never hides a skill the file listed. */
+function importedSkillGroups(raw: unknown, flatSkills: string[]): SkillGroup[] | undefined {
+  const groups = sanitizeSkillGroups(raw)
+    .map((group) => ({ title: group.title.trim(), skills: group.skills }))
+    .filter((group) => group.skills.length > 0);
+  if (!groups.some((group) => group.title)) return undefined;
+  const everySkill = flattenSkillGroups([...groups, { title: "", skills: flatSkills }]);
+  return reconcileSkillGroups(everySkill, groups);
 }
 
 function unwrapResume(raw: unknown): Record<string, unknown> {
@@ -660,5 +689,14 @@ export function mergeImportedResumes(base: ImportedResume, overlay: ImportedResu
       (sections as Record<string, unknown>)[key] = overlay.sections[key];
     }
   }
-  return { basicInfo, sections, filled: filledTargetsOf(basicInfo, sections) };
+  // The overlay's groups only make sense with the overlay's own skills; if it
+  // brought no skills, the base's skills and groups stand together.
+  const skillGroups = hasSectionContent("skills", overlay.sections) ? overlay.skillGroups : base.skillGroups;
+  if (skillGroups) sections.skills = flattenSkillGroups(skillGroups);
+  return {
+    basicInfo,
+    sections,
+    filled: filledTargetsOf(basicInfo, sections),
+    ...(skillGroups ? { skillGroups } : {}),
+  };
 }

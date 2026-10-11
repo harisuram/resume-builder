@@ -20,6 +20,7 @@ const IMPORT_SYSTEM_PROMPT = `You extract structured resume data. Never invent e
   "education": [{"institution":"","degree":"","fieldOfStudy":"","startDate":"YYYY-MM","endDate":"YYYY-MM","gpa":"","coursework":["..."]}],
   "projects": [{"name":"","description":"","link":"","technologies":["..."]}],
   "skills": ["..."],
+  "skillGroups": [{"title":"","skills":["..."]}],
   "certifications": [{"name":"","issuer":"","date":"YYYY-MM"}],
   "patents": [{"title":"","number":"","date":"YYYY-MM","office":"","link":""}],
   "languages": [{"name":"","level":"Native|Fluent|Professional|Intermediate|Basic"}],
@@ -34,6 +35,7 @@ Map section headings by meaning, including synonyms:
 - Part-time, Campus jobs → partTime
 - Academic Background, Qualifications → education
 - Technical Skills, Core Competencies, Tools, Tech Stack, Programming Languages → skills
+- If the skills are listed under sub-headings (e.g. "Frontend: React, CSS" / "Backend: Node, SQL"), also return skillGroups with one entry per sub-heading, keeping the original sub-heading as title; otherwise omit skillGroups. skills must still list every skill.
 - Profile, About Me, Objective, Professional Summary → summary
 - Achievements, Highlights, Accomplishments → keyAchievements
 - Licenses, Certificates, Credentials → certifications

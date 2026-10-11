@@ -1150,13 +1150,13 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
 }
 
 /* Sterling: skills as a ruled three-column list of competencies. */
-.resume-surface[data-variant="sterling"] [data-section-key="skills"] > div {
+.resume-surface[data-variant="sterling"] [data-section-key="skills"] > div:not([data-skill-groups]) {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0 20px;
   border-top: 1px solid var(--variant-rule);
 }
-.resume-surface[data-variant="sterling"] [data-section-key="skills"] > div > span {
+.resume-surface[data-variant="sterling"] [data-section-key="skills"] > div:not([data-skill-groups]) > span {
   background: none !important;
   color: var(--r-ink) !important;
   border-radius: 0;
@@ -1167,7 +1167,7 @@ ins.adsbygoogle[data-ad-status="unfilled"] {
 }
 
 /* Kernel: stack chips in monospace. */
-.resume-surface[data-variant="kernel"] [data-section-key="skills"] > div > span {
+.resume-surface[data-variant="kernel"] [data-section-key="skills"] > div:not([data-skill-groups]) > span {
   font-family: var(--font-jetbrains-mono), ui-monospace, Menlo, monospace;
   border-radius: 4px;
 }

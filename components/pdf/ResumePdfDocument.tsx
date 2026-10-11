@@ -18,8 +18,9 @@ import { PAGE_INSET_PX, PAGE_PAD_X_PX, PAGE_PAD_Y_PX } from "@/lib/page";
 import { mixHex, tintHex } from "@/lib/pdf/color";
 import { SUMMARY_COPY, resumeSectionTitle } from "@/lib/persona";
 import { NARROW_SECTION_KEYS, getRenderableSections, hasSummary } from "@/lib/resume";
+import { renderableSkillGroups } from "@/lib/skillGroups";
 import type { LetterContent } from "@/lib/coverLetter";
-import type { BasicInfo, ResumeData, SectionKey } from "@/lib/types";
+import type { BasicInfo, ResumeData, SectionKey, SkillGroup } from "@/lib/types";
 import { CoverLetterBody } from "./CoverLetterBody";
 import { PDF_DISPLAY, PDF_SANS, PDF_SERIF } from "./fonts";
 import { VariantPages } from "./variantPages";
@@ -1074,7 +1075,19 @@ export function PdfSection({
           </View>
         </>
       );
-    case "skills":
+    case "skills": {
+      const groups = renderableSkillGroups(data);
+      return (
+        <>
+          {heading}
+          {groups ? (
+            <SkillGroupLines groups={groups} ink={ink} />
+          ) : (
+            <ChipOrInline items={s.skills!} accent={theme.accent} inline={compact || ink.light} ink={ink} />
+          )}
+        </>
+      );
+    }
     case "hobbies":
     case "softSkills":
       return (
@@ -1164,6 +1177,21 @@ export function PdfSection({
         </>
       );
   }
+}
+
+/** Mirror of the HTML SkillGroupList: one "Title: a, b, c" line per group,
+ * 6px apart (space-y-1.5), each held on one page as a unit. */
+export function SkillGroupLines({ groups, ink }: { groups: SkillGroup[]; ink: Ink }) {
+  return (
+    <View style={{ gap: pt(6) }}>
+      {groups.map((group, i) => (
+        <Text key={i} wrap={false} style={{ ...text(12), lineHeight: 1.625, color: ink.strong }}>
+          {group.title ? <Text style={{ fontWeight: 600 }}>{`${group.title}: `}</Text> : null}
+          {group.skills.join(", ")}
+        </Text>
+      ))}
+    </View>
+  );
 }
 
 export function ChipOrInline({ items, accent, inline, ink }: { items: string[]; accent: string; inline: boolean; ink: Ink }) {

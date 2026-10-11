@@ -17,6 +17,7 @@ import { PAGE_INSET_PX, PAGE_PAD_Y_PX } from "@/lib/page";
 import { mixHex, tintHex } from "@/lib/pdf/color";
 import { SUMMARY_COPY, resumeSectionTitle } from "@/lib/persona";
 import { getRenderableSections, hasSummary } from "@/lib/resume";
+import { renderableSkillGroups } from "@/lib/skillGroups";
 import type { LetterContent } from "@/lib/coverLetter";
 import type { BasicInfo, ResumeData, SectionKey } from "@/lib/types";
 import { CoverLetterBody } from "./CoverLetterBody";
@@ -150,10 +151,13 @@ function VariantSection({
   if (theme.variant === "pivot" && section === "keyAchievements") {
     return <ResultsGrid data={data} theme={theme} ink={ink} width={width} />;
   }
-  if (theme.variant === "sterling" && section === "skills") {
+  // Grouped skills draw the standard group lines in every variant, as the
+  // HTML does (globals.css scopes these two treatments to the flat list).
+  const flatSkills = section === "skills" && !renderableSkillGroups(data);
+  if (theme.variant === "sterling" && flatSkills) {
     return <CompetencyGrid data={data} theme={theme} ink={ink} width={width} />;
   }
-  if (theme.variant === "kernel" && section === "skills") {
+  if (theme.variant === "kernel" && flatSkills) {
     return <MonoChips data={data} theme={theme} ink={ink} />;
   }
   return <PdfSection section={section} data={data} theme={theme} ink={ink} />;

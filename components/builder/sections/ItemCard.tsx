@@ -21,9 +21,12 @@ const FOCUSABLE =
 export function ItemCard({
   onRemove,
   autoFocus = false,
+  removeLabel = "Remove",
   children,
 }: {
   onRemove: () => void;
+  /** Accessible name for the delete icon, when "Remove" alone is ambiguous. */
+  removeLabel?: string;
   /** When true (the card that was just added), the first field is focused
    * so the user can type without an extra click. */
   autoFocus?: boolean;
@@ -44,7 +47,7 @@ export function ItemCard({
       <DeleteIconButton
         icon="entry"
         onClick={onRemove}
-        aria-label="Remove"
+        aria-label={removeLabel}
         className="absolute right-2 top-2 h-9 w-9 md:right-3 md:top-3 md:h-8 md:w-8"
       />
       {/* Extra top padding on phones keeps fields clear of the delete icon;
