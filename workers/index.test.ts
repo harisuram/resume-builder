@@ -53,3 +53,32 @@ describe("per-minute throttle", () => {
     await expect(res.json()).resolves.toMatchObject({ code: "throttled" });
   });
 });
+
+describe("geo Worker route", () => {
+  it("returns the country Cloudflare attached to the request", async () => {
+    const req = new Request("https://example.com/api/geo");
+    Object.defineProperty(req, "cf", { value: { country: "IN" } });
+    const res = await worker.fetch(req, env);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("cache-control")).toBe("private, no-store");
+    await expect(res.json()).resolves.toEqual({ country: "IN" });
+  });
+
+  it("falls back to the cf-ipcountry header", async () => {
+    const res = await worker.fetch(new Request("https://example.com/api/geo", { headers: { "cf-ipcountry": "us" } }), env);
+    await expect(res.json()).resolves.toEqual({ country: "US" });
+  });
+
+  it("reports null for unknown and Tor traffic", async () => {
+    for (const code of ["XX", "T1"]) {
+      const res = await worker.fetch(new Request("https://example.com/api/geo", { headers: { "cf-ipcountry": code } }), env);
+      await expect(res.json()).resolves.toEqual({ country: null });
+    }
+  });
+
+  it("rejects POST on /api/geo", async () => {
+    const res = await post("/api/geo");
+    expect(res.status).toBe(405);
+    expect(res.headers.get("allow")).toBe("GET");
+  });
+});

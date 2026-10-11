@@ -38,6 +38,7 @@ export default function PrivacyPage() {
             "Your light or dark theme choice.",
             "Whether you’ve already dismissed the builder’s quick tour, so it doesn’t keep reappearing.",
             "A short timer if the AI rewrite is temporarily busy, so the button can tell you when to try again.",
+            "The two-letter code of the country you’re visiting from (for example “IN”), used to pre-select your phone dial code and the grading system for your education. It’s looked up once, and you can change both in the builder.",
           ]}
         />
         <Body>
@@ -97,7 +98,9 @@ export default function PrivacyPage() {
           The site is hosted on Cloudflare. Like any web host, Cloudflare handles your IP address and basic request
           details (the page requested, the time, your browser type) to deliver pages and protect the site from abuse.
           The AI features also use your IP address, briefly and in memory only, to limit how many requests one visitor
-          can make per minute. I can see basic request logs — which page or feature was requested and whether it
+          can make per minute. When you first open the builder, it asks the site’s server which country your
+          request came from. Cloudflare works this out from your IP address; only the country code is sent back to
+          your browser, and nothing about it is stored on the server. I can see basic request logs — which page or feature was requested and whether it
           worked — to fix problems. I don’t use them to identify anyone.
         </Body>
 

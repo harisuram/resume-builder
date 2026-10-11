@@ -144,6 +144,17 @@ function LanguagesIcon({ filled }: IconProps) {
   );
 }
 
+function PersonalDetailsIcon({ filled }: IconProps) {
+  return (
+    <Svg filled={filled}>
+      <rect x="3.6" y="5.6" width="16.8" height="12.8" rx="1.8" />
+      <circle cx="9" cy="11" r="1.9" className="nav-icon-cut" />
+      <path d="M6.2 15.6c.4-1.4 1.5-2.2 2.8-2.2s2.4.8 2.8 2.2" className="nav-icon-cut" />
+      <path d="M14.2 10h3.6M14.2 13.4h2.6" className="nav-icon-cut" />
+    </Svg>
+  );
+}
+
 function HobbiesIcon({ filled }: IconProps) {
   return (
     <Svg filled={filled}>
@@ -205,6 +216,7 @@ const ICONS: Record<NavKey, (p: IconProps) => React.ReactElement> = {
   languages: LanguagesIcon,
   hobbies: HobbiesIcon,
   softSkills: SoftSkillsIcon,
+  personalDetails: PersonalDetailsIcon,
   additional: AdditionalIcon,
   export: ExportIcon,
 };

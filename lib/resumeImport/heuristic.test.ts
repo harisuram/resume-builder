@@ -1,3 +1,4 @@
+import { useBuilderStore } from "../store";
 import { parseResumeText } from "./heuristic";
 
 const SAMPLE = `JORDAN LEE
@@ -186,5 +187,80 @@ describe("more heading wordings", () => {
   ])("%s → %s", async (heading, key) => {
     const { resolveSectionHeading } = await import("./synonyms");
     expect(resolveSectionHeading(heading)).toBe(key);
+  });
+});
+
+describe("grouped skills, without the AI pass", () => {
+  const resume = (skills: string) => `PRIYA SHARMA
+priya@example.com | +91 98765 43210 | Bengaluru
+
+${skills}
+
+EXPERIENCE
+Software Engineer | Acme Corp | Jan 2021 – Present
+- Built a design system`;
+
+  it("reads 'Title: skill, skill' lines as titled groups, Tools line included", () => {
+    const parsed = parseResumeText(resume("SKILLS\nFrontend: React, TypeScript, CSS\nBackend: Node.js, PostgreSQL\nTools: Git, Docker"));
+    expect(parsed.skillGroups).toEqual([
+      { title: "Frontend", skills: ["React", "TypeScript", "CSS"] },
+      { title: "Backend", skills: ["Node.js", "PostgreSQL"] },
+      { title: "Tools", skills: ["Git", "Docker"] },
+    ]);
+    expect(parsed.sections.skills).toEqual(["React", "TypeScript", "CSS", "Node.js", "PostgreSQL", "Git", "Docker"]);
+    // No title glued onto a skill.
+    expect(parsed.sections.skills?.some((skill) => skill.includes(":"))).toBe(false);
+  });
+
+  it("takes bulleted group lines, and 'Languages:' with programming languages as a group", () => {
+    const parsed = parseResumeText(
+      resume("TECHNICAL SKILLS\n• Languages: Python, Java, SQL\n• Frameworks: Django, Spring\n• Cloud & DevOps: AWS, Docker"),
+    );
+    expect(parsed.skillGroups?.map((group) => group.title)).toEqual(["Languages", "Frameworks", "Cloud & DevOps"]);
+    expect(parsed.sections.languages).toBeUndefined();
+  });
+
+  it("still files 'Languages:' with proficiency levels as spoken languages", () => {
+    const parsed = parseResumeText(resume("SKILLS\nFrontend: React, CSS\nLanguages: English (Native), Hindi (Fluent)"));
+    expect(parsed.skillGroups).toEqual([{ title: "Frontend", skills: ["React", "CSS"] }]);
+    expect(parsed.sections.languages).toEqual([
+      { name: "English", level: "Native" },
+      { name: "Hindi", level: "Fluent" },
+    ]);
+  });
+
+  it("keeps skills no group names in an untitled group, so none are lost", () => {
+    const parsed = parseResumeText(resume("SKILLS\nReact, Vue\nTools: Git, Docker"));
+    expect(parsed.skillGroups).toEqual([
+      { title: "Tools", skills: ["Git", "Docker"] },
+      { title: "", skills: ["React", "Vue"] },
+    ]);
+  });
+
+  it("leaves a flat skills list flat", () => {
+    const parsed = parseResumeText(resume("SKILLS\nReact, TypeScript, CSS\nNode.js"));
+    expect(parsed.sections.skills).toEqual(["React", "TypeScript", "CSS", "Node.js"]);
+    expect(parsed.skillGroups).toBeUndefined();
+  });
+
+  it("keeps a one-line section's content ('Skills: React, Node, SQL') instead of dropping it", () => {
+    const parsed = parseResumeText(resume("Skills: React, Node, SQL"));
+    expect(parsed.sections.skills).toEqual(["React", "Node", "SQL"]);
+    expect(parsed.skillGroups).toBeUndefined();
+  });
+
+  it("opens the builder's Skills in grouped mode, the same as an AI import", () => {
+    useBuilderStore.getState().resetStore();
+    useBuilderStore.getState().applyImportedResume(parseResumeText(resume("SKILLS\nFrontend: React, CSS\nTools: Git, Docker")));
+    const state = useBuilderStore.getState();
+    expect(state.skillsLayout).toBe("grouped");
+    expect(state.skillGroups.map((group) => group.title)).toEqual(["Frontend", "Tools"]);
+    expect(state.sections.skills).toEqual(["React", "CSS", "Git", "Docker"]);
+    expect(state.getResumeData()).toMatchObject({ skillsLayout: "grouped" });
+  });
+
+  it("adds a second skills block to the first instead of replacing it", () => {
+    const parsed = parseResumeText(resume("SKILLS\nReact, CSS\n\nTECHNICAL SKILLS\nDocker, AWS"));
+    expect(parsed.sections.skills).toEqual(["React", "CSS", "Docker", "AWS"]);
   });
 });

@@ -5,10 +5,11 @@ import { type ImportedResume } from "./resumeImport/normalize";
 import { placeSectionAt, resolveSectionOrder, SECTION_ORDER } from "./persona";
 import { itemBreakKey, parseItemBreakKey } from "./resume";
 import { flattenSkillGroups, reconcileSkillGroups, sanitizeSkillGroups } from "./skillGroups";
-import { isBasicInfoValid, isSectionValid } from "./validation";
+import { hasPersonalDetails, isBasicInfoValid, isSectionValid } from "./validation";
 import type {
   AdditionalItem,
   BasicInfo,
+  PersonalDetails,
   ResumeData,
   ResumeSections,
   SectionKey,
@@ -74,6 +75,7 @@ export function hasSectionContent(key: SectionKey, sections: Partial<ResumeSecti
   if (key === "summary") {
     return typeof value === "string" && value.trim().length > 0;
   }
+  if (key === "personalDetails") return hasPersonalDetails(sections.personalDetails);
   return Array.isArray(value) && value.length > 0;
 }
 
@@ -140,6 +142,8 @@ interface BuilderState {
   updateLinks: (patch: Partial<BasicInfo["links"]>) => void;
 
   setSummary: (text: string) => void;
+  /** Merges into Personal details; a field set to "" is dropped. */
+  updatePersonalDetails: (patch: Partial<PersonalDetails>) => void;
   setSkills: (skills: string[]) => void;
   skillsLayout: SkillsLayout;
   skillGroups: SkillGroup[];
@@ -236,6 +240,22 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       return {
         sections,
         sectionStatus: { ...state.sectionStatus, summary: nextStatus("summary", sections, state.sectionStatus) },
+      };
+    }),
+
+  updatePersonalDetails: (patch) =>
+    set((state) => {
+      const merged: PersonalDetails = { ...state.sections.personalDetails, ...patch };
+      for (const field of Object.keys(merged) as (keyof PersonalDetails)[]) {
+        if (!merged[field]) delete merged[field];
+      }
+      const sections = { ...state.sections, personalDetails: merged };
+      return {
+        sections,
+        sectionStatus: {
+          ...state.sectionStatus,
+          personalDetails: nextStatus("personalDetails", sections, state.sectionStatus),
+        },
       };
     }),
 

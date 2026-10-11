@@ -115,6 +115,7 @@ export const SECTION_ICON_NAMES: Partial<Record<SectionKey, IconName>> = {
   languages: "language",
   hobbies: "hobby",
   softSkills: "softSkill",
+  personalDetails: "profile",
   additional: "additional",
 };
 

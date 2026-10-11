@@ -12,6 +12,7 @@ import {
   KeyAchievementsList,
   LanguageList,
   PatentList,
+  PersonalDetailsList,
   ProjectList,
   SkillGroupList,
 } from "./atoms";
@@ -134,6 +135,13 @@ export function ResumeSection({
         <>
           {heading}
           <ChipOrInline items={data.sections.softSkills!} accent={theme.accent} compact={compact} light={light} />
+        </>
+      );
+    case "personalDetails":
+      return (
+        <>
+          {heading}
+          <PersonalDetailsList details={data.sections.personalDetails} light={light} />
         </>
       );
     case "additional":

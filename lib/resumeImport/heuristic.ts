@@ -1,9 +1,11 @@
+import { MAX_SKILL_GROUP_TITLE_LENGTH } from "../skillGroups";
 import { MAX_CHIP_LENGTH } from "../validation";
-import type { AdditionalItem, Education, Experience, Project } from "../types";
+import type { AdditionalItem, Education, Experience, Project, SkillGroup } from "../types";
 import {
   clip,
   extractDateRangeFromLine,
   normalizeParsedResume,
+  normalizePersonalDetails,
   parseLanguageLine,
   parseResumeMonth,
   splitChips,
@@ -40,14 +42,44 @@ interface SectionBlock {
   body: string;
 }
 
+/** "Skills: React, Node" — a label with content on the same line. A URL's
+ * scheme ("https://…") isn't a label. */
+function splitInlineLabel(line: string): { label: string; content: string } | null {
+  const at = line.indexOf(":");
+  if (at <= 0) return null;
+  const content = line.slice(at + 1).trim();
+  if (!content || content.startsWith("//")) return null;
+  return { label: line.slice(0, at).trim(), content };
+}
+
+/** Proficiency words that mark a "Languages:" line as spoken languages
+ * rather than programming languages. */
+const SPOKEN_LEVEL_RE =
+  /\b(?:native|fluent|bilingual|mother tongue|professional working|full professional|intermediate|conversational|basic|beginner|elementary|limited working|proficien\w*|[abc][12])\b/i;
+
+/** Inside Skills, "Tools: Git, Docker" or "Languages: Python, Java" names a
+ * group of skills — not a new Tools or (spoken) Languages section. A
+ * "Languages:" line with proficiency levels is still spoken languages. */
+function isSkillGroupLine(line: string, inSection: string | null): boolean {
+  if (inSection !== "skills") return false;
+  const inline = splitInlineLabel(line);
+  if (!inline) return false;
+  const target = resolveSectionHeading(inline.label);
+  if (target === "skills") return true;
+  if (target === "languages") return !SPOKEN_LEVEL_RE.test(inline.content);
+  return false;
+}
+
 function splitIntoSections(text: string): { header: string; blocks: SectionBlock[] } {
   const lines = linesOf(text);
   const headingAt: number[] = [];
+  let inSection: string | null = null;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     if (!line) continue;
-    if (isLikelySectionHeading(line) && resolveSectionHeading(line) !== "basicInfo") {
+    if (isLikelySectionHeading(line) && resolveSectionHeading(line) !== "basicInfo" && !isSkillGroupLine(line, inSection)) {
       headingAt.push(i);
+      inSection = resolveSectionHeading(line);
     }
   }
   if (headingAt.length === 0) {
@@ -58,12 +90,46 @@ function splitIntoSections(text: string): { header: string; blocks: SectionBlock
   for (let i = 0; i < headingAt.length; i++) {
     const start = headingAt[i];
     const end = i + 1 < headingAt.length ? headingAt[i + 1] : lines.length;
+    // A one-line section ("Skills: React, Node") keeps what follows its
+    // label: that text is the section, not part of the heading.
+    const inline = splitInlineLabel(lines[start]);
+    const rest = lines.slice(start + 1, end).join("\n");
     blocks.push({
-      heading: lines[start],
-      body: lines.slice(start + 1, end).join("\n").trim(),
+      heading: inline ? inline.label : lines[start],
+      body: (inline ? `${inline.content}\n${rest}` : rest).trim(),
     });
   }
   return { header, blocks };
+}
+
+/** Longest line taken as a skill group's title ("Frontend", "Cloud & DevOps"). */
+const MAX_GROUP_TITLE_WORDS = 5;
+
+/** A Skills body, with "Title: skill, skill" lines read as titled groups
+ * and every other line as plain skills. */
+function parseSkillsBlock(body: string): { skills: string[]; groups: SkillGroup[] } {
+  const groups: SkillGroup[] = [];
+  const skills: string[] = [];
+  for (const raw of bodyLines(body)) {
+    const line = stripBullet(raw);
+    const inline = splitInlineLabel(line);
+    const titled =
+      inline &&
+      inline.label.length <= MAX_SKILL_GROUP_TITLE_LENGTH &&
+      inline.label.split(/\s+/).length <= MAX_GROUP_TITLE_WORDS &&
+      !inline.label.includes(",");
+    if (titled) {
+      const grouped = splitChips(inline.content, MAX_CHIP_LENGTH);
+      if (grouped.length) groups.push({ title: inline.label, skills: grouped });
+      skills.push(...grouped);
+    } else {
+      skills.push(...splitChips(line, MAX_CHIP_LENGTH));
+    }
+  }
+  // Every skill, grouped or not. When there are groups, normalizeParsedResume
+  // rebuilds this list from them, with ungrouped skills in a last, untitled
+  // group — the same shape the AI pass produces.
+  return { skills, groups };
 }
 
 /** A link the PDF wrapped at a hyphen or slash ("linkedin.com/in/jane-" then
@@ -363,6 +429,7 @@ export function parseResumeText(text: string): ImportedResume {
   const { header, blocks } = splitIntoSections(text);
   const basicInfo = extractContact(header);
   const imported: ImportedResume = { basicInfo, sections: {}, filled: [] };
+  const skillGroups: SkillGroup[] = [];
 
   for (const block of blocks) {
     const resolved = resolveSectionHeading(block.heading);
@@ -389,7 +456,19 @@ export function parseResumeText(text: string): ImportedResume {
         if (items.length) imported.sections.keyAchievements = items;
         break;
       }
-      case "skills":
+      case "skills": {
+        // Skills can arrive in more than one block (a second "Technical
+        // Skills" heading); each adds to the list rather than replacing it.
+        const { skills, groups } = parseSkillsBlock(block.body);
+        if (skills.length) imported.sections.skills = [...(imported.sections.skills ?? []), ...skills];
+        skillGroups.push(...groups);
+        break;
+      }
+      case "personalDetails": {
+        const details = normalizePersonalDetails(block.body);
+        if (details) imported.sections.personalDetails = details;
+        break;
+      }
       case "hobbies":
       case "softSkills": {
         const items = splitChips(block.body.replace(/\n/g, ", "), MAX_CHIP_LENGTH);
@@ -464,5 +543,9 @@ export function parseResumeText(text: string): ImportedResume {
     }
   }
 
-  return normalizeParsedResume({ basicInfo: imported.basicInfo, sections: imported.sections });
+  return normalizeParsedResume({
+    basicInfo: imported.basicInfo,
+    sections: imported.sections,
+    ...(skillGroups.length ? { skillGroups } : {}),
+  });
 }

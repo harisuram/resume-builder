@@ -6,6 +6,7 @@ import type {
   Experience,
   Language,
   Patent,
+  PersonalDetails,
   Project,
   ResumeData,
   SectionKey,
@@ -13,8 +14,9 @@ import type {
 } from "@/lib/types";
 import { formatDateRange, formatMonth, isCurrentExperience } from "@/lib/date";
 import { DEFAULT_DIAL_CODE } from "@/lib/countryCodes";
+import { formatGrade } from "@/lib/grades";
 import { linkHref } from "@/lib/link";
-import { itemBreakKey } from "@/lib/resume";
+import { itemBreakKey, personalDetailRows } from "@/lib/resume";
 import { CertificationIcon, GithubIcon, GlobeIcon, LinkedInIcon, MailIcon, PhoneIcon, PinIcon } from "./icons";
 import { BULLETS, type BulletKind } from "./iconShapes";
 import type { TemplateTheme } from "./theme";
@@ -309,7 +311,7 @@ export function EducationList({
           <p className={`text-[12px] ${tone(light, "soft")}`}>
             {edu.degree}
             {edu.fieldOfStudy ? `, ${edu.fieldOfStudy}` : ""}
-            {edu.gpa ? ` · GPA ${edu.gpa}` : ""}
+            {formatGrade(edu) ? ` · ${formatGrade(edu)}` : ""}
           </p>
           {edu.coursework && edu.coursework.length > 0 && (
             <p className={`mt-0.5 text-[11.5px] ${tone(light, "faint")}`}>
@@ -533,6 +535,21 @@ export function LanguageList({
         >
           <span className="font-semibold">{lang.name}</span>
           <span className={tone(light, "faint")}> — {lang.level}</span>
+        </p>
+      ))}
+    </div>
+  );
+}
+
+/** "Date of birth: 15 March 1998" rows. One block, never split by a page
+ * break — it's four short lines at most. */
+export function PersonalDetailsList({ details, light = false }: { details: PersonalDetails | undefined; light?: boolean }) {
+  return (
+    <div className="space-y-0.5 break-inside-avoid">
+      {personalDetailRows(details).map((row) => (
+        <p key={row.label} className={`text-[12px] ${tone(light, "strong")}`}>
+          <span className="font-semibold">{row.label}:</span>
+          <span className={tone(light, "soft")}> {row.value}</span>
         </p>
       ))}
     </div>

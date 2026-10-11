@@ -1,4 +1,5 @@
 import { AI_MESSAGES } from "../lib/ai";
+import { handleGeoGet } from "../lib/geoServer";
 import { handleImportPost } from "../lib/importServer";
 import { handleOptimizePost, jsonResponse } from "../lib/optimizeServer";
 import { isThrottled } from "../lib/optimizeThrottle";
@@ -8,6 +9,8 @@ import { isThrottled } from "../lib/optimizeThrottle";
 const worker = {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    // Read-only and free of Groq, so it skips the POST gate and throttle.
+    if (url.pathname === "/api/geo") return handleGeoGet(request);
     const handler = url.pathname === "/api/optimize" ? handleOptimizePost : url.pathname === "/api/import" ? handleImportPost : null;
     if (!handler) {
       return jsonResponse({ error: "Not found." }, 404);

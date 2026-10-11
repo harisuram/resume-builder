@@ -6,6 +6,7 @@ import { AdSlot } from "@/components/ads/AdSlot";
 import { requestedTemplateId } from "@/components/templates/shared/theme";
 import { ADSENSE_SLOTS } from "@/lib/ads";
 import { persistCurrentResume } from "@/lib/persistResume";
+import { detectCountry, dialCodeForCountry } from "@/lib/geo";
 import { hasSavedResumeData, loadResumeData } from "@/lib/storage";
 import {
   BUILDER_TOUR_MEDIA,
@@ -28,6 +29,7 @@ import { ExportSection } from "./sections/ExportSection";
 import { HobbiesForm } from "./sections/HobbiesForm";
 import { KeyAchievementsForm } from "./sections/KeyAchievementsForm";
 import { LanguagesForm } from "./sections/LanguagesForm";
+import { PersonalDetailsForm } from "./sections/PersonalDetailsForm";
 import { PatentsForm } from "./sections/PatentsForm";
 import { PhotoForm } from "./sections/PhotoForm";
 import { ProjectsForm } from "./sections/ProjectsForm";
@@ -181,6 +183,8 @@ function ActivePanel({ activeKey }: { activeKey: NavKey }) {
       return <HobbiesForm />;
     case "softSkills":
       return <SoftSkillsForm />;
+    case "personalDetails":
+      return <PersonalDetailsForm />;
     case "additional":
       return <AdditionalForm />;
     case "summary":
@@ -271,6 +275,23 @@ export function BuilderShell() {
     } else if (shouldOfferMobileBuilderTour()) setMobileTourOpen(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Country from Cloudflare, looked up once per browser (lib/geo.ts). It
+  // only pre-fills the phone dial code, and only while no phone number has
+  // been typed, so a saved draft never has its number re-labelled.
+  useEffect(() => {
+    if (!hydrated) return;
+    let cancelled = false;
+    void detectCountry().then((country) => {
+      const dialCode = dialCodeForCountry(country);
+      const { basicInfo, updateBasicInfo } = useBuilderStore.getState();
+      if (cancelled || !dialCode || basicInfo.phoneCountryCode || basicInfo.phone) return;
+      updateBasicInfo({ phoneCountryCode: dialCode });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [hydrated]);
 
   useEffect(() => {
     if (!hydrated || menuWarm || isBuilderTourViewport()) return;

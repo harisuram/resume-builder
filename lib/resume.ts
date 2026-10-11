@@ -1,5 +1,5 @@
 import { getNavSectionOrder, resolveSectionOrder } from "./persona";
-import type { ResumeData, SectionKey } from "./types";
+import type { PersonalDetails, ResumeData, SectionKey } from "./types";
 
 /** Compact sections that read well in a sidebar / narrow column. Narrative
  * sections (experience, projects, patents, additional) stay in the main
@@ -12,6 +12,7 @@ export const NARROW_SECTION_KEYS = new Set<SectionKey>([
   "languages",
   "hobbies",
   "softSkills",
+  "personalDetails",
 ]);
 
 /** Content sections worth rendering: not skipped, and actually has content.
@@ -62,6 +63,7 @@ export function hasSectionContent(data: ResumeData, key: SectionKey): boolean {
   if (key === "additional") {
     return (data.sections.additional?.items.length ?? 0) > 0;
   }
+  if (key === "personalDetails") return personalDetailRows(data.sections.personalDetails).length > 0;
   const value = data.sections[key];
   return Array.isArray(value) && value.length > 0;
 }
@@ -108,4 +110,31 @@ export function forcedItemIndices(data: ResumeData, section: SectionKey): Set<nu
     if (parsed && parsed.section === section) indices.add(parsed.index);
   }
   return indices;
+}
+
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+/** "1998-03-15" → "15 March 1998": day-month-year with the month spelled out
+ * reads the same everywhere, unlike 03/15 vs 15/03. */
+export function formatDateOfBirth(iso: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso.trim());
+  if (!match) return iso.trim();
+  const month = MONTHS[Number(match[2]) - 1];
+  return month ? `${Number(match[3])} ${month} ${match[1]}` : iso.trim();
+}
+
+/** The filled-in personal details as printed label/value rows, in a fixed
+ * order. Shared by the HTML templates and the PDF so they can't drift. */
+export function personalDetailRows(details: PersonalDetails | undefined): { label: string; value: string }[] {
+  if (!details || typeof details !== "object") return [];
+  // A hand-edited or corrupted save can hold non-strings; print only text.
+  const text = (value: unknown) => (typeof value === "string" ? value.trim() : "");
+  const dob = text(details.dateOfBirth);
+  const rows = [
+    { label: "Date of birth", value: dob ? formatDateOfBirth(dob) : "" },
+    { label: "Gender", value: text(details.gender) },
+    { label: "Marital status", value: text(details.maritalStatus) },
+    { label: "Nationality", value: text(details.nationality) },
+  ];
+  return rows.filter((row) => row.value);
 }

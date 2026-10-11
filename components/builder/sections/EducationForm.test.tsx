@@ -100,9 +100,9 @@ describe("EducationForm", () => {
     });
     render(<EducationForm />);
     expect(screen.queryByPlaceholderText("3.8 / 4.0")).not.toBeInTheDocument();
-    expect(screen.getByText("+ Add GPA / coursework")).toBeInTheDocument();
+    expect(screen.getByText("+ Add grade / coursework")).toBeInTheDocument();
 
-    await userEvent.click(screen.getByText("+ Add GPA / coursework"));
+    await userEvent.click(screen.getByText("+ Add grade / coursework"));
     expect(screen.getByPlaceholderText("3.8 / 4.0")).toBeInTheDocument();
   });
 
@@ -115,5 +115,101 @@ describe("EducationForm", () => {
     expect(screen.getByRole("option", { name: "Architecture" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Pharmacy" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Construction Management" })).toBeInTheDocument();
+  });
+
+  describe("grading system", () => {
+    function addEntry(extra: Record<string, string> = {}) {
+      act(() => {
+        useBuilderStore.getState().addListItem("education", { institution: "IIT Delhi", degree: "B.Tech", startDate: "2018-07", ...extra });
+      });
+    }
+
+    function education() {
+      return useBuilderStore.getState().sections.education![0];
+    }
+
+    afterEach(() => localStorage.clear());
+
+    it("lets the user pick a scale and saves the grade on it", async () => {
+      addEntry();
+      render(<EducationForm />);
+      await userEvent.click(screen.getByText("+ Add grade / coursework"));
+      await userEvent.selectOptions(screen.getByLabelText("Grading system"), "cgpa10");
+      await userEvent.type(screen.getByLabelText("Grade (optional)"), "8.6");
+      expect(education()).toMatchObject({ gradeType: "cgpa10", gpa: "8.6" });
+    });
+
+    it("offers every scale, grouped", async () => {
+      addEntry();
+      const { container } = render(<EducationForm />);
+      await userEvent.click(screen.getByText("+ Add grade / coursework"));
+      const groups = Array.from(container.querySelectorAll("optgroup")).map((g) => g.label);
+      expect(groups).toEqual(["GPA & CGPA", "Scores & percentages", "National scales", "Classes & honours", "Other"]);
+      expect(screen.getByRole("option", { name: "UK degree classification" })).toBeInTheDocument();
+      expect(screen.getByRole("option", { name: "German grade (1.0 best – 5.0)" })).toBeInTheDocument();
+    });
+
+    it("switches to a list of labels for classification scales", async () => {
+      addEntry();
+      render(<EducationForm />);
+      await userEvent.click(screen.getByText("+ Add grade / coursework"));
+      await userEvent.selectOptions(screen.getByLabelText("Grading system"), "ukClass");
+      const grade = screen.getByLabelText("Grade (optional)");
+      expect(grade.tagName).toBe("SELECT");
+      await userEvent.selectOptions(grade, "Upper Second Class Honours (2:1)");
+      expect(education()).toMatchObject({ gradeType: "ukClass", gpa: "Upper Second Class Honours (2:1)" });
+    });
+
+    it("clears a label grade that doesn't exist on the newly picked scale", async () => {
+      addEntry({ gradeType: "ukClass", gpa: "First Class Honours" });
+      render(<EducationForm />);
+      await userEvent.selectOptions(screen.getByLabelText("Grading system"), "latinHonors");
+      expect(education()).toMatchObject({ gradeType: "latinHonors", gpa: "" });
+    });
+
+    it("keeps a numeric grade when moving between numeric scales", async () => {
+      addEntry({ gradeType: "cgpa10", gpa: "8.6" });
+      render(<EducationForm />);
+      await userEvent.selectOptions(screen.getByLabelText("Grading system"), "percentage");
+      expect(education()).toMatchObject({ gradeType: "percentage", gpa: "8.6" });
+    });
+
+    it("flags a grade outside the scale's range once the field is left", async () => {
+      addEntry({ gradeType: "cgpa10" });
+      render(<EducationForm />);
+      await userEvent.click(screen.getByText("+ Add grade / coursework"));
+      await userEvent.type(screen.getByLabelText("Grade (optional)"), "11");
+      await userEvent.tab();
+      expect(screen.getByText("Enter a number from 0 to 10.")).toBeInTheDocument();
+    });
+
+    it("starts new entries on the scale used in the detected country", async () => {
+      localStorage.setItem("detectedCountry", "IN");
+      addEntry();
+      render(<EducationForm />);
+      await userEvent.click(screen.getByText("+ Add grade / coursework"));
+      expect(screen.getByLabelText("Grading system")).toHaveValue("cgpa10");
+      expect(screen.getByPlaceholderText("8.6")).toBeInTheDocument();
+    });
+
+    it("keeps a saved grade without a scale on plain GPA, whatever the country", async () => {
+      localStorage.setItem("detectedCountry", "IN");
+      addEntry({ gpa: "3.9" });
+      render(<EducationForm />);
+      expect(screen.getByLabelText("Grading system")).toHaveValue("gpa");
+    });
+  
+    it("re-checks the grade at once when the scale changes", async () => {
+      addEntry({ gradeType: "percentage", gpa: "85" });
+      render(<EducationForm />);
+      await userEvent.selectOptions(screen.getByLabelText("Grading system"), "cgpa10");
+      expect(screen.getByText("Enter a number from 0 to 10.")).toBeInTheDocument();
+    });
+
+    it("shows a saved grade's error without waiting for a blur", () => {
+      addEntry({ gradeType: "gpa4", gpa: "9" });
+      render(<EducationForm />);
+      expect(screen.getByText("Enter a number from 0 to 4.")).toBeInTheDocument();
+    });
   });
 });

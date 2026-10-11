@@ -12,12 +12,13 @@ import {
   type TemplateTheme,
 } from "@/components/templates/shared/theme";
 import { DEFAULT_DIAL_CODE } from "@/lib/countryCodes";
+import { formatGrade } from "@/lib/grades";
 import { linkHref } from "@/lib/link";
 import { formatDateRange, formatMonth, isCurrentExperience } from "@/lib/date";
 import { PAGE_INSET_PX, PAGE_PAD_X_PX, PAGE_PAD_Y_PX } from "@/lib/page";
 import { mixHex, tintHex } from "@/lib/pdf/color";
 import { SUMMARY_COPY, resumeSectionTitle } from "@/lib/persona";
-import { NARROW_SECTION_KEYS, getRenderableSections, hasSummary } from "@/lib/resume";
+import { NARROW_SECTION_KEYS, getRenderableSections, hasSummary, personalDetailRows } from "@/lib/resume";
 import { renderableSkillGroups } from "@/lib/skillGroups";
 import type { LetterContent } from "@/lib/coverLetter";
 import type { BasicInfo, ResumeData, SectionKey, SkillGroup } from "@/lib/types";
@@ -1007,7 +1008,7 @@ export function PdfSection({
                 {/* One string: separate text children let react-pdf break a
                     line before the comma (", Computer Architecture"). */}
                 <Text style={{ ...text(12), color: ink.soft }}>
-                  {`${edu.degree}${edu.fieldOfStudy ? `, ${edu.fieldOfStudy}` : ""}${edu.gpa ? ` · GPA ${edu.gpa}` : ""}`}
+                  {`${edu.degree}${edu.fieldOfStudy ? `, ${edu.fieldOfStudy}` : ""}${formatGrade(edu) ? ` · ${formatGrade(edu)}` : ""}`}
                 </Text>
                 {edu.coursework && edu.coursework.length > 0 && (
                   <Text style={{ marginTop: pt(2), ...text(11.5), color: ink.faint }}>
@@ -1148,6 +1149,20 @@ export function PdfSection({
               <Text key={i} wrap={false} style={{ ...text(12), color: ink.strong }}>
                 <Text style={{ fontWeight: 600 }}>{lang.name}</Text>
                 <Text style={{ color: ink.faint }}> — {lang.level}</Text>
+              </Text>
+            ))}
+          </View>
+        </>
+      );
+    case "personalDetails":
+      return (
+        <>
+          {heading}
+          <View wrap={false} style={{ gap: pt(2) }}>
+            {personalDetailRows(s.personalDetails).map((row) => (
+              <Text key={row.label} style={{ ...text(12), color: ink.strong }}>
+                <Text style={{ fontWeight: 600 }}>{`${row.label}:`}</Text>
+                <Text style={{ color: ink.soft }}>{` ${row.value}`}</Text>
               </Text>
             ))}
           </View>

@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ChipInput } from "@/components/ui/ChipInput";
-import { FieldGroup, TextInput } from "@/components/ui/Field";
+import { FieldGroup, Select, TextInput } from "@/components/ui/Field";
 import { SuggestInput } from "@/components/ui/SuggestInput";
 import { COURSE_CATALOG, DEGREE_CATALOG, FIELD_CATALOG } from "@/lib/catalogs";
+import { defaultGradeType, getGradeScale, GRADE_GROUPS, GRADE_SCALES, isGradeType } from "@/lib/grades";
 import { useBuilderStore } from "@/lib/store";
 import type { Education } from "@/lib/types";
+import { useDetectedCountry } from "@/lib/useDetectedCountry";
 import { useTouchedFields } from "@/lib/useTouchedFields";
 import { getEducationErrors, MAX_CHIP_LENGTH, MAX_FIELD_LENGTH } from "@/lib/validation";
 import { ItemCard, useFocusNewIndex } from "./ItemCard";
@@ -119,6 +121,7 @@ export function EducationForm() {
               edu={edu}
               index={i}
               gpaError={errorFor(`${i}.gpa`, errors.gpa)}
+              gpaMessage={errors.gpa}
               onGpaBlur={touch(`${i}.gpa`)}
               onChange={(patch) => updateListItem("education", i, patch)}
             />
@@ -146,18 +149,31 @@ export function EducationForm() {
 function DetailFields({
   edu,
   index,
-  gpaError,
+  gpaError: touchedGpaError,
+  gpaMessage,
   onGpaBlur,
   onChange,
 }: {
   edu: Education;
   index: number;
+  /** The grade's error once its field has been left. */
   gpaError?: string;
+  /** The grade's error regardless — shown at once for a grade that was
+   * already saved (or imported) when the form opened. */
+  gpaMessage?: string;
   onGpaBlur: () => void;
   onChange: (patch: Partial<Education>) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [prefilled] = useState(() => Boolean(edu.gpa?.trim()));
+  const gpaError = touchedGpaError ?? (prefilled ? gpaMessage : undefined);
+  const country = useDetectedCountry();
   const hasDetail = Boolean(edu.gpa || (edu.coursework && edu.coursework.length > 0));
+  // A saved grade keeps its scale; a new one starts on the scale most common
+  // where the visitor is (lib/grades.ts), and any scale can be picked.
+  const gradeType = edu.gradeType ?? (edu.gpa ? "gpa" : defaultGradeType(country));
+  const scale = getGradeScale(gradeType);
+  const gradeId = `education-${index}-gpa`;
 
   if (!expanded && !hasDetail) {
     return (
@@ -166,23 +182,66 @@ function DetailFields({
         onClick={() => setExpanded(true)}
         className="self-start text-[12px] font-medium text-[var(--color-accent)] transition-opacity hover:opacity-80"
       >
-        + Add GPA / coursework
+        + Add grade / coursework
       </button>
     );
   }
 
   return (
     <div className="grid gap-3 border-t border-[var(--color-border)] pt-3 sm:grid-cols-2">
-      <FieldGroup label="GPA (optional)" htmlFor={`education-${index}-gpa`} error={gpaError}>
-        <TextInput
-          id={`education-${index}-gpa`}
-          value={edu.gpa ?? ""}
-          onChange={(e) => onChange({ gpa: e.target.value })}
-          onBlur={onGpaBlur}
-          placeholder="3.8 / 4.0"
-          maxLength={20}
-          invalid={Boolean(gpaError)}
-        />
+      <FieldGroup label="Grading system" htmlFor={`education-${index}-grade-type`}>
+        <Select
+          id={`education-${index}-grade-type`}
+          value={gradeType}
+          onChange={(e) => {
+            if (!isGradeType(e.target.value)) return;
+            const next = getGradeScale(e.target.value);
+            // A value from one list of labels means nothing on another scale.
+            const keep = next.kind !== "choice" || next.options.includes(edu.gpa?.trim() ?? "");
+            onChange({ gradeType: next.id, ...(keep ? {} : { gpa: "" }) });
+            // Re-check the kept value against the new scale right away.
+            onGpaBlur();
+          }}
+        >
+          {GRADE_GROUPS.map((group) => (
+            <optgroup key={group} label={group}>
+              {GRADE_SCALES.filter((option) => option.group === group).map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </Select>
+      </FieldGroup>
+      <FieldGroup label="Grade (optional)" htmlFor={gradeId} error={gpaError}>
+        {scale.kind === "choice" ? (
+          <Select
+            id={gradeId}
+            value={edu.gpa ?? ""}
+            onChange={(e) => onChange({ gpa: e.target.value, gradeType })}
+            onBlur={onGpaBlur}
+            invalid={Boolean(gpaError)}
+          >
+            <option value="">Choose…</option>
+            {scale.options.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </Select>
+        ) : (
+          <TextInput
+            id={gradeId}
+            value={edu.gpa ?? ""}
+            onChange={(e) => onChange({ gpa: e.target.value, gradeType })}
+            onBlur={onGpaBlur}
+            placeholder={scale.placeholder}
+            inputMode={scale.kind === "number" && scale.id !== "outOf110" ? "decimal" : undefined}
+            maxLength={40}
+            invalid={Boolean(gpaError)}
+          />
+        )}
       </FieldGroup>
       <FieldGroup label="Relevant coursework (optional)">
         <ChipInput

@@ -57,6 +57,7 @@ describe("SectionNav", () => {
       ["Languages", "languages"],
       ["Hobbies", "hobbies"],
       ["Soft skills", "softSkills"],
+      ["Personal details", "personalDetails"],
       ["Additional", "additional"],
     ];
 

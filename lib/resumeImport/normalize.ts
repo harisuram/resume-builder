@@ -1,4 +1,5 @@
 import { COUNTRY_CODES, DEFAULT_DIAL_CODE } from "../countryCodes";
+import { inferGrade } from "../grades";
 import { SECTION_ORDER } from "../persona";
 import type {
   AdditionalItem,
@@ -10,6 +11,7 @@ import type {
   Language,
   LanguageLevel,
   Patent,
+  PersonalDetails,
   Project,
   ResumeSections,
   SectionKey,
@@ -26,7 +28,8 @@ import {
   MAX_FIELD_LENGTH,
   MAX_SUMMARY_LENGTH,
   sanitizePhoneDigits,
-  validateGpa,
+  validateDateOfBirth,
+  validateNationality,
 } from "../validation";
 import { flattenSkillGroups, reconcileSkillGroups, sanitizeSkillGroups } from "../skillGroups";
 import { keyToHeading, resolveSectionHeading, type ImportTarget } from "./synonyms";
@@ -40,6 +43,7 @@ function hasSectionContent(key: SectionKey, sections: Partial<ResumeSections>): 
   if (key === "summary") {
     return typeof value === "string" && value.trim().length > 0;
   }
+  if (key === "personalDetails") return Boolean(value && typeof value === "object" && Object.keys(value).length > 0);
   return Array.isArray(value) && value.length > 0;
 }
 
@@ -309,20 +313,113 @@ function normalizeEducation(value: unknown): Education[] {
     const degree = clip(asString(item.degree ?? item.qualification), MAX_FIELD_LENGTH);
     if (!institution && !degree) continue;
     const dates = parseDateRange(asString(item.dates ?? item.dateRange ?? ""));
-    const gpaRaw = clip(asString(item.gpa), 20);
-    const gpa = gpaRaw && validateGpa(gpaRaw).valid ? gpaRaw : undefined;
+    const grade = inferGrade(clip(asString(item.gpa ?? item.grade ?? item.cgpa ?? item.percentage), 40));
     out.push({
       institution: institution || degree,
       degree: degree || institution,
       fieldOfStudy: optionalClip(item.fieldOfStudy ?? item.field ?? item.major),
       startDate: parseResumeMonth(asString(item.startDate)) ?? dates.startDate ?? "",
       endDate: parseResumeMonth(asString(item.endDate)) ?? dates.endDate,
-      gpa,
+      ...(grade ? { gpa: grade.gpa, ...(grade.gradeType ? { gradeType: grade.gradeType } : {}) } : {}),
       coursework: asStringArray(item.coursework ?? item.courses, MAX_CHIP_LENGTH, 12),
     });
     if (out.length >= 10) break;
   }
   return out;
+}
+
+const pad2 = (n: number) => String(n).padStart(2, "0");
+
+/** A date of birth in any common written form, as `YYYY-MM-DD`, or undefined
+ * when it isn't a plausible birth date. Numeric dates are read day-first
+ * (15/03/1998): resumes that list a birth date are almost never American. */
+export function parseDateOfBirth(raw: string): string | undefined {
+  const text = raw.trim().replace(/(\d)(st|nd|rd|th)\b/gi, "$1").replace(/,/g, " ").replace(/\s+/g, " ");
+  let year: number | undefined;
+  let month: number | undefined;
+  let day: number | undefined;
+  let m: RegExpMatchArray | null;
+  if ((m = text.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/))) {
+    [year, month, day] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  } else if ((m = text.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/))) {
+    [day, month, year] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  } else if ((m = text.match(/^(\d{1,2})[ -]([a-z]+)\.?[ -](\d{4})$/i))) {
+    [day, month, year] = [Number(m[1]), MONTHS[m[2].toLowerCase()], Number(m[3])];
+  } else if ((m = text.match(/^([a-z]+)\.? (\d{1,2}) (\d{4})$/i))) {
+    [month, day, year] = [MONTHS[m[1].toLowerCase()], Number(m[2]), Number(m[3])];
+  }
+  if (!year || !month || !day) return undefined;
+  const iso = `${year}-${pad2(month)}-${pad2(day)}`;
+  return validateDateOfBirth(iso).valid ? iso : undefined;
+}
+
+/** A free-text answer mapped onto one of the form's choices, or undefined
+ * when it isn't one — an unknown value is dropped rather than imported as
+ * something the dropdown can't show. */
+function canonicalChoice(value: string, choices: Record<string, string>): string | undefined {
+  return choices[value.trim().toLowerCase().replace(/\s+/g, " ")];
+}
+
+const GENDER_WORDS: Record<string, string> = {
+  m: "Male",
+  male: "Male",
+  man: "Male",
+  f: "Female",
+  female: "Female",
+  woman: "Female",
+  "non-binary": "Non-binary",
+  nonbinary: "Non-binary",
+  "non binary": "Non-binary",
+  other: "Other",
+};
+const MARITAL_WORDS: Record<string, string> = {
+  single: "Single",
+  unmarried: "Single",
+  married: "Married",
+  divorced: "Divorced",
+  widowed: "Widowed",
+  widow: "Widowed",
+  widower: "Widowed",
+  separated: "Separated",
+  "civil partnership": "Civil partnership",
+  "in a civil partnership": "Civil partnership",
+};
+
+/** "Date of Birth : 15-03-1998" style lines → the field they fill. */
+const PERSONAL_LABELS: [RegExp, keyof PersonalDetails][] = [
+  [/^(date of birth|d\.?\s?o\.?\s?b\.?|birth ?date|born)$/i, "dateOfBirth"],
+  [/^(gender|sex)$/i, "gender"],
+  [/^marital status$|^marital$/i, "maritalStatus"],
+  [/^(nationality|citizenship)$/i, "nationality"],
+];
+
+function personalDetailsFromLines(text: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const line of text.split(/\n/)) {
+    const m = line.replace(/^[\s•*·-]+/, "").match(/^([^:–—]{2,30}?)(?:\s*[:–—]\s*|\s+-\s+)(.+)$/);
+    if (!m) continue;
+    const field = PERSONAL_LABELS.find(([pattern]) => pattern.test(m[1].trim()))?.[1];
+    if (field && !out[field]) out[field] = m[2].trim();
+  }
+  return out;
+}
+
+/** Personal details from the model's object or from a block of
+ * "Label: value" lines. Lines it doesn't recognise (father's name, address)
+ * are dropped; undefined when nothing usable is left. */
+export function normalizePersonalDetails(value: unknown): PersonalDetails | undefined {
+  const raw: Record<string, unknown> =
+    typeof value === "string" ? personalDetailsFromLines(value) : value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+  const details: PersonalDetails = {};
+  const dob = parseDateOfBirth(asString(raw.dateOfBirth ?? raw.dob ?? raw.birthDate));
+  if (dob) details.dateOfBirth = dob;
+  const gender = canonicalChoice(asString(raw.gender ?? raw.sex), GENDER_WORDS);
+  if (gender) details.gender = gender;
+  const marital = canonicalChoice(asString(raw.maritalStatus ?? raw.marital_status), MARITAL_WORDS);
+  if (marital) details.maritalStatus = marital;
+  const nationality = asString(raw.nationality ?? raw.citizenship).trim();
+  if (nationality && validateNationality(nationality).valid) details.nationality = nationality;
+  return Object.keys(details).length ? details : undefined;
 }
 
 function normalizeProjects(value: unknown): Project[] {
@@ -537,6 +634,11 @@ function assignSection(sections: Partial<ResumeSections>, key: SectionKey, value
     case "languages": {
       const items = normalizeLanguages(value);
       if (items.length) sections.languages = items;
+      return;
+    }
+    case "personalDetails": {
+      const details = normalizePersonalDetails(value);
+      if (details) sections.personalDetails = details;
       return;
     }
     case "additional": {

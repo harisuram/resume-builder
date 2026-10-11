@@ -420,6 +420,7 @@ describe("moveSection", () => {
       "languages",
       "hobbies",
       "softSkills",
+      "personalDetails",
       "additional",
     ]);
   });

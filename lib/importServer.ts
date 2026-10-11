@@ -26,6 +26,7 @@ const IMPORT_SYSTEM_PROMPT = `You extract structured resume data. Never invent e
   "languages": [{"name":"","level":"Native|Fluent|Professional|Intermediate|Basic"}],
   "hobbies": ["..."],
   "softSkills": ["..."],
+  "personalDetails": {"dateOfBirth":"YYYY-MM-DD","gender":"","maritalStatus":"","nationality":""},
   "additional": {"heading":"","items":[{"title":"","subtitle":"","date":"","bullets":["..."]}]}
 }
 
@@ -42,6 +43,7 @@ Map section headings by meaning, including synonyms:
 - Spoken Languages, Language Proficiency (not programming languages) → languages
 - Interests, Activities → hobbies
 - Interpersonal / People skills → softSkills
+- Personal Details, Personal Information, Personal Particulars → personalDetails (only date of birth, gender, marital status, nationality; drop anything else there such as father's name)
 - Volunteer, Publications, Awards, Affiliations, Research → additional (keep the original heading)
 
 Split mixed work history: intern/co-op roles go in internships, part-time jobs in partTime, full-time in experience.

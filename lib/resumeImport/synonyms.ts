@@ -32,10 +32,17 @@ const SYNONYM_GROUPS: Array<{ key: ResolvedHeading; phrases: string[] }> = [
     phrases: [
       "contact information",
       "contact details",
+      "contact",
+    ],
+  },
+  {
+    key: "personalDetails",
+    phrases: [
+      "personal particulars",
       "personal details",
       "personal information",
       "personal data",
-      "contact",
+      "personal info",
     ],
   },
   {
@@ -154,6 +161,23 @@ const SYNONYM_GROUPS: Array<{ key: ResolvedHeading; phrases: string[] }> = [
     phrases: [
       "programming languages",
       "technical proficiencies",
+      "technical proficiency",
+      "technical expertise",
+      "technical toolkit",
+      "relevant skills",
+      "software skills",
+      "digital skills",
+      "skills set",
+      "skill set",
+      "skillset",
+      "my skills",
+      "specializations",
+      "specialisations",
+      "specialities",
+      "specialties",
+      "proficiencies",
+      "toolbox",
+      "toolkit",
       "technical competencies",
       "technical skills",
       "professional skills",
@@ -227,6 +251,8 @@ const SYNONYM_GROUPS: Array<{ key: ResolvedHeading; phrases: string[] }> = [
     key: "softSkills",
     phrases: [
       "interpersonal skills",
+      "communication skills",
+      "leadership skills",
       "personal strengths",
       "personal qualities",
       "personal attributes",
@@ -322,7 +348,21 @@ function matchNormalized(normalized: string): ResolvedHeading | null {
 export function resolveSectionHeading(raw: string): ResolvedHeading | null {
   const stripped = raw.replace(/\([^)]*\)/g, " ").replace(/\[[^\]]*\]/g, " ");
   const normalized = normalizeHeading(stripped);
-  return matchNormalized(normalized);
+  return matchNormalized(normalized) ?? skillsCatchAll(stripped, normalized);
+}
+
+/** Any other "… SKILLS" / "… Skill Set:" heading is the skills section —
+ * "MANAGEMENT SKILLS", "Design Skills:" — when the line is written as a
+ * heading (all capitals, or ending in a colon). A plain list item such as
+ * "Leadership skills" isn't. Named headings above ("Soft Skills",
+ * "Language Skills") always win, since this only runs when none matched. */
+function skillsCatchAll(raw: string, normalized: string): ResolvedHeading | null {
+  const line = raw.trim();
+  const headingLike = line.endsWith(":") || (/[A-Z]/.test(line) && line === line.toUpperCase());
+  if (!headingLike) return null;
+  const words = normalized.split(" ");
+  if (words.length > 4) return null;
+  return /(?:^| )(?:skills|skill set|skillset)$/.test(normalized) ? "skills" : null;
 }
 
 const MAX_HEADING_WORDS = 8;

@@ -62,6 +62,11 @@ const SECTION_META: Record<SectionKey, SectionMeta> = {
     label: "Soft skills",
     helpText: "How you work with people — communication, leadership, mentoring.",
   },
+  personalDetails: {
+    key: "personalDetails",
+    label: "Personal details",
+    helpText: "Date of birth, gender, marital status, nationality — expected in India, the Gulf and much of Europe; usually left off in the US and UK.",
+  },
   additional: {
     key: "additional",
     label: "Additional",
@@ -96,6 +101,7 @@ export const SECTION_ORDER: SectionKey[] = [
   "languages",
   "hobbies",
   "softSkills",
+  "personalDetails",
   "additional",
 ];
 
@@ -107,7 +113,27 @@ export function getSectionOrder(): SectionMeta[] {
  * the user's custom order once they've moved anything via the section
  * nav, else the default. */
 export function resolveSectionOrder(custom?: SectionKey[] | null): SectionKey[] {
-  return custom && custom.length > 0 ? custom : SECTION_ORDER;
+  if (!custom || custom.length === 0) return SECTION_ORDER;
+  return withMissingSections(custom);
+}
+
+/** Sections added after custom orders could be saved. A draft reordered
+ * before one existed has an order that lists every other section but not it. */
+const ADDED_SECTIONS: SectionKey[] = ["personalDetails"];
+
+/** Slots each section the saved order predates in right after the section it
+ * follows by default, so it still renders and stays navigable. Anything else
+ * — including a deliberately partial order — comes back unchanged. */
+function withMissingSections(custom: SectionKey[]): SectionKey[] {
+  const missing = SECTION_ORDER.filter((key) => !custom.includes(key));
+  if (missing.length === 0 || !missing.every((key) => ADDED_SECTIONS.includes(key))) return custom;
+  const next = [...custom];
+  for (const key of missing) {
+    const i = SECTION_ORDER.indexOf(key);
+    const before = SECTION_ORDER.slice(0, i).reverse().find((prev) => next.includes(prev));
+    next.splice(before ? next.indexOf(before) + 1 : 0, 0, key);
+  }
+  return next;
 }
 
 /** Moves `key` to `toIndex` in a content-section order. Unknown keys and
@@ -152,6 +178,8 @@ export function resumeSectionTitle(key: SectionKey, data?: { sections: { additio
       return "Part-Time Work";
     case "softSkills":
       return "Soft Skills";
+    case "personalDetails":
+      return "Personal Details";
     default:
       return SECTION_META[key].label;
   }

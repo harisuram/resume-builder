@@ -5,6 +5,10 @@ import type { ResumeData } from "@/lib/types";
  * every layout branch (sidebar vs. main column, headings, list rendering). */
 export function makeFullResumeData(overrides: Partial<ResumeData> = {}): ResumeData {
   const base = JSON.parse(JSON.stringify(SAMPLE_RESUME)) as ResumeData;
+  // The public sample is US-style and leaves personal details off; tests
+  // still need every section filled so each template is exercised.
+  base.sections.personalDetails = { dateOfBirth: "1996-03-15", gender: "Female", maritalStatus: "Single", nationality: "Indian" };
+  base.sectionStatus.personalDetails = "complete";
   return {
     ...base,
     ...overrides,

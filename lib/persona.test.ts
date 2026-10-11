@@ -23,6 +23,7 @@ const ALL_KEYS: SectionKey[] = [
   "languages",
   "hobbies",
   "softSkills",
+  "personalDetails",
   "additional",
 ];
 
@@ -43,6 +44,7 @@ describe("getSectionOrder", () => {
       "languages",
       "hobbies",
       "softSkills",
+      "personalDetails",
       "additional",
     ]);
   });
@@ -96,7 +98,7 @@ describe("getNavSectionOrder", () => {
     const order = getNavSectionOrder();
     expect(order[0]).toBe("summary");
     expect(order[1]).toBe("keyAchievements");
-    expect(order).toHaveLength(14);
+    expect(order).toHaveLength(15);
   });
 
   it("uses a custom order for the content sections when given, summary always still leading", () => {

@@ -1,6 +1,8 @@
 import {
   mergeImportedResumes,
   normalizeParsedResume,
+  normalizePersonalDetails,
+  parseDateOfBirth,
   parseLanguageLevel,
   parseResumeMonth,
   splitPhone,
@@ -93,5 +95,84 @@ describe("imported languages", () => {
     });
     expect(parsed.sections.languages?.map((l) => l.name)).toEqual(["English", "Spanish"]);
     expect(parsed.sections.languages?.[0].level).toBe("Native");
+  });
+});
+
+describe("personal details import", () => {
+  it("reads birth dates in the common written forms", () => {
+    expect(parseDateOfBirth("1998-03-15")).toBe("1998-03-15");
+    expect(parseDateOfBirth("15/03/1998")).toBe("1998-03-15");
+    expect(parseDateOfBirth("15-03-1998")).toBe("1998-03-15");
+    expect(parseDateOfBirth("15.3.1998")).toBe("1998-03-15");
+    expect(parseDateOfBirth("15th March, 1998")).toBe("1998-03-15");
+    expect(parseDateOfBirth("15 Mar 1998")).toBe("1998-03-15");
+    expect(parseDateOfBirth("March 15, 1998")).toBe("1998-03-15");
+  });
+
+  it("drops dates that aren't plausible birth dates", () => {
+    expect(parseDateOfBirth("31/02/1998")).toBeUndefined();
+    expect(parseDateOfBirth("01/01/2024")).toBeUndefined();
+    expect(parseDateOfBirth("sometime in 1998")).toBeUndefined();
+  });
+
+  it("normalizes the model's object, tidying common values", () => {
+    expect(
+      normalizePersonalDetails({ dateOfBirth: "1998-03-15", gender: "m", maritalStatus: "unmarried", nationality: "Indian" }),
+    ).toEqual({ dateOfBirth: "1998-03-15", gender: "Male", maritalStatus: "Single", nationality: "Indian" });
+  });
+
+  it("reads 'Label: value' lines and ignores fields it doesn't keep", () => {
+    const block = ["Father's Name : R. Kumar", "Date of Birth : 05-08-1999", "Gender - Female", "Marital Status: Married", "• Nationality: Indian", "Address: Pune"].join("\n");
+    expect(normalizePersonalDetails(block)).toEqual({
+      dateOfBirth: "1999-08-05",
+      gender: "Female",
+      maritalStatus: "Married",
+      nationality: "Indian",
+    });
+  });
+
+  it("returns undefined when nothing usable is there", () => {
+    expect(normalizePersonalDetails("Father's Name: R. Kumar")).toBeUndefined();
+    expect(normalizePersonalDetails(null)).toBeUndefined();
+  });
+
+  it("maps a personalDetails key from the AI pass into the section", () => {
+    const imported = normalizeParsedResume({ personalDetails: { nationality: "Nepali", dob: "1997-01-02" } });
+    expect(imported.sections.personalDetails).toEqual({ dateOfBirth: "1997-01-02", nationality: "Nepali" });
+    expect(imported.filled).toContain("personalDetails");
+  });
+});
+
+describe("import validation", () => {
+  it("drops gender and marital status values the form can't show", () => {
+    expect(normalizePersonalDetails({ gender: "Robot", maritalStatus: "complicated", nationality: "Indian" })).toEqual({
+      nationality: "Indian",
+    });
+    expect(normalizePersonalDetails({ gender: "Woman", maritalStatus: "widower" })).toEqual({
+      gender: "Female",
+      maritalStatus: "Widowed",
+    });
+  });
+
+  it("drops a nationality that isn't written in letters", () => {
+    expect(normalizePersonalDetails({ nationality: "1234" })).toBeUndefined();
+  });
+
+  it("imports grades onto their scale instead of dropping them", () => {
+    const imported = normalizeParsedResume({
+      education: [
+        { institution: "IIT", degree: "B.Tech", gpa: "85%" },
+        { institution: "NIT", degree: "M.Tech", gpa: "8.6/10" },
+        { institution: "Oxford", degree: "BA", grade: "Upper Second Class Honours (2:1)" },
+        { institution: "Nowhere", degree: "BS", gpa: "great" },
+      ],
+    });
+    const grades = imported.sections.education!.map((e) => [e.gpa, e.gradeType]);
+    expect(grades).toEqual([
+      ["85", "percentage"],
+      ["8.6", "cgpa10"],
+      ["Upper Second Class Honours (2:1)", "ukClass"],
+      [undefined, undefined],
+    ]);
   });
 });

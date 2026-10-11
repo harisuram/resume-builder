@@ -77,6 +77,7 @@ describe("getPlaceholderSections", () => {
       "languages",
       "hobbies",
       "softSkills",
+      "personalDetails",
       "additional",
     ]);
   });

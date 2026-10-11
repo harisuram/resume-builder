@@ -8,7 +8,7 @@ import { LabeledLayout } from "./LabeledLayout";
 import { SidebarLayout } from "./SidebarLayout";
 import { SingleColumnLayout } from "./SingleColumnLayout";
 
-const NARROW = ["education", "skills", "certifications", "languages", "hobbies", "softSkills"] as const;
+const NARROW = ["education", "skills", "certifications", "languages", "hobbies", "softSkills", "personalDetails"] as const;
 const WIDE = ["keyAchievements", "experience", "internships", "partTime", "projects", "patents", "additional"] as const;
 
 function sectionKeys(root: Element | null): string[] {
@@ -31,7 +31,7 @@ describe("template layouts share the same section split", () => {
     const data = makeFullResumeData();
     const { container } = render(<SingleColumnLayout data={data} theme={getTheme("atlas")} />);
     expect(sectionKeys(container)).toEqual(["summary", ...getRenderableSections(data)]);
-    expect(sectionKeys(container).slice(-5)).toEqual(["patents", "languages", "hobbies", "softSkills", "additional"]);
+    expect(sectionKeys(container).slice(-6)).toEqual(["patents", "languages", "hobbies", "softSkills", "personalDetails", "additional"]);
   });
 
   it("Marquee keeps the accent header band out of the flowing page body", () => {

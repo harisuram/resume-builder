@@ -11,7 +11,7 @@ export const OPERATOR = "an independent developer based in India";
 export const JURISDICTION = "India";
 
 /** Bump when the wording of the legal pages changes in substance. */
-export const LEGAL_UPDATED = "2026-10-07";
+export const LEGAL_UPDATED = "2026-10-11";
 
 export function formatLegalDate(iso: string = LEGAL_UPDATED): string {
   return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", {

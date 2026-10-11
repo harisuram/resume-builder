@@ -19,7 +19,12 @@ export interface Education {
   fieldOfStudy?: string;
   startDate: string;
   endDate?: string; // absent = present
+  /** The grade value as typed or picked. Named `gpa` for saved drafts that
+   * predate grading scales; `gradeType` says how to read it. */
   gpa?: string;
+  /** Which grading scale `gpa` is on (lib/grades.ts). Absent = "gpa", the
+   * plain "GPA 3.8" every entry printed before scales existed. */
+  gradeType?: GradeType;
   coursework?: string[];
 }
 
@@ -70,6 +75,49 @@ export interface AdditionalItem {
   bullets: string[];
 }
 
+/** Every grading scale the education form offers (lib/grades.ts). */
+export type GradeType =
+  | "gpa"
+  | "gpa4"
+  | "gpa4.3"
+  | "gpa4.5"
+  | "gpa5"
+  | "gpa7"
+  | "cgpa10"
+  | "percentage"
+  | "outOf10"
+  | "outOf20"
+  | "outOf30"
+  | "outOf100"
+  | "outOf110"
+  | "wam"
+  | "germanGrade"
+  | "swissGrade"
+  | "russianGrade"
+  | "letter"
+  | "ects"
+  | "ukClass"
+  | "indiaClass"
+  | "latinHonors"
+  | "honours"
+  | "passFail"
+  | "custom";
+
+export const GENDER_OPTIONS = ["Male", "Female", "Non-binary", "Other"] as const;
+export const MARITAL_STATUS_OPTIONS = ["Single", "Married", "Divorced", "Widowed", "Separated", "Civil partnership"] as const;
+
+/** Personal details some countries expect on a resume (India, the Gulf, much
+ * of Europe) and others leave off. Every field is optional. */
+export interface PersonalDetails {
+  /** ISO date, `YYYY-MM-DD`. */
+  dateOfBirth?: string;
+  /** One of GENDER_OPTIONS. */
+  gender?: string;
+  /** One of MARITAL_STATUS_OPTIONS. */
+  maritalStatus?: string;
+  nationality?: string;
+}
+
 /** One titled bundle of skills ("Frontend: React, TypeScript"). Used only
  * when the user switches Skills to grouped mode (ResumeData.skillsLayout). */
 export interface SkillGroup {
@@ -100,6 +148,7 @@ export interface ResumeSections {
   languages: Language[];
   hobbies: string[];
   softSkills: string[];
+  personalDetails: PersonalDetails;
   additional: AdditionalSection;
 }
 

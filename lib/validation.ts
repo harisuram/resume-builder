@@ -1,3 +1,5 @@
+import { validateGrade } from "./grades";
+import { GENDER_OPTIONS, MARITAL_STATUS_OPTIONS } from "./types";
 import type {
   AdditionalItem,
   AdditionalSection,
@@ -7,6 +9,7 @@ import type {
   Experience,
   Language,
   Patent,
+  PersonalDetails,
   Project,
   ResumeSections,
   SectionKey,
@@ -228,7 +231,7 @@ export function getEducationErrors(item: Education): EducationErrors {
     degree: required(item.degree, "Enter the degree.").message,
     fieldOfStudy: optionalText(item.fieldOfStudy ?? "").message,
     endDate: validateEndDate(item.startDate, item.endDate ?? "").message,
-    gpa: validateGpa(item.gpa ?? "").message,
+    gpa: validateGrade(item.gradeType, item.gpa ?? "").message,
   };
 }
 
@@ -356,6 +359,82 @@ export function isAdditionalSectionValid(section: AdditionalSection | undefined)
   return section.items.every(isAdditionalItemValid);
 }
 
+export interface PersonalDetailsErrors {
+  dateOfBirth?: string;
+  gender?: string;
+  maritalStatus?: string;
+  nationality?: string;
+}
+
+const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/** A real calendar date, not in the future, and an age a working adult could
+ * have (14 to 100). Empty is fine — every personal detail is optional. */
+export function validateDateOfBirth(value: string, today: Date = new Date()): FieldValidation {
+  if (!value.trim()) return ok;
+  const match = ISO_DATE.exec(value.trim());
+  if (!match) return { valid: false, message: "Enter a date of birth." };
+  const [year, month, day] = [Number(match[1]), Number(match[2]), Number(match[3])];
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
+    return { valid: false, message: "Enter a real date." };
+  }
+  const todayUtc = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+  if (date.getTime() > todayUtc) return { valid: false, message: "Date of birth can't be in the future." };
+  let age = today.getFullYear() - year;
+  if (today.getMonth() + 1 < month || (today.getMonth() + 1 === month && today.getDate() < day)) age -= 1;
+  if (age < 14 || age > 100) return { valid: false, message: "Check the year — that age looks off." };
+  return ok;
+}
+
+export const MAX_NATIONALITY_LENGTH = 60;
+
+/** Letters in any script, plus the joiners demonyms use: "Indian",
+ * "New Zealander", "Indian / British", "Côte d’Ivoire". No digits. */
+const NATIONALITY_PATTERN = /^[\p{L}\p{M}][\p{L}\p{M} .,'’\-/&()]*$/u;
+
+/** Saved drafts and imports can hold anything; only strings are details. */
+function detail(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function fromList(value: string, options: readonly string[], message: string): FieldValidation {
+  if (!value.trim()) return ok;
+  return options.includes(value.trim()) ? ok : { valid: false, message };
+}
+
+export function validateNationality(value: string): FieldValidation {
+  const trimmed = value.trim();
+  if (!trimmed) return ok;
+  const long = tooLong(trimmed, MAX_NATIONALITY_LENGTH);
+  if (long) return long;
+  if (!NATIONALITY_PATTERN.test(trimmed)) return { valid: false, message: "Use letters only, like “Indian”." };
+  return ok;
+}
+
+export function getPersonalDetailsErrors(details: PersonalDetails): PersonalDetailsErrors {
+  return {
+    dateOfBirth: validateDateOfBirth(detail(details.dateOfBirth)).message,
+    gender: fromList(detail(details.gender), GENDER_OPTIONS, "Choose a gender from the list, or leave it off.").message,
+    maritalStatus: fromList(
+      detail(details.maritalStatus),
+      MARITAL_STATUS_OPTIONS,
+      "Choose a marital status from the list, or leave it off.",
+    ).message,
+    nationality: validateNationality(detail(details.nationality)).message,
+  };
+}
+
+export function hasPersonalDetails(details: PersonalDetails | undefined): boolean {
+  if (!details || typeof details !== "object") return false;
+  return [details.dateOfBirth, details.gender, details.maritalStatus, details.nationality].some((value) => detail(value).trim());
+}
+
+/** At least one detail filled in, and none of them malformed. */
+export function isPersonalDetailsValid(details: PersonalDetails | undefined): boolean {
+  return hasPersonalDetails(details) && !hasAnyError(getPersonalDetailsErrors(details!));
+}
+
 /** Whether a content section has at least one valid, complete entry — the
  * same gate the wizard's Next button and the nav's complete-dot use. Empty
  * is not valid (Skip is how you pass an unused section); a half-filled
@@ -385,6 +464,8 @@ export function isSectionValid(key: SectionKey, sections: Partial<ResumeSections
       return isFilledList(value, isPatentItemValid);
     case "languages":
       return isFilledList(value, isLanguageItemValid);
+    case "personalDetails":
+      return isPersonalDetailsValid(value && typeof value === "object" && !Array.isArray(value) ? (value as PersonalDetails) : undefined);
     case "additional":
       return isAdditionalSectionValid(value && typeof value === "object" && "items" in value ? value : undefined);
   }

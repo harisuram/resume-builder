@@ -787,3 +787,16 @@ export const HOBBY_CATALOG: string[] = uniqueSorted([
   "Writing",
   "Yoga",
 ]);
+
+/** Nationality suggestions (demonyms). Free text is still accepted. */
+export const NATIONALITY_CATALOG: string[] = uniqueSorted([
+  "Afghan", "Algerian", "American", "Argentine", "Australian", "Austrian", "Bahraini", "Bangladeshi", "Belgian",
+  "Bhutanese", "Brazilian", "British", "Bulgarian", "Cambodian", "Cameroonian", "Canadian", "Chilean", "Chinese",
+  "Colombian", "Croatian", "Czech", "Danish", "Dutch", "Egyptian", "Emirati", "Ethiopian", "Filipino", "Finnish",
+  "French", "German", "Ghanaian", "Greek", "Hungarian", "Indian", "Indonesian", "Iranian", "Iraqi", "Irish",
+  "Israeli", "Italian", "Jamaican", "Japanese", "Jordanian", "Kazakh", "Kenyan", "Korean", "Kuwaiti", "Lebanese",
+  "Malaysian", "Maldivian", "Mauritian", "Mexican", "Moroccan", "Nepali", "New Zealander", "Nigerian", "Norwegian",
+  "Omani", "Pakistani", "Palestinian", "Peruvian", "Polish", "Portuguese", "Qatari", "Romanian", "Russian", "Saudi",
+  "Singaporean", "South African", "Spanish", "Sri Lankan", "Swedish", "Swiss", "Syrian", "Taiwanese", "Tanzanian",
+  "Thai", "Tunisian", "Turkish", "Ugandan", "Ukrainian", "Venezuelan", "Vietnamese", "Yemeni", "Zambian", "Zimbabwean",
+]);

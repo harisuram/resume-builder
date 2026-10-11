@@ -13,6 +13,7 @@ import {
   type TemplateVariant,
 } from "@/components/templates/shared/theme";
 import { formatDateRange, isCurrentExperience } from "@/lib/date";
+import { formatGrade } from "@/lib/grades";
 import { PAGE_INSET_PX, PAGE_PAD_Y_PX } from "@/lib/page";
 import { mixHex, tintHex } from "@/lib/pdf/color";
 import { SUMMARY_COPY, resumeSectionTitle } from "@/lib/persona";
@@ -187,7 +188,7 @@ function TimelineSection({
             <>
               <Text style={{ ...text(13), fontWeight: 600, color: ink.strong }}>{edu.institution}</Text>
               <Text style={{ ...text(12), color: ink.soft }}>
-                {`${edu.degree}${edu.fieldOfStudy ? `, ${edu.fieldOfStudy}` : ""}${edu.gpa ? ` · GPA ${edu.gpa}` : ""}`}
+                {`${edu.degree}${edu.fieldOfStudy ? `, ${edu.fieldOfStudy}` : ""}${formatGrade(edu) ? ` · ${formatGrade(edu)}` : ""}`}
               </Text>
               {edu.coursework && edu.coursework.length > 0 && (
                 <Text style={{ marginTop: pt(2), ...text(11.5), color: ink.faint }}>
