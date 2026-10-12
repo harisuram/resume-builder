@@ -106,7 +106,12 @@ describe("BuilderShell", () => {
     expect(screen.getByRole("button", { name: "Save & Next" })).toBeDisabled();
 
     // Skip works even though the section is unresolved — that's its purpose.
-    await userEvent.click(screen.getByRole("button", { name: "Skip" }));
+    // On a phone Skip and Save & Next share one solid pill so the form
+    // text scrolling underneath doesn't show through the pair.
+    const skip = screen.getByRole("button", { name: "Skip" });
+    expect(skip.parentElement!.className).toContain("max-md:rounded-full");
+    expect(skip.parentElement!.className).toContain("max-md:bg-[var(--color-surface)]");
+    await userEvent.click(skip);
     expect(useBuilderStore.getState().sectionStatus.skills).toBe("skipped");
     expect(JSON.parse(localStorage.getItem("resumeData")!).sectionStatus.skills).toBe("skipped");
     expect(screen.getByRole("heading", { name: "Certifications", level: 2 })).toBeInTheDocument();
@@ -274,6 +279,21 @@ describe("BuilderShell", () => {
     expect(previewAside.className).toContain("min-h-0");
     expect(container.querySelector("main")!.className).not.toContain("hidden");
     expect(container.querySelector("main")!.className).toContain("overflow-y-auto");
+  });
+
+  it("sticks the mobile step progress to the top while the header scrolls with the form", async () => {
+    const { container } = render(<BuilderShell />);
+    await screen.findByRole("heading", { name: "Basic info" });
+
+    const scroller = container.querySelector("[data-builder-scroll]") as HTMLElement;
+    expect(scroller.className).toContain("max-md:overflow-y-auto");
+    const header = scroller.querySelector("header");
+    const progress = scroller.querySelector("aside");
+    expect(header).not.toBeNull();
+    expect(progress!.className).toContain("sticky");
+    expect(progress!.className).toContain("top-0");
+    expect(progress!.parentElement!.className).toContain("max-md:overflow-visible");
+    expect(progress!.compareDocumentPosition(header!) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
   });
 
   it("caps the builder to the viewport so the preview column scrolls on its own", async () => {

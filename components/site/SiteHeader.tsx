@@ -14,7 +14,7 @@ export function SiteHeader({ home = false }: { home?: boolean }) {
   return (
     <header className="sticky top-0 z-30 w-full border-b border-[var(--color-border)]/80 bg-[var(--color-paper)]/80 backdrop-blur-xl">
       <div className="flex min-w-0 items-center justify-between gap-3 px-4 py-3 sm:px-10 sm:py-3.5">
-        <Logo href={home ? "" : "/"} />
+        <Logo href={home ? "" : "/"} hideNameOnMobile />
         <div className="flex shrink-0 items-center gap-3 sm:gap-5">
           <nav className="hidden items-center gap-5 text-[13.5px] font-medium md:flex" aria-label="Site">
             {HEADER_LINKS.map((link) => (

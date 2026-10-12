@@ -250,6 +250,21 @@ describe("CoverLetterShell", () => {
     });
   });
 
+  it("sticks the mobile step progress to the top while the header scrolls with the form", async () => {
+    saveResumeData(makeFullResumeData());
+    const { container } = render(<CoverLetterShell />);
+    await screen.findByRole("heading", { name: "Recipient" });
+    const scroller = container.querySelector("[data-builder-scroll]") as HTMLElement;
+    expect(scroller.className).toContain("max-md:overflow-y-auto");
+    const header = scroller.querySelector("header");
+    const progress = scroller.querySelector("aside");
+    expect(header).not.toBeNull();
+    expect(progress!.className).toContain("sticky");
+    expect(progress!.className).toContain("top-0");
+    expect(progress!.parentElement!.className).toContain("max-md:overflow-visible");
+    expect(progress!.compareDocumentPosition(header!) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
+  });
+
   it("opens the phone menu with the letter's own steps", async () => {
     await renderWithResume();
     await userEvent.click(screen.getByRole("button", { name: "Open sections menu" }));

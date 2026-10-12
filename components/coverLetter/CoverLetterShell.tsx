@@ -128,8 +128,15 @@ export function CoverLetterShell() {
   }, []);
 
   useEffect(() => {
+    // Desktop scrolls the form pane. On a phone the header and the form
+    // share one scroller so the step bar can stick to the top while the
+    // header scrolls away.
     const pane = formPaneRef.current;
-    if (pane) pane.scrollTop = 0;
+    if (!pane) return;
+    const mobile =
+      typeof window.matchMedia === "function" && window.matchMedia("(max-width: 767px)").matches;
+    const scroller = mobile ? pane.closest("[data-builder-scroll]") : pane;
+    if (scroller instanceof HTMLElement) scroller.scrollTop = 0;
   }, [activeKey]);
 
   const wizardOrder = getLetterWizardOrder(letter);
@@ -212,15 +219,16 @@ export function CoverLetterShell() {
   return (
     <div className="print-unclip flex h-[100dvh] flex-col overflow-hidden">
       <div
-        className="print-unclip flex min-h-0 flex-1 flex-col overflow-hidden"
+        className="print-unclip flex min-h-0 flex-1 flex-col max-md:overflow-x-clip max-md:overflow-y-auto max-md:overscroll-contain md:overflow-hidden"
         data-builder-content=""
+        data-builder-scroll=""
         inert={previewOpen || undefined}
       >
         <CoverLetterNavbar onReset={() => selectSection(hasBasicInfoContent(basicInfo) ? "recipient" : "details", -1)} />
         {/* Inert until hydrated: anything typed before the saved copies load
             would be overwritten by them. */}
         <div
-          className="print-unclip flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row"
+          className="print-unclip flex min-h-0 w-full flex-col max-md:flex-none max-md:overflow-visible md:min-h-0 md:flex-1 md:flex-row md:overflow-hidden"
           inert={!hydrated || undefined}
         >
           {/* Same collapsible sidebar as the resume builder: peeking keeps
@@ -229,7 +237,7 @@ export function CoverLetterShell() {
             onPointerEnter={(event) => schedulePeek(true, event)}
             onPointerLeave={(event) => schedulePeek(false, event)}
             data-peek={peeking ? "" : undefined}
-            className={`no-print sticky top-0 z-20 shrink-0 border-b border-[var(--color-border)] bg-[var(--color-surface)] md:relative md:z-30 md:flex md:h-full md:min-h-0 md:flex-col md:overflow-x-hidden md:overflow-y-auto md:border-b-0 md:border-r md:transition-[width,margin,box-shadow] md:duration-300 md:ease-[cubic-bezier(0.22,1,0.36,1)] ${
+            className={`no-print sticky top-0 z-30 shrink-0 border-b border-[var(--color-border)] bg-[var(--color-surface)] md:relative md:z-30 md:flex md:h-full md:min-h-0 md:flex-col md:overflow-x-hidden md:overflow-y-auto md:border-b-0 md:border-r md:transition-[width,margin,box-shadow] md:duration-300 md:ease-[cubic-bezier(0.22,1,0.36,1)] ${
               peeking
                 ? "md:-mr-48 md:w-64 md:shadow-[12px_0_32px_-12px_rgb(0_0_0_/_0.25)]"
                 : railMode
@@ -237,8 +245,9 @@ export function CoverLetterShell() {
                   : "md:w-64"
             }`}
           >
-            {/* Mobile: a bar that opens the side menu with the full step
-                list. From md up the list is the sidebar itself. */}
+            {/* Mobile: sticky at the top of the shell scroller, so the step
+                name and progress stay put while the header scrolls away.
+                From md up the list is the sidebar itself. */}
             <div className="flex items-center gap-3 px-3 py-2 md:hidden">
               <MobileMenuButton className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)]/70 bg-[var(--color-surface)]/70 text-[var(--color-ink-soft)] shadow-[0_4px_14px_-6px_rgb(0_0_0_/_0.22),inset_0_1px_0_color-mix(in_srgb,var(--color-surface)_60%,transparent)] backdrop-blur-xl transition duration-150 hover:text-[var(--color-ink)] active:scale-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]" />
               <button
@@ -286,8 +295,8 @@ export function CoverLetterShell() {
           </aside>
 
           {activeKey === "export" ? (
-            <div className="print-unclip flex min-h-0 flex-1 overflow-hidden">
-              <main ref={formPaneRef} className="print-unclip min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-clip overscroll-contain px-5 py-6 sm:px-8">
+            <div className="print-unclip relative flex w-full min-w-0 max-md:flex-none max-md:overflow-visible md:min-h-0 md:flex-1 md:overflow-hidden">
+              <main ref={formPaneRef} className="print-unclip w-full min-w-0 max-md:overflow-visible md:min-h-0 md:flex-1 md:overflow-y-auto md:overflow-x-clip md:overscroll-contain px-5 py-6 sm:px-8">
                 <div
                   className={`mx-auto w-full transition-[max-width] duration-300 ease-out ${layoutCollapsed ? "max-w-[980px]" : "max-w-[820px]"}`}
                 >
@@ -307,11 +316,11 @@ export function CoverLetterShell() {
               </aside>
             </div>
           ) : (
-            <div className="flex min-h-0 flex-1 overflow-hidden">
+            <div className="relative flex w-full min-w-0 max-md:flex-none max-md:overflow-visible md:min-h-0 md:flex-1 md:overflow-hidden">
               {/* Extra bottom padding on mobile: the fixed step footer sits
                   over the viewport, and the last 150px keeps a filled ad
                   clear of that bar. */}
-              <main ref={formPaneRef} className="block min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-clip overscroll-contain px-5 py-6 pb-[calc(11rem+150px+env(safe-area-inset-bottom))] sm:px-8 md:pb-6">
+              <main ref={formPaneRef} className="block w-full min-w-0 max-md:overflow-visible md:min-h-0 md:flex-1 md:overflow-y-auto md:overflow-x-clip md:overscroll-contain px-5 py-6 pb-[calc(11rem+150px+env(safe-area-inset-bottom))] sm:px-8 md:pb-6">
                 <div
                   className={`mx-auto w-full transition-[max-width] duration-300 ease-out ${layoutCollapsed ? "max-w-3xl" : "max-w-2xl"}`}
                 >
@@ -356,7 +365,7 @@ export function CoverLetterShell() {
               {/* Side-by-side preview from lg up only; phones and tablets
                   open the same pane in the bottom sheet. */}
               <aside
-                className={`flex min-h-0 w-0 overflow-hidden border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-ink)_3.5%,var(--color-paper))] p-0 lg:shrink-0 lg:flex-col lg:overflow-hidden lg:border-l lg:px-4 lg:py-6 lg:transition-[width] lg:duration-300 lg:ease-[cubic-bezier(0.22,1,0.36,1)] xl:px-5 ${
+                className={`flex min-h-0 w-0 overflow-hidden max-md:absolute max-md:h-0 border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-ink)_3.5%,var(--color-paper))] p-0 lg:shrink-0 lg:flex-col lg:overflow-hidden lg:border-l lg:px-4 lg:py-6 lg:transition-[width] lg:duration-300 lg:ease-[cubic-bezier(0.22,1,0.36,1)] xl:px-5 ${
                   layoutCollapsed ? "lg:w-[min(820px,max(325px,48%))]" : "lg:w-[min(650px,max(325px,42.75%))]"
                 }`}
               >

@@ -23,6 +23,18 @@ function NextIcon() {
   );
 }
 
+/** Phones hide Skip / Save & Next while the form scrolls down, and bring
+ * them back on the way up or once the bottom of the scroller is in view.
+ * Preview stays put. Desktop never hides them. */
+export function footerActionsHidden(
+  hidden: boolean,
+  reading: { mobile: boolean; top: number; delta: number; atBottom: boolean },
+): boolean {
+  if (!reading.mobile || reading.atBottom || reading.top <= 12 || reading.delta <= -8) return false;
+  if (reading.delta >= 8 && reading.top > 40) return true;
+  return hidden;
+}
+
 /** A light tap on phones that support it (Android Chrome); a no-op
  * elsewhere, including iOS Safari. */
 function haptic() {
@@ -72,6 +84,8 @@ export function SectionFooterNav({
 }) {
   const [confirming, setConfirming] = useState(false);
   const [celebration, setCelebration] = useState(0);
+  const [actionsHidden, setActionsHidden] = useState(false);
+  const barRef = useRef<HTMLDivElement>(null);
   const prevRef = useRef({ label: clearLabel, enabled: nextEnabled });
 
   // Same step, Next just unlocked because the user filled it in (not by
@@ -83,6 +97,44 @@ export function SectionFooterNav({
       setCelebration((n) => n + 1);
     }
   }, [clearLabel, nextEnabled, canClear, canGoNext]);
+
+  // A new step opens at the top with the actions in view. Hiding is decided
+  // from the shell scroller, which is what actually moves on a phone.
+  useEffect(() => {
+    setActionsHidden(false);
+  }, [clearLabel]);
+
+  useEffect(() => {
+    const bar = barRef.current;
+    if (!bar || typeof window.matchMedia !== "function") return;
+    const media = window.matchMedia("(max-width: 767px)");
+    const scroller = bar.closest("[data-builder-scroll]");
+    if (!(scroller instanceof HTMLElement)) return;
+
+    let last = scroller.scrollTop;
+    let frame = 0;
+    const read = () => {
+      frame = 0;
+      const top = scroller.scrollTop;
+      const delta = top - last;
+      last = top;
+      const atBottom = scroller.scrollHeight - top - scroller.clientHeight <= 72;
+      setActionsHidden((hidden) =>
+        footerActionsHidden(hidden, { mobile: media.matches, top, delta, atBottom }),
+      );
+    };
+    const onScroll = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(read);
+    };
+    scroller.addEventListener("scroll", onScroll, { passive: true });
+    media.addEventListener("change", read);
+    return () => {
+      scroller.removeEventListener("scroll", onScroll);
+      media.removeEventListener("change", read);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, []);
 
   if (!canGoBack && !canGoNext && !canSkip) return null;
 
@@ -104,11 +156,11 @@ export function SectionFooterNav({
           Clear
         </Button>
       </div>
-      {/* Phones: pinned to the viewport bottom, with Preview above the
-          capsule. The bar is opaque and takes every tap in that strip, so an
-          ad scrolling underneath can't receive a miss next to Preview, Skip,
-          or Save & Next. From md up it flattens into the inline footer. */}
-      <div className="no-print pointer-events-auto fixed inset-x-0 bottom-0 z-40 flex flex-col gap-2 border-t border-[var(--color-border)] bg-[var(--color-paper)] px-3 pt-3 pb-[max(0.625rem,env(safe-area-inset-bottom))] shadow-[0_-12px_32px_-20px_rgb(0_0_0_/_0.35)] md:static md:z-0 md:flex-row md:items-center md:gap-3 md:border-0 md:bg-transparent md:p-0 md:shadow-none">
+      {/* Phones: pinned to the viewport bottom, with Preview above Save &
+          Next. Skip and Save & Next slide away while scrolling down and
+          return on the way up, or at the bottom of the form. Preview stays.
+          From md up the row is inline and always visible. */}
+      <div ref={barRef} className="no-print pointer-events-auto fixed inset-x-0 bottom-0 z-40 flex flex-col bg-transparent px-3 pt-3 pb-[max(0.625rem,env(safe-area-inset-bottom))] md:static md:z-0 md:flex-row md:items-center md:gap-3 md:p-0">
         {onPreview ? (
           <div className="flex items-end justify-end gap-2 px-1 lg:hidden">
             {onPreview ? (
@@ -129,7 +181,18 @@ export function SectionFooterNav({
             ) : null}
           </div>
         ) : null}
-        <div data-mtour="capsule" className="pointer-events-auto relative flex items-center gap-1.5 max-md:w-full max-md:rounded-full max-md:border max-md:border-[var(--color-border)]/70 max-md:bg-[var(--color-surface)]/65 max-md:p-1.5 max-md:shadow-[0_10px_40px_-8px_rgb(0_0_0_/_0.28),inset_0_1px_0_color-mix(in_srgb,var(--color-surface)_60%,transparent)] max-md:backdrop-blur-2xl max-md:backdrop-saturate-[1.8] md:gap-3">
+        <div
+          data-mtour="capsule"
+          data-actions-hidden={actionsHidden ? "" : undefined}
+          aria-hidden={actionsHidden || undefined}
+          inert={actionsHidden || undefined}
+          className={`relative max-md:w-full max-md:transition-[max-height,margin,opacity,transform] max-md:duration-300 max-md:ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none md:overflow-visible ${
+            actionsHidden
+              ? "max-md:pointer-events-none max-md:mt-0 max-md:max-h-0 max-md:overflow-hidden max-md:translate-y-3 max-md:opacity-0"
+              : "max-md:pointer-events-auto max-md:mt-2 max-md:max-h-24 max-md:overflow-visible max-md:translate-y-0 max-md:opacity-100"
+          }`}
+        >
+          <div className="flex items-center gap-1.5 max-md:w-full max-md:rounded-full max-md:border max-md:border-[var(--color-border)] max-md:bg-[var(--color-surface)] max-md:p-1.5 max-md:shadow-[0_8px_22px_-8px_rgb(0_0_0_/_0.45)] md:gap-3">
           {helper ? (
             <span className="hidden min-w-0 text-[11.5px] text-[var(--color-ink-faint)] md:inline">{helper}</span>
           ) : null}
@@ -140,7 +203,7 @@ export function SectionFooterNav({
                 haptic();
                 onSkip();
               }}
-              className="max-md:min-h-11 max-md:flex-1 max-md:rounded-full max-md:text-[var(--color-ink-soft)] max-md:active:scale-95 max-md:active:bg-[var(--color-ink)]/5"
+              className="max-md:min-h-11 max-md:flex-1 max-md:rounded-full max-md:text-[var(--color-ink)] max-md:hover:bg-transparent max-md:active:scale-95 max-md:active:bg-[var(--color-ink)]/5"
             >
               <SkipIcon />
               Skip
@@ -161,6 +224,7 @@ export function SectionFooterNav({
               <NextIcon />
             </Button>
           )}
+          </div>
         </div>
       </div>
       <ConfirmDialog
