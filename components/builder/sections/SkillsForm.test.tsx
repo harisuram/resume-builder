@@ -194,11 +194,15 @@ describe("SkillsForm — grouped editor", () => {
       const second = screen.getByRole("button", { name: /Backend 1 skill$/ });
       expect(first).toHaveAttribute("aria-expanded", "true");
       expect(second).toHaveAttribute("aria-expanded", "false");
-      // The row is phone-only; the body hides below md only, so tablets and
-      // desktops always see every group open.
+      // The row is phone-only. A closed body eases shut below md; tablets and
+      // desktops keep every group open.
       expect(first).toHaveClass("md:hidden");
-      expect(document.getElementById(second.getAttribute("aria-controls")!)).toHaveClass("max-md:hidden");
-      expect(document.getElementById(first.getAttribute("aria-controls")!)).not.toHaveClass("max-md:hidden");
+      const closed = document.getElementById(second.getAttribute("aria-controls")!)!;
+      const opened = document.getElementById(first.getAttribute("aria-controls")!)!;
+      expect(closed).toHaveClass("max-md:grid-rows-[0fr]");
+      expect(closed.className).toContain("transition-[grid-template-rows]");
+      expect(opened).not.toHaveClass("max-md:grid-rows-[0fr]");
+      expect(opened).toHaveClass("grid-rows-[1fr]");
     });
 
     it("opens one group at a time", async () => {

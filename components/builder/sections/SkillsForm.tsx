@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ChipInput } from "@/components/ui/ChipInput";
 import { TextInput } from "@/components/ui/Field";
@@ -18,6 +18,13 @@ const GROUP_PLACEHOLDER = "Add a skill to this group, press Enter";
 /** Shown in place of an empty group list (after Clear), so grouped mode
  * always has a group to type into. Never written until the user edits it. */
 const NO_GROUPS: SkillGroup[] = [{ title: "", skills: [] }];
+const GROUP_MOVE_MS = 280;
+
+let nextGroupSerial = 0;
+function nextGroupId() {
+  nextGroupSerial += 1;
+  return `skill-group-${nextGroupSerial}`;
+}
 
 const LAYOUTS: { value: SkillsLayout; label: string }[] = [
   { value: "list", label: "Simple list" },
@@ -110,13 +117,27 @@ function SkillGroupsEditor() {
   // Phones show one group open at a time; from md every group is open and
   // this is ignored (see SkillGroupCard).
   const [openIndex, setOpenIndex] = useState(0);
+  const [ids, setIds] = useState<string[]>(() => groups.map(() => nextGroupId()));
+  const listRef = useRef<HTMLDivElement>(null);
+  const positions = useRef(new Map<string, number>());
+  const orderSeen = useRef("");
   const atLimit = groups.length >= MAX_SKILL_GROUPS;
+
+  // Clear, import, or a saved resume can change the group count without
+  // going through add/remove. Keep one stable id per group so a move can
+  // animate the same card into its new slot.
+  if (ids.length !== groups.length) {
+    setIds(ids.length < groups.length
+      ? [...ids, ...Array.from({ length: groups.length - ids.length }, () => nextGroupId())]
+      : ids.slice(0, groups.length));
+  }
 
   function update(index: number, patch: Partial<SkillGroup>) {
     setSkillGroups(groups.map((group, i) => (i === index ? { ...group, ...patch } : group)));
   }
 
   function remove(index: number) {
+    setIds((current) => current.filter((_, i) => i !== index));
     setSkillGroups(groups.filter((_, i) => i !== index));
     setOpenIndex((open) => (open > index ? open - 1 : open === index ? Math.max(0, index - 1) : open));
   }
@@ -125,6 +146,11 @@ function SkillGroupsEditor() {
     if (to < 0 || to >= groups.length) return;
     const next = [...groups];
     [next[index], next[to]] = [next[to], next[index]];
+    setIds((current) => {
+      const order = [...current];
+      [order[index], order[to]] = [order[to], order[index]];
+      return order;
+    });
     setSkillGroups(next);
     if (openIndex === index) setOpenIndex(to);
     else if (openIndex === to) setOpenIndex(index);
@@ -134,15 +160,42 @@ function SkillGroupsEditor() {
     if (atLimit) return;
     focusNew(groups.length);
     setOpenIndex(groups.length);
+    setIds((current) => [...current, nextGroupId()]);
     setSkillGroups([...groups, { title: "", skills: [] }]);
   }
 
+  const orderKey = ids.join("\0");
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const reduce =
+      typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const orderChanged = orderSeen.current !== "" && orderSeen.current !== orderKey;
+    const nextPositions = new Map<string, number>();
+    for (const node of list.children) {
+      if (!(node instanceof HTMLElement)) continue;
+      const id = node.dataset.groupId;
+      if (!id) continue;
+      const top = node.getBoundingClientRect().top;
+      const prev = positions.current.get(id);
+      if (orderChanged && !reduce && prev != null && Math.abs(prev - top) > 1 && typeof node.animate === "function") {
+        node.animate([{ transform: `translateY(${prev - top}px)` }, { transform: "translateY(0)" }], {
+          duration: GROUP_MOVE_MS,
+          easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+        });
+      }
+      nextPositions.set(id, top);
+    }
+    positions.current = nextPositions;
+    orderSeen.current = orderKey;
+  }, [orderKey, openIndex]);
+
   return (
     <>
-      <div className="flex flex-col gap-3">
+      <div ref={listRef} className="flex flex-col gap-3">
         {groups.map((group, i) => (
+          <div key={ids[i] ?? i} data-group-id={ids[i]} className="min-w-0">
           <SkillGroupCard
-            key={i}
             index={i}
             count={groups.length}
             group={group}
@@ -154,6 +207,7 @@ function SkillGroupsEditor() {
             onRemove={() => remove(i)}
             onMove={(to) => move(i, to)}
           />
+          </div>
         ))}
       </div>
       <Button
@@ -202,8 +256,9 @@ function SkillGroupCard({
 
   return (
     <ItemCard onRemove={onRemove} autoFocus={autoFocus} removeLabel={`Remove group ${name}`}>
-      {/* Phone-only summary row: collapses the card to its title and count so
-          a long list of groups stays scannable on a small screen. */}
+      {/* Phone-only summary row. The body eases open and shut; from md every
+          group stays open and the row is hidden. */}
+      <div className="min-w-0">
       <button
         type="button"
         onClick={onToggle}
@@ -216,14 +271,21 @@ function SkillGroupCard({
           {skillCount}
           <svg
             viewBox="0 0 16 16"
-            className={`h-4 w-4 transition-transform duration-150 ${open ? "rotate-180" : ""}`}
+            className={`h-4 w-4 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${open ? "rotate-180" : ""}`}
             aria-hidden="true"
           >
             <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
           </svg>
         </span>
       </button>
-      <div id={bodyId} className={`grid gap-3 ${open ? "" : "max-md:hidden"}`}>
+      <div
+        id={bodyId}
+        className={`grid transition-[grid-template-rows] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
+          open ? "grid-rows-[1fr]" : "max-md:grid-rows-[0fr] md:grid-rows-[1fr]"
+        }`}
+      >
+      <div className={`min-h-0 overflow-hidden ${open ? "" : "max-md:pointer-events-none"}`}>
+      <div className="grid gap-3 max-md:pt-3">
         <div>
           <label htmlFor={titleId} className="mb-1.5 block text-[12px] font-medium tracking-wide text-[var(--color-ink-soft)]">
             Group title
@@ -252,6 +314,9 @@ function SkillGroupCard({
             <MoveButton label={`Move ${name} down`} disabled={index === count - 1} onClick={() => onMove(index + 1)} />
           </div>
         ) : null}
+      </div>
+      </div>
+      </div>
       </div>
     </ItemCard>
   );

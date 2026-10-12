@@ -520,7 +520,7 @@ export function BuilderShell() {
                 >
                   {/* Above the step footer so absolute suggestion lists aren't
                       painted under Clear / Save & Next (later DOM sibling). */}
-                  <div className="relative z-10 min-w-0 max-md:rounded-2xl max-md:border max-md:border-[var(--color-border)]/70 max-md:bg-[var(--color-surface)] max-md:p-4 max-md:shadow-[0_1px_2px_rgb(0_0_0_/_0.04),0_12px_32px_-18px_rgb(0_0_0_/_0.18)]">
+                  <div className="relative z-10 min-w-0">
                     <StepEnter key={activeKey} direction={stepDir} enabled={animateStep}>
                       <ActivePanel activeKey={activeKey} />
                     </StepEnter>
