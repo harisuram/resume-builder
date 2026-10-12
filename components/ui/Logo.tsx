@@ -19,11 +19,13 @@ export function Logo({
   href = "/",
   size = "md",
   className = "",
+  nameClassName = "",
   hideNameOnMobile = false,
 }: {
   href?: string;
   size?: "sm" | "md";
   className?: string;
+  nameClassName?: string;
   /** Phones crop the wordmark next to the icon. The name stays available to
    * screen readers and shows again from md up. */
   hideNameOnMobile?: boolean;
@@ -44,7 +46,7 @@ export function Logo({
       <span
         className={`min-w-0 font-display font-semibold tracking-tight text-[var(--color-ink)] ${
           hideNameOnMobile ? "max-md:sr-only md:truncate" : "truncate"
-        } ${compact ? "text-[14px] sm:text-[16px]" : "text-[15px] sm:text-[17px]"}`}
+        } ${nameClassName} ${compact ? "text-[14px] sm:text-[16px]" : "text-[15px] sm:text-[17px]"}`}
       >
         Free Resume Builder
       </span>

@@ -35,7 +35,16 @@ export function TextInput({
   invalid,
   ...props
 }: InputHTMLAttributes<HTMLInputElement> & InvalidProp) {
-  return <input className={controlClassName(className, invalid)} aria-invalid={invalid || undefined} {...props} />;
+  // Extensions such as temp-mail stamp data attributes and a background
+  // image onto email inputs before hydrate. This only covers this node.
+  return (
+    <input
+      className={controlClassName(className, invalid)}
+      aria-invalid={invalid || undefined}
+      {...props}
+      suppressHydrationWarning
+    />
+  );
 }
 
 export const TextArea = forwardRef<
@@ -48,6 +57,7 @@ export const TextArea = forwardRef<
       className={`${controlClassName(className, invalid)} resize-y`}
       aria-invalid={invalid || undefined}
       {...props}
+      suppressHydrationWarning
     />
   );
 });
