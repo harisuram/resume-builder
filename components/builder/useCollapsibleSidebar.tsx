@@ -65,7 +65,8 @@ export function useCollapsibleSidebar({ forceOpen = false }: { forceOpen?: boole
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
-      if (event.key.toLowerCase() !== "b" || !(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey) return;
+      const key = event.key?.toLowerCase();
+      if (key !== "b" || !(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey) return;
       if (!isBuilderTourViewport()) return;
       event.preventDefault();
       window.clearTimeout(peekTimer.current);
