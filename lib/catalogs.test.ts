@@ -52,4 +52,22 @@ describe("catalogs", () => {
     expect(FIELD_CATALOG).toEqual(expect.arrayContaining(["Pharmacy", "Architecture", "Construction Management"]));
     expect(CERTIFICATION_CATALOG).toEqual(expect.arrayContaining(["CCNA", "PMP", "OSHA 30"]));
   });
+
+  it("covers roles outside tech, from trades to teaching and public service", () => {
+    expect(ROLE_CATALOG).toEqual(
+      expect.arrayContaining([
+        "Chef",
+        "Professor",
+        "Lawyer",
+        "Chartered Accountant",
+        "Truck Driver",
+        "Welder",
+        "Police Officer",
+        "Scrum Master",
+        "Graduate Engineer Trainee",
+      ]),
+    );
+    const lower = ROLE_CATALOG.map((role) => role.toLowerCase());
+    expect(new Set(lower).size).toBe(lower.length);
+  });
 });

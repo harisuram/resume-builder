@@ -248,6 +248,44 @@ describe("handleOptimizePost", () => {
     await expect(res.json()).resolves.toEqual({ error: AI_MESSAGES.invalid, code: "invalid" });
   });
 
+  it("routes kind=suggest to 20 deduplicated bullet ideas for the role", async () => {
+    const ideas = Array.from({ length: 22 }, (_, i) => `Did thing ${i % 21}`);
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ choices: [{ message: { content: JSON.stringify({ bullets: ideas }) } }] }),
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    const res = await handleOptimizePost(
+      new Request("http://localhost/api/optimize", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ kind: "suggest", role: " Pharmacist ", company: "" }),
+      }),
+      { GROQ_API_KEY: "gsk_test" },
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { bullets: string[] };
+    expect(body.bullets).toHaveLength(20);
+    expect(new Set(body.bullets).size).toBe(20);
+    const sent = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+    expect(sent.messages[1].content).toBe("Role: Pharmacist");
+  });
+
+  it("rejects kind=suggest without a role", async () => {
+    const res = await handleOptimizePost(
+      new Request("http://localhost/api/optimize", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ kind: "suggest", role: "  " }),
+      }),
+      { GROQ_API_KEY: "gsk_test" },
+    );
+    expect(res.status).toBe(400);
+    await expect(res.json()).resolves.toMatchObject({ code: "invalid" });
+  });
+
   it("routes kind=summary to a summary rewrite", async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,

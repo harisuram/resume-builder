@@ -12,10 +12,34 @@ declare global {
 type AdFormat = "auto" | "fluid";
 type FillStatus = "pending" | "filled" | "unfilled";
 
-/** False while the node or any ancestor is display:none. */
+/** Ignore subpixel rounding; a collapsed preview column is width 0. */
+const CLIPPED_MIN_PX = 2;
+
+function clipsOverflow(style: CSSStyleDeclaration): boolean {
+  // Longhands are what browsers compute. jsdom only fills the shorthand.
+  return [style.overflow, style.overflowX, style.overflowY].some((value) => value === "hidden" || value === "clip");
+}
+
+/**
+ * False while the unit cannot be seen: display:none / visibility:hidden, or
+ * clipped by a collapsed ancestor (the preview column is width 0 below lg).
+ * The slot's own wrapper is height 0 until Google fills it — that collapse
+ * is not a hidden ad. body/html are skipped so a page-level overflow rule
+ * can't block every unit.
+ */
 function isRendered(node: HTMLElement): boolean {
   for (let el: HTMLElement | null = node; el; el = el.parentElement) {
-    if (getComputedStyle(el).display === "none") return false;
+    const style = getComputedStyle(el);
+    if (style.display === "none" || style.visibility === "hidden") return false;
+  }
+  const wrapper = node.parentElement;
+  for (
+    let el: HTMLElement | null = wrapper?.parentElement ?? null;
+    el && el !== document.body && el !== document.documentElement;
+    el = el.parentElement
+  ) {
+    if (!clipsOverflow(getComputedStyle(el))) continue;
+    if (el.clientWidth < CLIPPED_MIN_PX || el.clientHeight < CLIPPED_MIN_PX) return false;
   }
   return true;
 }
@@ -46,10 +70,10 @@ export function AdSlot({
     const node = insRef.current;
     if (!node) return;
 
-    // Request only once the unit is actually rendered. A unit hidden at this
-    // breakpoint (e.g. `md:hidden`) would otherwise be filled and then shown
-    // as display:none — a served but invisible impression. A resize that
-    // reveals it retries via the ResizeObserver.
+    // Request only once the unit is actually visible. A unit hidden at this
+    // breakpoint (`md:hidden`, `max-lg:hidden`) or clipped in a zero-width
+    // column would otherwise be filled and then invisible — a served but
+    // hidden impression. A resize that reveals it retries.
     let requested = false;
     const requestAd = () => {
       if (requested || !isRendered(node)) return;
@@ -63,6 +87,8 @@ export function AdSlot({
     requestAd();
     const resizeObserver = new ResizeObserver(requestAd);
     resizeObserver.observe(node);
+    if (node.parentElement) resizeObserver.observe(node.parentElement);
+    window.addEventListener("resize", requestAd);
 
     const syncStatus = () => {
       const next = node.getAttribute("data-ad-status");
@@ -74,6 +100,7 @@ export function AdSlot({
     return () => {
       resizeObserver.disconnect();
       observer.disconnect();
+      window.removeEventListener("resize", requestAd);
     };
   }, [enabled, slot]);
 

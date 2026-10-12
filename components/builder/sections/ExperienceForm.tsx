@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { DeleteIconButton } from "@/components/ui/DeleteIconButton";
 import { FieldGroup, TextInput } from "@/components/ui/Field";
@@ -13,6 +13,7 @@ import { showToast } from "@/lib/toast";
 import type { Experience } from "@/lib/types";
 import { useTouchedFields } from "@/lib/useTouchedFields";
 import { getExperienceErrors, MAX_BULLET_LENGTH, MAX_FIELD_LENGTH } from "@/lib/validation";
+import { BulletSuggestionsModal } from "./BulletSuggestionsModal";
 import { BulletTextArea } from "./BulletTextArea";
 import { CopyBulletsButton } from "./CopyBulletsButton";
 import { ItemCard, useFocusNewIndex } from "./ItemCard";
@@ -38,6 +39,7 @@ export function ExperienceForm({
   const { focusIndex, focusNew } = useFocusNewIndex();
   const [aiAvailable, setAiAvailable] = useState(true);
   const [optimizingIndex, setOptimizingIndex] = useState<number | null>(null);
+  const [suggestIndex, setSuggestIndex] = useState<number | null>(null);
   /** Which bullet row to focus after "+ Add bullet" (entry index + bullet index). */
   const [focusBullet, setFocusBullet] = useState<{ entry: number; bullet: number } | null>(null);
   const { touch, errorFor } = useTouchedFields();
@@ -53,6 +55,25 @@ export function ExperienceForm({
   function setBullets(index: number, bullets: string[]) {
     updateListItem(sectionKey, index, { bullets });
   }
+
+  /** Fills the first blank bullet row before appending, so a fresh entry's
+   * empty starter row doesn't sit above the added points. Reads the store
+   * directly because "Add all" calls this several times in one tick. */
+  function addSuggestedBullet(index: number, bullet: string) {
+    const current = useBuilderStore.getState().sections[sectionKey]?.[index]?.bullets ?? [];
+    const blank = current.findIndex((b) => !b.trim());
+    const next = [...current];
+    if (blank === -1) next.push(bullet);
+    else next[blank] = bullet;
+    setBullets(index, next);
+  }
+
+  const markAiLimited = useCallback(() => {
+    localStorage.setItem(AI_LIMITED_UNTIL_KEY, String(Date.now() + AI_BACKOFF_MS));
+    setAiAvailable(false);
+  }, []);
+
+  const closeSuggestions = useCallback(() => setSuggestIndex(null), []);
 
   async function handleOptimize(index: number, exp: Experience) {
     const bullets = exp.bullets.map((b) => b.trim()).filter(Boolean);
@@ -237,6 +258,16 @@ export function ExperienceForm({
                 >
                   + Add bullet
                 </button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={!exp.role.trim()}
+                  title={exp.role.trim() ? undefined : "Enter a role or title first"}
+                  onClick={() => setSuggestIndex(i)}
+                >
+                  ✨ Suggest points
+                </Button>
                 {aiAvailable && (
                   <Button
                     type="button"
@@ -266,6 +297,18 @@ export function ExperienceForm({
       >
         + Add {sectionKey === "experience" ? "experience" : "role"}
       </Button>
+      {suggestIndex !== null && items[suggestIndex] ? (
+        <BulletSuggestionsModal
+          key={`${suggestIndex}-${items[suggestIndex].role}`}
+          role={items[suggestIndex].role.trim()}
+          company={items[suggestIndex].company.trim()}
+          bullets={items[suggestIndex].bullets}
+          aiAvailable={aiAvailable}
+          onAdd={(bullet) => addSuggestedBullet(suggestIndex, bullet)}
+          onAiLimited={markAiLimited}
+          onClose={closeSuggestions}
+        />
+      ) : null}
         </>
       )}
     </div>

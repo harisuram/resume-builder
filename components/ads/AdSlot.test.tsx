@@ -108,6 +108,13 @@ describe("AdSlot", () => {
     expect(container.firstElementChild).not.toHaveClass("mt-12");
   });
 
+  it("keeps max-lg:hidden while pending", () => {
+    setClientId("ca-pub-123");
+    const { container } = render(<AdSlot slot="9876" className="mb-[150px] flex shrink-0 max-lg:hidden" />);
+    expect(container.firstElementChild).toHaveClass("h-0", "overflow-hidden", "max-lg:hidden");
+    expect(container.firstElementChild).not.toHaveClass("mb-[150px]");
+  });
+
   it("does not request an ad while the unit is display:none, and requests once it is shown", () => {
     setClientId("ca-pub-123");
     window.adsbygoogle = [];
@@ -123,10 +130,10 @@ describe("AdSlot", () => {
       unobserve() {}
     } as unknown as typeof ResizeObserver;
 
+    const host = document.createElement("div");
+    host.style.display = "none";
+    document.body.appendChild(host);
     try {
-      const host = document.createElement("div");
-      host.style.display = "none";
-      document.body.appendChild(host);
       render(<AdSlot slot="9876" />, { container: host });
       expect(pushSpy).not.toHaveBeenCalled();
 
@@ -136,6 +143,43 @@ describe("AdSlot", () => {
       expect(pushSpy).toHaveBeenCalledTimes(1);
     } finally {
       window.ResizeObserver = OriginalRO;
+      host.remove();
+    }
+  });
+
+  it("does not request an ad clipped in a zero-width ancestor, and requests once that ancestor has size", () => {
+    setClientId("ca-pub-123");
+    window.adsbygoogle = [];
+    const pushSpy = jest.spyOn(window.adsbygoogle, "push");
+    let onResize: () => void = () => {};
+    const OriginalRO = window.ResizeObserver;
+    window.ResizeObserver = class {
+      constructor(cb: () => void) {
+        onResize = cb;
+      }
+      observe() {}
+      disconnect() {}
+      unobserve() {}
+    } as unknown as typeof ResizeObserver;
+
+    const host = document.createElement("div");
+    host.style.overflow = "hidden";
+    let width = 0;
+    Object.defineProperty(host, "clientWidth", { configurable: true, get: () => width });
+    Object.defineProperty(host, "clientHeight", { configurable: true, get: () => 640 });
+    document.body.appendChild(host);
+
+    try {
+      render(<AdSlot slot="9876" />, { container: host });
+      expect(pushSpy).not.toHaveBeenCalled();
+
+      width = 400;
+      onResize();
+      onResize();
+      expect(pushSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      window.ResizeObserver = OriginalRO;
+      host.remove();
     }
   });
 });

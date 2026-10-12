@@ -254,6 +254,136 @@ input[type="month"]::-webkit-calendar-picker-indicator {
   }
 }
 
+/* Bullet suggestions modal: a bottom sheet on phones, a centered card from md.
+ * Cards cascade in, an added card pulses once, the label shimmers. */
+@keyframes suggest-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes suggest-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes suggest-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes suggest-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes suggest-added {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent) 40%, transparent);
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.015);
+  }
+  100% {
+    box-shadow: 0 0 0 10px transparent;
+    transform: scale(1);
+  }
+}
+@keyframes suggest-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+@keyframes suggest-twinkle {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.12) rotate(12deg);
+  }
+}
+@keyframes suggest-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.suggest-shimmer-text {
+  color: var(--color-accent);
+}
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .suggest-shimmer-text {
+    background-image: linear-gradient(
+      90deg,
+      var(--color-accent) 0%,
+      color-mix(in srgb, var(--color-accent) 45%, var(--color-focus)) 50%,
+      var(--color-accent) 100%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+.suggest-skeleton {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-accent-tint) 0%,
+    color-mix(in srgb, var(--color-accent) 14%, var(--color-surface)) 46%,
+    var(--color-accent-tint) 100%
+  );
+  background-size: 200% 100%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .suggest-overlay {
+    animation: suggest-overlay-in 180ms ease-out both;
+  }
+  .suggest-panel {
+    animation: suggest-sheet-in 360ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  }
+  @media (min-width: 768px) {
+    .suggest-panel {
+      animation: suggest-panel-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+  }
+  .suggest-card-in {
+    animation: suggest-card-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .suggest-added {
+    animation: suggest-added 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .suggest-shimmer-text {
+    animation: suggest-shimmer 3s linear infinite;
+  }
+  .suggest-sparkle {
+    animation: suggest-twinkle 2.4s ease-in-out infinite;
+  }
+  .suggest-spin {
+    animation: suggest-spin 1.4s linear infinite;
+  }
+  .suggest-skeleton {
+    animation:
+      suggest-card-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both,
+      skeleton-shimmer 1.4s ease-in-out infinite;
+  }
+}
+
 /* Template picker panel: grows down from the trigger on open, lifts away on
  * close (CLOSE_MS in TemplatePicker.tsx matches the out duration). */
 @keyframes template-picker-in {
@@ -941,6 +1071,74 @@ html[data-resume-saved] [data-builder-pending] {
     animation: nav-icon-tassel 1.6s ease-in-out infinite;
     transform-origin: 20.2px 9.4px;
     transform-box: view-box;
+  }
+}
+
+/* Cover letter sidebar: the same entry, bob, and hover motions, one per step. */
+@keyframes nav-icon-wave {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(-14deg);
+  }
+  40% {
+    transform: rotate(10deg);
+  }
+  60% {
+    transform: rotate(-8deg);
+  }
+  80% {
+    transform: rotate(4deg);
+  }
+}
+
+@keyframes nav-icon-write {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(1px, -1px) rotate(-6deg);
+  }
+  50% {
+    transform: translate(-1px, 0) rotate(4deg);
+  }
+  75% {
+    transform: translate(1px, 1px) rotate(-3deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .group\/navrow:hover .nav-section-icon[data-nav-icon="letter-opening"] .nav-icon-motion,
+  .nav-section-icon[data-nav-icon="letter-opening"][data-active="true"] .nav-icon-motion {
+    transform-origin: 50% 90%;
+    animation: nav-icon-wave 1.3s ease-in-out infinite;
+  }
+
+  .group\/navrow:hover .nav-section-icon[data-nav-icon="letter-interest"] .nav-icon-motion,
+  .nav-section-icon[data-nav-icon="letter-interest"][data-active="true"] .nav-icon-motion {
+    animation: nav-icon-beat 1.15s ease-in-out infinite;
+  }
+
+  .group\/navrow:hover .nav-section-icon[data-nav-icon="letter-achievements"] .nav-icon-motion,
+  .nav-section-icon[data-nav-icon="letter-achievements"][data-active="true"] .nav-icon-motion {
+    animation: nav-icon-pulse 1.4s ease-in-out infinite;
+  }
+
+  .group\/navrow:hover .nav-section-icon[data-nav-icon="letter-greeting"] .nav-icon-motion,
+  .group\/navrow:hover .nav-section-icon[data-nav-icon="letter-fit"] .nav-icon-motion,
+  .nav-section-icon[data-nav-icon="letter-greeting"][data-active="true"] .nav-icon-motion,
+  .nav-section-icon[data-nav-icon="letter-fit"][data-active="true"] .nav-icon-motion {
+    animation: nav-icon-wiggle 0.9s ease-in-out infinite;
+  }
+
+  .group\/navrow:hover .nav-section-icon[data-nav-icon="letter-closing"] .nav-icon-motion,
+  .group\/navrow:hover .nav-section-icon[data-nav-icon="letter-custom"] .nav-icon-motion,
+  .nav-section-icon[data-nav-icon="letter-closing"][data-active="true"] .nav-icon-motion,
+  .nav-section-icon[data-nav-icon="letter-custom"][data-active="true"] .nav-icon-motion {
+    animation: nav-icon-write 1.2s ease-in-out infinite;
   }
 }
 

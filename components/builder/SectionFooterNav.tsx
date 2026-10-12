@@ -104,10 +104,11 @@ export function SectionFooterNav({
           Clear
         </Button>
       </div>
-      {/* Phones: a floating frosted-glass capsule (iOS tab bar style) with
-          Preview riding just above it. From md up it
-          flattens back into the inline footer row. */}
-      <div className="no-print pointer-events-none fixed inset-x-0 bottom-0 z-40 flex flex-col gap-2 px-3 pb-[max(0.625rem,env(safe-area-inset-bottom))] md:pointer-events-auto md:static md:z-0 md:flex-row md:items-center md:gap-3 md:p-0">
+      {/* Phones: pinned to the viewport bottom, with Preview above the
+          capsule. The bar is opaque and takes every tap in that strip, so an
+          ad scrolling underneath can't receive a miss next to Preview, Skip,
+          or Save & Next. From md up it flattens into the inline footer. */}
+      <div className="no-print pointer-events-auto fixed inset-x-0 bottom-0 z-40 flex flex-col gap-2 border-t border-[var(--color-border)] bg-[var(--color-paper)] px-3 pt-3 pb-[max(0.625rem,env(safe-area-inset-bottom))] shadow-[0_-12px_32px_-20px_rgb(0_0_0_/_0.35)] md:static md:z-0 md:flex-row md:items-center md:gap-3 md:border-0 md:bg-transparent md:p-0 md:shadow-none">
         {onPreview ? (
           <div className="flex items-end justify-end gap-2 px-1 lg:hidden">
             {onPreview ? (

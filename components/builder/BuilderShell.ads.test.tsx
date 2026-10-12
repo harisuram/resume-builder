@@ -6,7 +6,9 @@ import { useBuilderStore } from "@/lib/store";
 import { BuilderShell } from "./BuilderShell";
 
 jest.mock("../ads/AdSlot", () => ({
-  AdSlot: ({ name }: { name?: string }) => <div>{name}</div>,
+  AdSlot: ({ name, className }: { name?: string; className?: string }) => (
+    <div data-ad-class={className}>{name}</div>
+  ),
 }));
 
 beforeEach(() => {
@@ -22,8 +24,12 @@ describe("BuilderShell ads", () => {
   it("shows only the preview units on a form step — none in the nav or under the step buttons", async () => {
     render(<BuilderShell />);
     await screen.findByRole("heading", { name: "Basic info" });
-    expect(screen.getByText("Builder preview top")).toBeInTheDocument();
-    expect(screen.getAllByText("Builder preview")).toHaveLength(1);
+    const previewTop = screen.getByText("Builder preview top");
+    const preview = screen.getByText("Builder preview");
+    expect(previewTop).toHaveAttribute("data-ad-class", expect.stringContaining("max-lg:hidden"));
+    expect(previewTop).toHaveAttribute("data-ad-class", expect.stringContaining("mb-[150px]"));
+    expect(preview).toHaveAttribute("data-ad-class", expect.stringContaining("mt-[150px]"));
+    expect(preview).toHaveAttribute("data-ad-class", expect.stringContaining("md:hidden"));
     expect(screen.queryByText("Builder nav")).not.toBeInTheDocument();
     expect(screen.queryByText(/Section footer/)).not.toBeInTheDocument();
     expect(screen.queryByText("Export page")).not.toBeInTheDocument();

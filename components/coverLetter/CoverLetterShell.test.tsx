@@ -66,6 +66,25 @@ describe("CoverLetterShell", () => {
     expect(nav().getByText("Required")).toBeInTheDocument();
   });
 
+  it("collapses the sidebar to an icon rail and back, by button and Ctrl+B", async () => {
+    await renderWithResume();
+    await userEvent.click(screen.getByRole("button", { name: "Collapse sidebar" }));
+
+    const expand = screen.getByRole("button", { name: "Expand sidebar" });
+    expect(expand).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByText("Cover letter", { selector: "span" })).not.toBeInTheDocument();
+    expect(nav().getByRole("button", { name: "Recipient" })).toBeInTheDocument();
+    expect(nav().getByRole("button", { name: "Add paragraph" })).toBeInTheDocument();
+    expect(nav().queryByRole("switch")).not.toBeInTheDocument();
+
+    await userEvent.click(nav().getByRole("button", { name: "Greeting" }));
+    expect(await screen.findByRole("heading", { name: "Greeting" })).toBeInTheDocument();
+
+    await userEvent.keyboard("{Control>}b{/Control}");
+    expect(screen.getByRole("button", { name: "Collapse sidebar" })).toHaveAttribute("aria-expanded", "true");
+    expect(nav().getAllByRole("switch").length).toBeGreaterThan(0);
+  });
+
   it("loads the saved resume's details and starts on Recipient", async () => {
     await renderWithResume();
     expect(useBuilderStore.getState().basicInfo.name).toBe("Alexandra Montgomery-Whitfield");

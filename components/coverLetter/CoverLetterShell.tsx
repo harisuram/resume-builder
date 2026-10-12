@@ -7,6 +7,7 @@ import { MobileMenuButton, MobileSectionMenu } from "@/components/builder/Mobile
 import { setMobileMenuOpen } from "@/components/builder/mobileMenuStore";
 import { SectionFooterNav } from "@/components/builder/SectionFooterNav";
 import { TemplateRail } from "@/components/builder/TemplateRail";
+import { SidebarToggleIcon, useCollapsibleSidebar } from "@/components/builder/useCollapsibleSidebar";
 import { ToastHost } from "@/components/ui/Toast";
 import { ADSENSE_SLOTS } from "@/lib/ads";
 import { hasSavedCoverLetter, loadCoverLetter } from "@/lib/coverLetter";
@@ -82,6 +83,7 @@ export function CoverLetterShell() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [menuWarm, setMenuWarm] = useState(false);
   const formPaneRef = useRef<HTMLElement>(null);
+  const { layoutCollapsed, peeking, railMode, toggle: toggleNav, schedulePeek } = useCollapsibleSidebar();
 
   useEffect(() => {
     // One-time localStorage hydration, as in BuilderShell: the resume (for
@@ -221,7 +223,20 @@ export function CoverLetterShell() {
           className="print-unclip flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row"
           inert={!hydrated || undefined}
         >
-          <aside className="no-print sticky top-0 z-20 shrink-0 border-b border-[var(--color-border)] bg-[var(--color-surface)] md:relative md:flex md:h-full md:min-h-0 md:w-64 md:flex-col md:overflow-y-auto md:border-b-0 md:border-r">
+          {/* Same collapsible sidebar as the resume builder: peeking keeps
+              the 4rem rail footprint and slides over the form. */}
+          <aside
+            onPointerEnter={(event) => schedulePeek(true, event)}
+            onPointerLeave={(event) => schedulePeek(false, event)}
+            data-peek={peeking ? "" : undefined}
+            className={`no-print sticky top-0 z-20 shrink-0 border-b border-[var(--color-border)] bg-[var(--color-surface)] md:relative md:z-30 md:flex md:h-full md:min-h-0 md:flex-col md:overflow-x-hidden md:overflow-y-auto md:border-b-0 md:border-r md:transition-[width,margin,box-shadow] md:duration-300 md:ease-[cubic-bezier(0.22,1,0.36,1)] ${
+              peeking
+                ? "md:-mr-48 md:w-64 md:shadow-[12px_0_32px_-12px_rgb(0_0_0_/_0.25)]"
+                : railMode
+                  ? "md:w-16"
+                  : "md:w-64"
+            }`}
+          >
             {/* Mobile: a bar that opens the side menu with the full step
                 list. From md up the list is the sidebar itself. */}
             <div className="flex items-center gap-3 px-3 py-2 md:hidden">
@@ -244,20 +259,38 @@ export function CoverLetterShell() {
                 </span>
               </button>
             </div>
-            <div className="hidden md:-mb-2 md:flex md:shrink-0 md:items-center md:pl-6 md:pr-3 md:pt-3">
-              <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[var(--color-ink-faint)]">
-                Cover letter
-              </span>
+            <div
+              className={`hidden md:-mb-2 md:flex md:shrink-0 md:items-center md:pt-2 ${
+                railMode ? "md:justify-center md:px-2" : "md:justify-between md:pl-6 md:pr-3"
+              }`}
+            >
+              {railMode ? null : (
+                <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[var(--color-ink-faint)]">
+                  Cover letter
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={toggleNav}
+                aria-expanded={!layoutCollapsed}
+                aria-label={layoutCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                title={`${layoutCollapsed ? "Keep sidebar open" : "Collapse sidebar"} (Ctrl/⌘ B)`}
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--color-ink-faint)] transition-colors hover:bg-[var(--color-accent-tint)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]"
+              >
+                <SidebarToggleIcon collapsed={layoutCollapsed} />
+              </button>
             </div>
             <div className="hidden md:block">
-              <CoverLetterNav active={activeKey} onSelect={selectSection} onAddParagraph={addParagraphStep} />
+              <CoverLetterNav active={activeKey} onSelect={selectSection} onAddParagraph={addParagraphStep} collapsed={railMode} />
             </div>
           </aside>
 
           {activeKey === "export" ? (
             <div className="print-unclip flex min-h-0 flex-1 overflow-hidden">
               <main ref={formPaneRef} className="print-unclip min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-clip overscroll-contain px-5 py-6 sm:px-8">
-                <div className="mx-auto w-full max-w-[820px]">
+                <div
+                  className={`mx-auto w-full transition-[max-width] duration-300 ease-out ${layoutCollapsed ? "max-w-[980px]" : "max-w-[820px]"}`}
+                >
                   <StepEnter key={activeKey} direction={stepDir} enabled={animateStep}>
                     <CoverLetterExport />
                   </StepEnter>
@@ -276,9 +309,12 @@ export function CoverLetterShell() {
           ) : (
             <div className="flex min-h-0 flex-1 overflow-hidden">
               {/* Extra bottom padding on mobile: the fixed step footer sits
-                  over the viewport, so the last field has to scroll above it. */}
-              <main ref={formPaneRef} className="block min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-clip overscroll-contain px-5 py-6 pb-[calc(11rem+env(safe-area-inset-bottom))] sm:px-8 md:pb-6">
-                <div className="mx-auto w-full max-w-2xl">
+                  over the viewport, and the last 150px keeps a filled ad
+                  clear of that bar. */}
+              <main ref={formPaneRef} className="block min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-clip overscroll-contain px-5 py-6 pb-[calc(11rem+150px+env(safe-area-inset-bottom))] sm:px-8 md:pb-6">
+                <div
+                  className={`mx-auto w-full transition-[max-width] duration-300 ease-out ${layoutCollapsed ? "max-w-3xl" : "max-w-2xl"}`}
+                >
                   <div className="relative z-10 min-w-0 max-md:rounded-2xl max-md:border max-md:border-[var(--color-border)]/70 max-md:bg-[var(--color-surface)] max-md:p-4 max-md:shadow-[0_1px_2px_rgb(0_0_0_/_0.04),0_12px_32px_-18px_rgb(0_0_0_/_0.18)]">
                     <StepEnter key={activeKey} direction={stepDir} enabled={animateStep}>
                       {hydrated && <ActivePanel activeKey={activeKey} onParagraphRemoved={() => selectSection("closing")} />}
@@ -298,23 +334,29 @@ export function CoverLetterShell() {
                     onClear={goClear}
                     onPreview={previewOpen ? undefined : () => setPreviewOpen(true)}
                   />
-                  {/* Mobile's one unit on form steps, below the footer and
-                      clear of the fixed Save & Next. Desktop shows the
-                      preview-column unit instead. */}
+                  {/* Mobile's one unit on form steps, 150px under Back / Clear
+                      and, via the pane padding, the same distance above the
+                      fixed step bar. Desktop shows the preview-column unit. */}
                   <AdSlot
                     slot={ADSENSE_SLOTS.coverBuilder}
                     name="Cover letter builder"
-                    className="mt-12 mb-4 flex min-h-[8.5rem] flex-col items-center gap-1 md:hidden"
+                    className="mt-[150px] flex min-h-[8.5rem] flex-col items-center gap-1 md:hidden"
                   />
                 </div>
               </main>
               {/* Side-by-side preview from lg up only; phones and tablets
                   open the same pane in the bottom sheet. */}
-              <aside className="flex min-h-0 w-0 overflow-hidden border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-ink)_3.5%,var(--color-paper))] p-0 lg:w-[min(650px,max(325px,42.75%))] lg:shrink-0 lg:flex-col lg:overflow-hidden lg:border-l lg:px-4 lg:py-6 xl:px-5">
+              <aside
+                className={`flex min-h-0 w-0 overflow-hidden border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-ink)_3.5%,var(--color-paper))] p-0 lg:shrink-0 lg:flex-col lg:overflow-hidden lg:border-l lg:px-4 lg:py-6 lg:transition-[width] lg:duration-300 lg:ease-[cubic-bezier(0.22,1,0.36,1)] xl:px-5 ${
+                  layoutCollapsed ? "lg:w-[min(820px,max(325px,48%))]" : "lg:w-[min(650px,max(325px,42.75%))]"
+                }`}
+              >
+                {/* lg and up only. Below that the column is width 0, so a fill
+                    would be a hidden ad. 150px above the template dropdown. */}
                 <AdSlot
                   slot={ADSENSE_SLOTS.coverBuilderTop}
                   name="Cover letter preview top"
-                  className="mb-4 flex shrink-0 flex-col items-center gap-1"
+                  className="mb-[150px] flex shrink-0 flex-col items-center gap-1 max-lg:hidden"
                 />
                 <div className="min-h-0 min-w-0 flex-1">{hydrated && <CoverLetterPreviewPane />}</div>
               </aside>

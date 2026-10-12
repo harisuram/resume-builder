@@ -123,6 +123,20 @@ export async function optimizeExperienceBullets({ role, company, bullets }: Opti
   return body.bullets as string[];
 }
 
+/** Asks the AI for up to 20 bullet ideas for a role. Nothing the user wrote is
+ * sent or changed; they pick which ones to add. */
+export async function suggestExperienceBullets({ role, company }: { role: string; company?: string }): Promise<string[]> {
+  const body = await postOptimize({ kind: "suggest", role, company });
+  if (
+    !Array.isArray(body.bullets) ||
+    body.bullets.length === 0 ||
+    body.bullets.some((b) => typeof b !== "string")
+  ) {
+    throw new AiError(AI_MESSAGES.malformed, "malformed");
+  }
+  return body.bullets as string[];
+}
+
 /** Rewrites the professional summary the same way as experience bullets. */
 export async function optimizeSummary(summary: string): Promise<string> {
   const body = await postOptimize({ kind: "summary", summary });

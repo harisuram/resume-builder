@@ -7,6 +7,9 @@ export const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 export const DEFAULT_MODEL = "openai/gpt-oss-120b";
 export const MAX_BULLETS = 12;
 export const MAX_BULLET_LEN = 300;
+export const SUGGESTION_COUNT = 20;
+/** Matches `MAX_FIELD_LENGTH` in validation.ts. */
+export const MAX_ROLE_LEN = 200;
 export const MAX_SUMMARY_LEN = 800;
 /** Matches `MAX_DESCRIPTION_LENGTH` in validation.ts. */
 export const MAX_PROJECT_DESCRIPTION_LEN = 600;
@@ -24,6 +27,15 @@ const BULLETS_SYSTEM_PROMPT =
   "characters. Keep any numbers already present; never invent facts, metrics, or " +
   "outcomes that aren't implied by the input. Return exactly as many bullets as " +
   'given, same order, as strict JSON: {"bullets": ["...", ...]}.';
+
+const SUGGEST_SYSTEM_PROMPT =
+  "You suggest resume experience bullets for a job title. Write exactly 20 " +
+  "distinct bullets covering the core duties, tools, collaboration, and " +
+  "achievements typical of that role. Each starts with a strong past-tense " +
+  "action verb, is one line under ~22 words, plain text with no markdown and no " +
+  "first-person pronouns. Never invent employers, product names, or specific " +
+  "numbers; where a metric would help, use a placeholder like [X]% or [N] for " +
+  'the user to fill in. Return strict JSON: {"bullets": ["...", ...]}.';
 
 const SUMMARY_SYSTEM_PROMPT =
   "You rewrite a professional resume summary to be ATS-friendly: 2–4 concise " +
@@ -147,6 +159,15 @@ export function parseExperienceBody(body: unknown): { role: string; company: str
     return { error: "Add at least one bullet to this role (up to 12, each under 300 characters), then try the AI rewrite." };
   }
   return { role, company, bullets: cleanBullets };
+}
+
+export function parseSuggestBody(body: unknown): { role: string; company: string } | { error: string } {
+  const { role, company } = (body ?? {}) as { role?: unknown; company?: unknown };
+  if (typeof role !== "string" || role.trim().length === 0 || role.length > MAX_ROLE_LEN) {
+    return { error: "Enter your role or title first, then ask for suggested points." };
+  }
+  const cleanCompany = typeof company === "string" ? company.trim().slice(0, MAX_ROLE_LEN) : "";
+  return { role: role.trim(), company: cleanCompany };
 }
 
 export function parseSummaryBody(body: unknown): { summary: string } | { error: string } {
@@ -326,6 +347,23 @@ export async function rewriteBulletsWithGroq(
   return { bullets: parsedBullets };
 }
 
+export async function suggestBulletsWithGroq(
+  env: OptimizeEnv,
+  input: { role: string; company: string },
+): Promise<{ bullets: string[] } | AiFailure> {
+  const userPrompt = `Role: ${input.role}` + (input.company ? `\nCompany: ${input.company}` : "");
+  const result = await callGroqChat(env, SUGGEST_SYSTEM_PROMPT, userPrompt, {
+    temperature: 0.6,
+    maxCompletionTokens: 3000,
+  });
+  if ("error" in result) return result;
+  const parsed = parseBullets(result.content);
+  if (!parsed) return fail(502, "malformed");
+  const unique = [...new Set(parsed.filter((b) => b.length <= MAX_BULLET_LEN))].slice(0, SUGGESTION_COUNT);
+  if (unique.length === 0) return fail(502, "malformed");
+  return { bullets: unique };
+}
+
 export async function rewriteSummaryWithGroq(
   env: OptimizeEnv,
   input: { summary: string },
@@ -384,6 +422,14 @@ export async function handleOptimizePost(request: Request, env: OptimizeEnv): Pr
     const result = await rewriteSummaryWithGroq(env, parsed);
     if ("error" in result) return failureResponse(result);
     return jsonResponse({ summary: result.summary }, 200);
+  }
+
+  if (kind === "suggest") {
+    const parsed = parseSuggestBody(body);
+    if ("error" in parsed) return jsonResponse({ error: parsed.error, code: "invalid" }, 400);
+    const result = await suggestBulletsWithGroq(env, parsed);
+    if ("error" in result) return failureResponse(result);
+    return jsonResponse({ bullets: result.bullets }, 200);
   }
 
   if (kind === "project") {

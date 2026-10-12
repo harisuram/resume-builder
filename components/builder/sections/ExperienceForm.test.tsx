@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { AiLimitError, optimizeExperienceBullets } from "@/lib/ai";
+import { AiLimitError, optimizeExperienceBullets, suggestExperienceBullets } from "@/lib/ai";
+import { BULLET_FAMILIES } from "@/lib/bulletSuggestions";
 import { useBuilderStore } from "@/lib/store";
 import { useToastStore } from "@/lib/toast";
 import { ToastHost } from "@/components/ui/Toast";
@@ -14,14 +15,17 @@ jest.mock("../../../lib/ai", () => ({
   AI_LIMITED_UNTIL_KEY: "ai-optimize-limited-until",
   AI_BACKOFF_MS: 4 * 60 * 60 * 1000,
   optimizeExperienceBullets: jest.fn(),
+  suggestExperienceBullets: jest.fn(),
 }));
 const mockOptimize = optimizeExperienceBullets as jest.Mock;
+const mockSuggest = suggestExperienceBullets as jest.Mock;
 
 beforeEach(() => {
   act(() => {
     useBuilderStore.getState().resetStore();
   });
   mockOptimize.mockReset();
+  mockSuggest.mockReset();
   localStorage.clear();
   useToastStore.getState().clear();
 });
@@ -202,6 +206,78 @@ describe.each([
 
     await waitFor(() => expect(screen.queryByRole("button", { name: /Make ATS-friendly/ })).not.toBeInTheDocument());
     expect(screen.getByRole("alert")).toHaveTextContent(/free AI rewrite limit is used up/i);
+    expect(Number(localStorage.getItem("ai-optimize-limited-until"))).toBeGreaterThan(Date.now());
+  });
+
+  it("keeps Suggest points disabled until a role is entered", () => {
+    act(() => {
+      useBuilderStore.getState().addListItem(sectionKey, { company: "Acme", role: "", startDate: "", bullets: [""] });
+    });
+    render(<ExperienceForm sectionKey={sectionKey} title={title} help="help" />);
+    expect(screen.getByRole("button", { name: /Suggest points/ })).toBeDisabled();
+  });
+
+  it("adds AI-suggested points once each, filling the blank row first", async () => {
+    mockSuggest.mockResolvedValue(["Dispensed prescriptions accurately", "Counseled patients on medication use"]);
+    act(() => {
+      useBuilderStore.getState().addListItem(sectionKey, { company: "Acme", role: "Pharmacist", startDate: "", bullets: [""] });
+    });
+    render(<ExperienceForm sectionKey={sectionKey} title={title} help="help" />);
+
+    await userEvent.click(screen.getByRole("button", { name: /Suggest points/ }));
+    const dialog = await screen.findByRole("dialog", { name: "Pharmacist" });
+    expect(mockSuggest).toHaveBeenCalledWith({ role: "Pharmacist", company: "Acme" });
+    expect(dialog).toHaveTextContent("AI suggestions");
+
+    const first = await screen.findByRole("button", { name: /Dispensed prescriptions accurately/ });
+    await userEvent.click(first);
+    expect(useBuilderStore.getState().sections[sectionKey]![0].bullets).toEqual(["Dispensed prescriptions accurately"]);
+    expect(first).toBeDisabled();
+    expect(first).toHaveTextContent("Added");
+
+    await userEvent.click(first);
+    expect(useBuilderStore.getState().sections[sectionKey]![0].bullets).toHaveLength(1);
+
+    await userEvent.click(screen.getByRole("button", { name: /Counseled patients/ }));
+    expect(useBuilderStore.getState().sections[sectionKey]![0].bullets).toEqual([
+      "Dispensed prescriptions accurately",
+      "Counseled patients on medication use",
+    ]);
+    expect(screen.getByRole("button", { name: "Add all (0)" })).toBeDisabled();
+
+    await userEvent.click(screen.getByRole("button", { name: "Done" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("adds every remaining point at once and remembers the role's suggestions", async () => {
+    mockSuggest.mockResolvedValue(["One", "Two", "Three"]);
+    act(() => {
+      useBuilderStore.getState().addListItem(sectionKey, { company: "", role: "Chef", startDate: "", bullets: ["Two"] });
+    });
+    render(<ExperienceForm sectionKey={sectionKey} title={title} help="help" />);
+
+    await userEvent.click(screen.getByRole("button", { name: /Suggest points/ }));
+    await userEvent.click(await screen.findByRole("button", { name: "Add all (2)" }));
+    expect(useBuilderStore.getState().sections[sectionKey]![0].bullets).toEqual(["Two", "One", "Three"]);
+
+    await userEvent.click(screen.getByRole("button", { name: "Done" }));
+    await userEvent.click(screen.getByRole("button", { name: /Suggest points/ }));
+    await screen.findByRole("dialog");
+    expect(mockSuggest).toHaveBeenCalledTimes(1);
+  });
+
+  it("falls back to the job family's built-in points when AI fails", async () => {
+    mockSuggest.mockRejectedValue(new AiLimitError("quota"));
+    act(() => {
+      useBuilderStore.getState().addListItem(sectionKey, { company: "", role: "Welder", startDate: "", bullets: [""] });
+    });
+    render(<ExperienceForm sectionKey={sectionKey} title={title} help="help" />);
+
+    await userEvent.click(screen.getByRole("button", { name: /Suggest points/ }));
+    const dialog = await screen.findByRole("dialog");
+    await waitFor(() => expect(dialog).toHaveTextContent("Suggested points"));
+    expect(dialog).not.toHaveTextContent(/AI isn.t available/i);
+    expect(screen.getByRole("button", { name: new RegExp(BULLET_FAMILIES.trades.bullets[0]) })).toBeInTheDocument();
     expect(Number(localStorage.getItem("ai-optimize-limited-until"))).toBeGreaterThan(Date.now());
   });
 });

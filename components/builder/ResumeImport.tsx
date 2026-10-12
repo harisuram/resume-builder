@@ -298,7 +298,7 @@ export function ResumeImportProvider({
         : null}
       {result && !progress && typeof document !== "undefined"
         ? createPortal(
-            <div className="no-print pointer-events-none fixed inset-x-0 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-[66] px-4 sm:inset-auto sm:bottom-6 sm:right-6 sm:w-full sm:max-w-md">
+            <div className="no-print pointer-events-none fixed inset-x-0 bottom-[calc(8.5rem+env(safe-area-inset-bottom))] z-[66] px-4 sm:inset-auto sm:bottom-6 sm:right-6 sm:w-full sm:max-w-md">
               <div className="pointer-events-auto">
                 <ResumeImportResult
                   result={result}

@@ -49,38 +49,10 @@ import { PreviewPane } from "./PreviewPane";
 import { TemplateRail } from "./TemplateRail";
 import { SectionFooterNav } from "./SectionFooterNav";
 import { SectionNav } from "./SectionNav";
+import { SidebarToggleIcon, useCollapsibleSidebar } from "./useCollapsibleSidebar";
 
 /** Matches the `lg:` breakpoint where the live preview sits beside the form. */
 const SIDE_PREVIEW_MEDIA = "(min-width: 1024px)";
-
-/** Hover delays for the collapsed sidebar's peek: a short wait before it
- * opens so a cursor passing over doesn't fling it open, and a brief grace
- * before it closes so grazing the edge doesn't snap it shut. */
-const PEEK_OPEN_DELAY_MS = 120;
-const PEEK_CLOSE_DELAY_MS = 180;
-
-function SidebarToggleIcon({ collapsed }: { collapsed: boolean }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.7}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-4 w-4 shrink-0"
-      aria-hidden="true"
-    >
-      <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" />
-      <path d="M9.5 4.5v15" />
-      <path
-        className="transition-transform duration-300 ease-out"
-        style={{ transformBox: "fill-box", transformOrigin: "center", transform: collapsed ? "scaleX(-1)" : undefined }}
-        d="m15.5 10-2 2 2 2"
-      />
-    </svg>
-  );
-}
 
 // Tours only open after mount (first visit or "Replay tour"), so their code
 // stays out of the bundle that has to load before the builder is usable.
@@ -216,17 +188,9 @@ export function BuilderShell() {
   const [hydrated, setHydrated] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
-  // Desktop sidebar: open on every visit; collapsing gives the form and the
-  // preview the room. The tour points at sidebar controls, so it forces the
-  // sidebar open while it runs. While collapsed, hovering it "peeks": it
-  // slides open over the page (no layout shift) and shuts when the cursor
-  // leaves.
-  const [navCollapsed, setNavCollapsed] = useState(false);
-  const [navPeek, setNavPeek] = useState(false);
-  const peekTimer = useRef(0);
-  const layoutCollapsed = navCollapsed && !tourOpen;
-  const peeking = layoutCollapsed && navPeek;
-  const railMode = layoutCollapsed && !navPeek;
+  const { layoutCollapsed, peeking, railMode, toggle: toggleNav, schedulePeek } = useCollapsibleSidebar({
+    forceOpen: tourOpen,
+  });
   // On phones the side menu is built once, shortly after load, and kept
   // (hidden) so the ☰ tap only has to start the slide.
   const [menuWarm, setMenuWarm] = useState(false);
@@ -341,38 +305,6 @@ export function BuilderShell() {
     const pane = formPaneRef.current;
     if (pane) pane.scrollTop = 0;
   }, [activeKey]);
-
-  function toggleNav() {
-    window.clearTimeout(peekTimer.current);
-    setNavPeek(false);
-    setNavCollapsed((current) => !current);
-  }
-
-  function schedulePeek(open: boolean, event: React.PointerEvent) {
-    // Mouse only: on a touch tablet a tap would open it with no way to
-    // "move out" and close it again.
-    if (event.pointerType !== "mouse" || !layoutCollapsed) return;
-    window.clearTimeout(peekTimer.current);
-    // Mid-drag the rows are measured; don't resize the sidebar under them.
-    if (!open && document.body.classList.contains("nav-section-dragging")) return;
-    peekTimer.current = window.setTimeout(() => setNavPeek(open), open ? PEEK_OPEN_DELAY_MS : PEEK_CLOSE_DELAY_MS);
-  }
-
-  useEffect(() => () => window.clearTimeout(peekTimer.current), []);
-
-  // Ctrl/Cmd+B toggles the sidebar, as in most editors.
-  useEffect(() => {
-    function onKey(event: KeyboardEvent) {
-      if (event.key.toLowerCase() !== "b" || !(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey) return;
-      if (!isBuilderTourViewport()) return;
-      event.preventDefault();
-      window.clearTimeout(peekTimer.current);
-      setNavPeek(false);
-      setNavCollapsed((current) => !current);
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
 
   const wizardOrder = getWizardOrder(sectionOrder);
   const stepIndex = wizardOrder.indexOf(activeKey);
@@ -573,9 +505,10 @@ export function BuilderShell() {
             </div>
           ) : (
             <div className="flex min-h-0 flex-1 overflow-hidden">
-              {/* Extra bottom padding on mobile: the sticky step footer sits
-                  over the viewport, so the last field has to scroll above it. */}
-              <main ref={formPaneRef} className="block min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-clip overscroll-contain px-5 py-6 pb-[calc(11rem+env(safe-area-inset-bottom))] sm:px-8 md:pb-6">
+              {/* Extra bottom padding on mobile: the fixed step footer sits
+                  over the viewport, and the last 150px keeps a filled ad
+                  clear of that bar. */}
+              <main ref={formPaneRef} className="block min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-clip overscroll-contain px-5 py-6 pb-[calc(11rem+150px+env(safe-area-inset-bottom))] sm:px-8 md:pb-6">
                 <div
                   className={`mx-auto w-full transition-[max-width] duration-300 ease-out ${layoutCollapsed ? "max-w-3xl" : "max-w-2xl"}`}
                 >
@@ -600,14 +533,14 @@ export function BuilderShell() {
                     onClear={goClear}
                     onPreview={previewOpen ? undefined : () => setPreviewOpen(true)}
                   />
-                  {/* Mobile's one unit on form steps. Save & Next is fixed to
-                      the viewport bottom there, and the pane's bottom padding
-                      keeps this clear of it. Desktop shows the preview-column
-                      unit instead; nothing sits beside inputs or buttons. */}
+                  {/* Mobile's one unit on form steps, 150px under Back / Clear.
+                      The pane's bottom padding keeps it the same distance
+                      above the fixed Preview / Save & Next bar. Desktop shows
+                      the preview-column unit instead. */}
                   <AdSlot
                     slot={ADSENSE_SLOTS.builderPreview}
                     name="Builder preview"
-                    className="mt-12 mb-4 flex min-h-[8.5rem] flex-col items-center gap-1 md:hidden"
+                    className="mt-[150px] flex min-h-[8.5rem] flex-col items-center gap-1 md:hidden"
                   />
                 </div>
               </main>
@@ -624,10 +557,12 @@ export function BuilderShell() {
                   layoutCollapsed ? "lg:w-[min(820px,max(325px,48%))]" : "lg:w-[min(650px,max(325px,42.75%))]"
                 }`}
               >
+                {/* lg and up only. Below that the column is width 0, so a fill
+                    would be a hidden ad. 150px above the template dropdown. */}
                 <AdSlot
                   slot={ADSENSE_SLOTS.builderPreviewTop}
                   name="Builder preview top"
-                  className="mb-4 flex shrink-0 flex-col items-center gap-1"
+                  className="mb-[150px] flex shrink-0 flex-col items-center gap-1 max-lg:hidden"
                 />
                 {/* Mounted after hydration: the saved copy and `?template=`
                     are only applied then, so a pre-hydrate preview would show
