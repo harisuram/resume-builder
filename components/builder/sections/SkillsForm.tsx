@@ -284,7 +284,7 @@ function SkillGroupCard({
           open ? "grid-rows-[1fr]" : "max-md:grid-rows-[0fr] md:grid-rows-[1fr]"
         }`}
       >
-      <div className={`min-h-0 overflow-hidden ${open ? "" : "max-md:pointer-events-none"}`}>
+      <div className={`min-h-0 md:overflow-visible ${open ? "" : "max-md:overflow-hidden max-md:pointer-events-none"}`}>
       <div className="grid gap-3 max-md:pt-3">
         <div>
           <label htmlFor={titleId} className="mb-1.5 block text-[12px] font-medium tracking-wide text-[var(--color-ink-soft)]">
