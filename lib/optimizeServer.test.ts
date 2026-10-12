@@ -155,8 +155,22 @@ describe("parseExperienceBody", () => {
   });
 
   it("rejects empty or oversized input", () => {
-    expect(parseExperienceBody({ role: "Eng", company: "Acme", bullets: [] })).toEqual({ error: "Add at least one bullet to this role (up to 12, each under 300 characters), then try the AI rewrite." });
-    expect(parseExperienceBody({ role: 1, company: "Acme", bullets: ["x"] })).toEqual({ error: "Add at least one bullet to this role (up to 12, each under 300 characters), then try the AI rewrite." });
+    expect(parseExperienceBody({ role: "Eng", company: "Acme", bullets: [] })).toEqual({ error: "Add at least one bullet to this role (up to 20, each under 400 characters), then try the AI rewrite." });
+    expect(parseExperienceBody({ role: 1, company: "Acme", bullets: ["x"] })).toEqual({ error: "Add at least one bullet to this role (up to 20, each under 400 characters), then try the AI rewrite." });
+  });
+
+  it("accepts a full set of suggested points, including ones longer than 300 characters", () => {
+    const bullets = Array.from({ length: 20 }, (_, i) => `Point ${i} ${"a".repeat(320)}`);
+    const parsed = parseExperienceBody({ role: "Eng", company: "Acme", bullets });
+    expect(parsed).toMatchObject({ role: "Eng", company: "Acme" });
+    expect("bullets" in parsed && parsed.bullets).toHaveLength(20);
+  });
+
+  it("rejects more than 20 bullets with its own message", () => {
+    const bullets = Array.from({ length: 21 }, () => "Did a thing");
+    expect(parseExperienceBody({ role: "Eng", company: "Acme", bullets })).toEqual({
+      error: "ATS rewrite handles up to 20 bullets for one role. Remove a few, then try again.",
+    });
   });
 });
 

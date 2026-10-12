@@ -5,8 +5,14 @@ import { AI_LIMIT_MESSAGE, AI_MESSAGES, type AiErrorCode } from "./ai";
 
 export const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 export const DEFAULT_MODEL = "openai/gpt-oss-120b";
-export const MAX_BULLETS = 12;
+/** Suggestions offer 20 points and "Add all" puts every one on the role.
+ * The rewrite has to accept that set; 12 was rejecting a full suggestion
+ * list with an error that said the role had no bullets. */
+export const MAX_BULLETS = 20;
+/** Suggestion lines stay short. The form itself allows 400, matching
+ * MAX_BULLET_LENGTH in validation.ts, and the rewrite must too. */
 export const MAX_BULLET_LEN = 300;
+export const MAX_REWRITE_BULLET_LEN = 400;
 export const SUGGESTION_COUNT = 20;
 /** Matches `MAX_FIELD_LENGTH` in validation.ts. */
 export const MAX_ROLE_LEN = 200;
@@ -152,11 +158,15 @@ export function parseExperienceBody(body: unknown): { role: string; company: str
   const { role, company, bullets } = (body ?? {}) as { role?: unknown; company?: unknown; bullets?: unknown };
   const cleanBullets = Array.isArray(bullets)
     ? bullets
-        .filter((b): b is string => typeof b === "string" && b.trim().length > 0 && b.length <= MAX_BULLET_LEN)
+        .filter((b): b is string => typeof b === "string")
         .map((b) => b.trim())
+        .filter((b) => b.length > 0 && b.length <= MAX_REWRITE_BULLET_LEN)
     : [];
-  if (typeof role !== "string" || typeof company !== "string" || cleanBullets.length === 0 || cleanBullets.length > MAX_BULLETS) {
-    return { error: "Add at least one bullet to this role (up to 12, each under 300 characters), then try the AI rewrite." };
+  if (typeof role !== "string" || typeof company !== "string" || cleanBullets.length === 0) {
+    return { error: "Add at least one bullet to this role (up to 20, each under 400 characters), then try the AI rewrite." };
+  }
+  if (cleanBullets.length > MAX_BULLETS) {
+    return { error: "ATS rewrite handles up to 20 bullets for one role. Remove a few, then try again." };
   }
   return { role, company, bullets: cleanBullets };
 }
