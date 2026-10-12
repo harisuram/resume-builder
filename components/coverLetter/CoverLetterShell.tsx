@@ -342,6 +342,15 @@ export function CoverLetterShell() {
                     name="Cover letter builder"
                     className="mt-[150px] flex min-h-[8.5rem] flex-col items-center gap-1 md:hidden"
                   />
+                  {/* The Download step's unit, present in this first screen so
+                      AdsBot can see the slot id. Collapsed and not requested;
+                      the copy on the Download step is the one that serves. */}
+                  <AdSlot
+                    slot={ADSENSE_SLOTS.coverExport}
+                    name="Cover letter download"
+                    request={false}
+                    className="flex flex-col items-center gap-1"
+                  />
                 </div>
               </main>
               {/* Side-by-side preview from lg up only; phones and tablets

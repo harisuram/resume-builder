@@ -101,18 +101,66 @@ describe("AdSlot", () => {
     expect(container.querySelector("ins.adsbygoogle")).toBeInTheDocument();
   });
 
-  it("keeps breakpoint hides like md:hidden while pending, so it is never filled then hidden", () => {
+  it("leaves md:hidden off the element so AdsBot is not looking at display:none", () => {
     setClientId("ca-pub-123");
+    window.adsbygoogle = [];
+    const pushSpy = jest.spyOn(window.adsbygoogle, "push");
+    window.matchMedia = jest.fn().mockImplementation((query: string) => ({
+      matches: query === "(min-width: 48rem)",
+      addEventListener() {},
+      removeEventListener() {},
+    })) as unknown as typeof window.matchMedia;
+
     const { container } = render(<AdSlot slot="9876" className="mt-12 flex md:hidden" />);
-    expect(container.firstElementChild).toHaveClass("h-0", "overflow-hidden", "md:hidden");
-    expect(container.firstElementChild).not.toHaveClass("mt-12");
+    const ins = container.querySelector("ins.adsbygoogle");
+    expect(ins).toHaveAttribute("data-ad-slot", "9876");
+    expect(ins).toHaveStyle({ display: "block" });
+    expect(container.firstElementChild).toHaveClass("h-0", "overflow-hidden");
+    expect(container.firstElementChild).not.toHaveClass("md:hidden", "hidden", "mt-12");
+    expect(pushSpy).not.toHaveBeenCalled();
   });
 
-  it("keeps max-lg:hidden while pending", () => {
+  it("requests an md:hidden unit once the viewport is below md", () => {
     setClientId("ca-pub-123");
+    window.adsbygoogle = [];
+    const pushSpy = jest.spyOn(window.adsbygoogle, "push");
+    window.matchMedia = jest.fn().mockImplementation(() => ({
+      matches: false,
+      addEventListener() {},
+      removeEventListener() {},
+    })) as unknown as typeof window.matchMedia;
+
+    render(<AdSlot slot="9876" className="mt-12 flex md:hidden" />);
+    expect(pushSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves max-lg:hidden off the element and skips the request while below lg", () => {
+    setClientId("ca-pub-123");
+    window.adsbygoogle = [];
+    const pushSpy = jest.spyOn(window.adsbygoogle, "push");
+    window.matchMedia = jest.fn().mockImplementation((query: string) => ({
+      matches: query === "(width < 64rem)",
+      addEventListener() {},
+      removeEventListener() {},
+    })) as unknown as typeof window.matchMedia;
+
     const { container } = render(<AdSlot slot="9876" className="mb-[150px] flex shrink-0 max-lg:hidden" />);
-    expect(container.firstElementChild).toHaveClass("h-0", "overflow-hidden", "max-lg:hidden");
-    expect(container.firstElementChild).not.toHaveClass("mb-[150px]");
+    expect(container.firstElementChild).toHaveClass("h-0", "overflow-hidden");
+    expect(container.firstElementChild).not.toHaveClass("max-lg:hidden", "mb-[150px]");
+    expect(container.querySelector("ins.adsbygoogle")).toHaveAttribute("data-ad-slot", "9876");
+    expect(pushSpy).not.toHaveBeenCalled();
+  });
+
+  it("renders the ins and does not request when request is false", () => {
+    setClientId("ca-pub-123");
+    window.adsbygoogle = [];
+    const pushSpy = jest.spyOn(window.adsbygoogle, "push");
+    const { container } = render(<AdSlot slot="9876" request={false} />);
+    expect(container.querySelector("ins.adsbygoogle")).toHaveAttribute("data-ad-slot", "9876");
+    expect(container.querySelector("ins.adsbygoogle")).toHaveStyle({ display: "block" });
+    expect(container.firstElementChild).toHaveClass("h-0", "overflow-hidden");
+    expect(container.firstElementChild).not.toHaveClass("hidden");
+    expect(pushSpy).not.toHaveBeenCalled();
   });
 
   it("does not request an ad while the unit is display:none, and requests once it is shown", () => {

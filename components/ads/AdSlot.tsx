@@ -15,6 +15,27 @@ type FillStatus = "pending" | "filled" | "unfilled";
 /** Ignore subpixel rounding; a collapsed preview column is width 0. */
 const CLIPPED_MIN_PX = 2;
 
+/** Tailwind tokens that compile to display:none. AdsBot skips those units, so
+ * they never go on the element. They only decide when a request is allowed.
+ * Breakpoints match this app's defaults: md 48rem, lg 64rem. */
+const BREAKPOINT_HIDDEN = /^(?:[\w-]+:)+hidden$/;
+
+function hideQueries(className: string): string[] {
+  const tokens = className.split(/\s+/);
+  const queries: string[] = [];
+  if (tokens.includes("md:hidden")) queries.push("(min-width: 48rem)");
+  if (tokens.includes("max-lg:hidden")) queries.push("(width < 64rem)");
+  return queries;
+}
+
+/** True when a breakpoint token would have set display:none at this width. */
+function hiddenAtThisWidth(className: string): boolean {
+  const queries = hideQueries(className);
+  if (queries.length === 0 || typeof window === "undefined") return false;
+  if (typeof window.matchMedia !== "function") return true;
+  return queries.some((query) => window.matchMedia(query).matches);
+}
+
 function clipsOverflow(style: CSSStyleDeclaration): boolean {
   // Longhands are what browsers compute. jsdom only fills the shorthand.
   return [style.overflow, style.overflowX, style.overflowY].some((value) => value === "hidden" || value === "clip");
@@ -53,30 +74,51 @@ export function AdSlot({
   format = "auto",
   name,
   className = "flex flex-col items-center gap-1",
+  request = true,
 }: {
   slot: string;
   format?: AdFormat;
   name?: string;
   className?: string;
+  /** False keeps the `ins` in the HTML for AdsBot without asking for a fill.
+   * Used when the unit's visible placement is a later step: the crawler only
+   * fetches the first screen, and a request here would show the ad on the
+   * form. */
+  request?: boolean;
 }) {
   const insRef = useRef<HTMLModElement>(null);
   const [status, setStatus] = useState<FillStatus>("pending");
+  const [covered, setCovered] = useState(false);
   const client = adsenseClientAttr(ADSENSE_CLIENT_ID);
   const enabled = Boolean(client && slot);
-  const visible = status === "filled";
+  const visible = status === "filled" && !covered;
 
   useEffect(() => {
-    if (!enabled) return;
+    const sync = () => setCovered(hiddenAtThisWidth(className));
+    sync();
+    if (typeof window.matchMedia !== "function") return;
+    const medias = hideQueries(className).map((query) => window.matchMedia(query));
+    for (const media of medias) media.addEventListener("change", sync);
+    window.addEventListener("resize", sync);
+    return () => {
+      for (const media of medias) media.removeEventListener("change", sync);
+      window.removeEventListener("resize", sync);
+    };
+  }, [className]);
+
+  useEffect(() => {
+    if (!enabled || !request) return;
     const node = insRef.current;
     if (!node) return;
 
-    // Request only once the unit is actually visible. A unit hidden at this
-    // breakpoint (`md:hidden`, `max-lg:hidden`) or clipped in a zero-width
-    // column would otherwise be filled and then invisible — a served but
-    // hidden impression. A resize that reveals it retries.
+    // Request only once the unit is actually visible. A unit meant for the
+    // other breakpoint, or clipped in a zero-width column, would otherwise
+    // be filled and then invisible — a served but hidden impression. A
+    // resize that reveals it retries. Breakpoint hides stay off the element:
+    // `md:hidden` is display:none, and AdsBot skips that.
     let requested = false;
     const requestAd = () => {
-      if (requested || !isRendered(node)) return;
+      if (requested || hiddenAtThisWidth(className) || !isRendered(node)) return;
       requested = true;
       try {
         (window.adsbygoogle = window.adsbygoogle || []).push({});
@@ -102,17 +144,16 @@ export function AdSlot({
       observer.disconnect();
       window.removeEventListener("resize", requestAd);
     };
-  }, [enabled, slot]);
+  }, [className, enabled, request, slot]);
 
   if (!enabled) return null;
 
-  // Never apply Tailwind `hidden` (`display: none`). AdsBot skips those units,
-  // and a filled ad that is display:none also violates AdSense's hidden-ads rule.
-  const tokens = className.split(/\s+/).filter((token) => token && token !== "hidden");
+  // Never apply Tailwind `hidden` or `md:hidden` (`display: none`). AdsBot
+  // skips those units, and a filled ad that is display:none also violates
+  // AdSense's hidden-ads rule. Breakpoint tokens are honored by not requesting.
+  const tokens = className.split(/\s+/).filter((token) => token && token !== "hidden" && !BREAKPOINT_HIDDEN.test(token));
   const shownClass = tokens.join(" ");
-  // Breakpoint hides (`md:hidden`) apply while pending too, so the unit is
-  // never requested at a width where it would end up hidden once filled.
-  const pendingClass = ["h-0 overflow-hidden", ...tokens.filter((token) => /^(?:[\w-]+:)+hidden$/.test(token))].join(" ");
+  const pendingClass = "h-0 overflow-hidden";
 
   return (
     <div

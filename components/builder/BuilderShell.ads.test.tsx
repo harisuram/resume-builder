@@ -6,8 +6,10 @@ import { useBuilderStore } from "@/lib/store";
 import { BuilderShell } from "./BuilderShell";
 
 jest.mock("../ads/AdSlot", () => ({
-  AdSlot: ({ name, className }: { name?: string; className?: string }) => (
-    <div data-ad-class={className}>{name}</div>
+  AdSlot: ({ name, className, request = true }: { name?: string; className?: string; request?: boolean }) => (
+    <div data-ad-class={className} data-ad-request={String(request)}>
+      {name}
+    </div>
   ),
 }));
 
@@ -32,14 +34,20 @@ describe("BuilderShell ads", () => {
     expect(preview).toHaveAttribute("data-ad-class", expect.stringContaining("md:hidden"));
     expect(screen.queryByText("Builder nav")).not.toBeInTheDocument();
     expect(screen.queryByText(/Section footer/)).not.toBeInTheDocument();
-    expect(screen.queryByText("Export page")).not.toBeInTheDocument();
+    // Download's slot is in this first screen so AdsBot can see it, collapsed
+    // and not requested. The serving copy mounts on the Download step.
+    const crawl = screen.getByText("Export page");
+    expect(crawl).toHaveAttribute("data-ad-request", "false");
+    expect(crawl.getAttribute("data-ad-class")).not.toMatch(/hidden/);
   });
 
-  it("keeps the preview units in the pre-hydrate HTML Google's crawler fetches", () => {
+  it("keeps every builder slot in the pre-hydrate HTML Google's crawler fetches", () => {
     const html = renderToString(<BuilderShell />);
     expect(html).toContain("Basic info");
     expect(html).toContain("Builder preview top");
     expect(html).toContain("Builder preview");
+    expect(html).toContain("Export page");
+    expect(html).toContain('data-ad-request="false"');
   });
 
   it("shows a single unit on export, placed after the preview rather than by Download", async () => {
@@ -50,6 +58,7 @@ describe("BuilderShell ads", () => {
     expect(screen.queryByText("Builder preview top")).not.toBeInTheDocument();
     expect(screen.queryByText("Builder preview")).not.toBeInTheDocument();
     const ad = screen.getByText("Export page");
+    expect(ad).toHaveAttribute("data-ad-request", "true");
     const heading = screen.getByRole("heading", { name: "Preview & download" });
     expect(heading.compareDocumentPosition(ad) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(ad.previousElementSibling).not.toBeNull();

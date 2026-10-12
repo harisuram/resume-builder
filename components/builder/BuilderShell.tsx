@@ -542,6 +542,16 @@ export function BuilderShell() {
                     name="Builder preview"
                     className="mt-[150px] flex min-h-[8.5rem] flex-col items-center gap-1 md:hidden"
                   />
+                  {/* The Download step's unit. AdsBot fetches this first screen
+                      and does not open Download, so the slot id has to be in
+                      this HTML. It stays collapsed and is not requested here;
+                      the copy on the Download step is the one that serves. */}
+                  <AdSlot
+                    slot={ADSENSE_SLOTS.builderExport}
+                    name="Export page"
+                    request={false}
+                    className="flex flex-col items-center gap-1"
+                  />
                 </div>
               </main>
               {/* Side-by-side preview from lg up only. Below that — phones and
