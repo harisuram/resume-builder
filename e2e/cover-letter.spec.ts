@@ -268,18 +268,17 @@ test("the landing page's call to action opens the letter builder", async ({ page
   await expect(page.getByRole("navigation", { name: "Cover letter sections" })).toBeVisible();
 });
 
-test("the home page offers both builders side by side on the first screen, and opens the letter builder", async ({ page }) => {
+test("the home page offers both builders, equal and on the first screen, and opens the letter builder", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
-  const resume = page.getByRole("article", { name: "Build your resume" });
-  const card = page.getByRole("article", { name: "Write your cover letter" });
-  const [r, l] = [await resume.boundingBox(), await card.boundingBox()];
-  expect(r!.y).toBe(l!.y);
-  expect(r!.height).toBe(l!.height);
-  for (const link of [resume.getByRole("link", { name: "Build my resume" }), card.getByRole("link", { name: "Write my cover letter" })]) {
-    await expect(link).toBeInViewport();
-  }
-  await card.getByRole("link", { name: "Write my cover letter" }).click();
+  const resume = page.getByRole("link", { name: "Build my resume" });
+  const letter = page.getByRole("link", { name: "Write my cover letter" });
+  const [r, l] = [await resume.boundingBox(), await letter.boundingBox()];
+  // The same width and height: neither is the main one.
+  expect(Math.round(r!.width)).toBe(Math.round(l!.width));
+  expect(Math.abs(r!.height - l!.height)).toBeLessThanOrEqual(24);
+  for (const link of [resume, letter]) await expect(link).toBeInViewport();
+  await letter.click();
   await expect(page).toHaveURL(/\/cover-letter\/builder$/);
   await expect(page.getByRole("navigation", { name: "Cover letter sections" })).toBeVisible();
 });
@@ -348,15 +347,33 @@ test("a long URL or unbroken string in a paragraph wraps inside the page instead
 test.describe("home page on a phone", () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
 
-  test("stacks resume then cover letter, the first way in on the first screen, nothing wider than the screen", async ({ page }) => {
+  test("opens on the two ways in, side by side at the top, equal, nothing wider than the screen", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("article", { name: "Build your resume" }).getByRole("link", { name: "Build my resume" })).toBeInViewport();
+    const resume = page.getByRole("link", { name: "Build my resume" });
+    const letter = page.getByRole("link", { name: "Write my cover letter" });
+    await expect(resume).toBeInViewport({ ratio: 1 });
+    await expect(letter).toBeInViewport({ ratio: 1 });
+    const [r, l] = [await resume.boundingBox(), await letter.boundingBox()];
+    // One row, the same size, in the top half of the screen.
+    expect(Math.round(l!.y)).toBe(Math.round(r!.y));
+    expect(Math.round(l!.width)).toBe(Math.round(r!.width));
+    expect(Math.round(l!.height)).toBe(Math.round(r!.height));
+    expect(l!.x).toBeGreaterThan(r!.x + r!.width - 1);
+    // Right under the headline, wholly on the first screen with room to spare.
+    expect(r!.y).toBeLessThan(300);
+    expect(r!.y + r!.height).toBeLessThan(844 * 0.75);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
+  });
+
+  test("keeps the two tiles readable and equal at 320px", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 640 });
+    await page.goto("/");
     const [r, l] = [
-      await page.getByRole("article", { name: "Build your resume" }).boundingBox(),
-      await page.getByRole("article", { name: "Write your cover letter" }).boundingBox(),
+      await page.getByRole("link", { name: "Build my resume" }).boundingBox(),
+      await page.getByRole("link", { name: "Write my cover letter" }).boundingBox(),
     ];
-    expect(l!.y).toBeGreaterThan(r!.y + r!.height - 1);
-    expect(l!.width).toBe(r!.width);
+    expect(Math.round(l!.height)).toBe(Math.round(r!.height));
+    expect(r!.y + r!.height).toBeLessThanOrEqual(640);
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
   });
 });

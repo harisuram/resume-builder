@@ -78,4 +78,18 @@ describe("HomeImportCallout", () => {
       expect(push).not.toHaveBeenCalled();
     });
   });
+
+  describe("as a link inside a sentence", () => {
+    it("opens the same picker and hands the file to the builder", async () => {
+      render(<HomeImportCallout variant="link" />);
+      const click = jest.spyOn(input(), "click");
+      await userEvent.click(screen.getByRole("button", { name: "import it" }));
+      expect(click).toHaveBeenCalledTimes(1);
+      const file = new File(["%PDF-1.4"], "resume.pdf", { type: "application/pdf" });
+      await userEvent.upload(input(), file);
+      expect(push).toHaveBeenCalledWith("/builder?import=1");
+      expect(takePendingImport()).toBe(file);
+      expect(screen.getByRole("button", { name: "opening it…" })).toBeDisabled();
+    });
+  });
 });

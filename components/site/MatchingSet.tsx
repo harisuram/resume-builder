@@ -3,77 +3,77 @@
 import { useState } from "react";
 import { getTheme } from "@/components/templates/shared/theme";
 import { DocumentSheet, SHOWCASE_TEMPLATE_IDS, type ShowcaseTemplateId } from "./DocumentSheet";
+import { HOME_SERIF } from "./home/serif";
 
-/** "One look, two documents": a resume and its cover letter side by side,
- * restyled together by the template chips — the letter follows the resume's
- * template in the builder the same way. */
+/** A resume and its cover letter side by side, restyled together by the
+ * template list — the letter follows the resume's template in the builder
+ * the same way. */
 export function MatchingSet() {
-  const [templateId, setTemplateId] = useState<ShowcaseTemplateId>(SHOWCASE_TEMPLATE_IDS[0]);
+  const [templateId, setTemplateId] = useState<ShowcaseTemplateId>("fern");
   const name = getTheme(templateId).name;
 
   return (
-    <section aria-labelledby="matching-set-heading" className="mt-24 w-full min-w-0 max-w-5xl">
-      <div className="mx-auto max-w-2xl text-center">
-        <p className="text-[11.5px] font-semibold uppercase tracking-[0.18em] text-[var(--color-accent)]">Matching set</p>
-        <h2
-          id="matching-set-heading"
-          className="mt-2 text-balance font-display text-[26px] font-semibold tracking-tight text-[var(--color-ink)] sm:text-[32px]"
-        >
-          One look, two documents
+    <section
+      aria-labelledby="matching-set-heading"
+      className="mt-16 grid w-full min-w-0 max-w-6xl gap-8 border-t border-[var(--color-ink)]/15 pt-10 sm:mt-24 sm:gap-10 sm:pt-12 lg:mt-32 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-14"
+    >
+      <div className="min-w-0">
+        <h2 id="matching-set-heading" className={`${HOME_SERIF} text-[32px] leading-tight tracking-[-0.01em] text-[var(--color-ink)] sm:text-[40px]`}>
+          Pick a look once. Both pages follow.
         </h2>
-        <p className="mt-3 text-[15px] leading-relaxed text-[var(--color-ink-soft)]">
-          Your cover letter uses your resume&rsquo;s template, name and contact details, so the two arrive as a set.
-          Want a different look for the letter? Pick one — your resume keeps its own.
+        <p className="mt-4 max-w-sm text-[15px] leading-relaxed text-[var(--color-ink-soft)]">
+          The cover letter takes your resume’s template, name and contact details, so the two arrive as a set. Want
+          the letter to look different? Choose another template for it — your resume keeps its own.
         </p>
-      </div>
 
-      <div role="radiogroup" aria-label="Template" className="mt-7 flex flex-wrap justify-center gap-2">
-        {SHOWCASE_TEMPLATE_IDS.map((id) => {
-          const theme = getTheme(id);
-          const selected = id === templateId;
-          return (
-            <button
-              key={id}
-              type="button"
-              role="radio"
-              aria-checked={selected}
-              onClick={() => setTemplateId(id)}
-              className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)] ${
-                selected
-                  ? "border-[var(--color-accent)] bg-[var(--color-accent-tint)] text-[var(--color-accent)] shadow-card"
-                  : "border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink-soft)] hover:border-[var(--color-accent)]/40 hover:text-[var(--color-ink)]"
-              }`}
-            >
-              <span
-                className="h-3 w-3 rounded-full ring-1 ring-black/10"
-                style={{ background: theme.headerColor ?? theme.railColor ?? theme.accent }}
-                aria-hidden="true"
-              />
-              {theme.name}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="mx-auto mt-10 max-w-3xl rounded-[28px] border border-[var(--color-border)] bg-[radial-gradient(90%_70%_at_50%_0%,var(--color-accent-tint),transparent_75%)] px-5 py-8 sm:px-12 sm:py-12">
-        <div className="mx-auto grid max-w-[620px] grid-cols-2 items-start gap-4 sm:gap-8">
-          {(["resume", "letter"] as const).map((kind) => (
-            <figure key={kind} className="min-w-0">
-              {/* Keyed by template so a switch fades the new pair in. */}
-              <div key={templateId} className="animate-fade-up">
-                <DocumentSheet
-                  kind={kind}
-                  templateId={templateId}
-                  alt={`${kind === "resume" ? "Resume" : "Cover letter"} in the ${name} template`}
-                  sizes="(min-width: 640px) 290px, 45vw"
+        <div
+          role="radiogroup"
+          aria-label="Template"
+          className="-mx-6 mt-6 flex snap-x gap-x-6 overflow-x-auto px-6 pb-1 [scrollbar-width:none] sm:mx-0 sm:mt-7 sm:flex-wrap sm:gap-x-5 sm:gap-y-2 sm:overflow-visible sm:px-0 lg:flex-col lg:gap-y-1 [&::-webkit-scrollbar]:hidden"
+        >
+          {SHOWCASE_TEMPLATE_IDS.map((id) => {
+            const theme = getTheme(id);
+            const selected = id === templateId;
+            return (
+              <button
+                key={id}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                onClick={() => setTemplateId(id)}
+                className={`group inline-flex shrink-0 snap-start items-center gap-2.5 whitespace-nowrap py-1 text-left text-[15px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)] ${
+                  selected ? "font-semibold text-[var(--color-ink)]" : "text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]"
+                }`}
+              >
+                <span
+                  className="h-2.5 w-2.5 rounded-full ring-1 ring-black/10"
+                  style={{ background: theme.headerColor ?? theme.railColor ?? theme.accent }}
+                  aria-hidden="true"
                 />
-              </div>
-              <figcaption className="mt-3 text-center text-[12.5px] font-medium text-[var(--color-ink-soft)]">
-                {kind === "resume" ? "Resume" : "Cover letter"}
-              </figcaption>
-            </figure>
-          ))}
+                <span className={selected ? "underline decoration-2 underline-offset-[6px]" : ""}>{theme.name}</span>
+              </button>
+            );
+          })}
         </div>
+      </div>
+
+      <div className="grid min-w-0 grid-cols-2 items-start gap-4 sm:gap-6">
+        {(["resume", "letter"] as const).map((kind) => (
+          <figure key={kind} className="min-w-0">
+            {/* Keyed by template so a switch fades the new pair in. */}
+            <div key={templateId} className="animate-fade-up">
+              <DocumentSheet
+                kind={kind}
+                templateId={templateId}
+                alt={`${kind === "resume" ? "Resume" : "Cover letter"} in the ${name} template`}
+                sizes="(min-width: 1024px) 330px, 45vw"
+              />
+            </div>
+            <figcaption className="mt-3 text-[13px] text-[var(--color-ink-soft)]">
+              {kind === "resume" ? "Resume" : "Cover letter"}, {name}
+            </figcaption>
+          </figure>
+        ))}
       </div>
     </section>
   );

@@ -17,9 +17,10 @@ function UploadIcon() {
 
 /** "Already have a resume?" — the whole card opens the file picker (or takes
  * a dropped file); once a file is chosen the builder opens and imports it.
+ * `variant="link"` draws it as an underlined phrase inside a sentence.
  * `variant="button"` draws the same picker as a secondary pill, for the
  * homepage's Resume card. */
-export function HomeImportCallout({ variant = "card" }: { variant?: "card" | "button" }) {
+export function HomeImportCallout({ variant = "card" }: { variant?: "card" | "button" | "link" }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -68,6 +69,24 @@ export function HomeImportCallout({ variant = "card" }: { variant?: "card" | "bu
       {error}
     </p>
   ) : null;
+
+  if (variant === "link") {
+    return (
+      <>
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={opening}
+          aria-describedby={error ? "home-import-error" : undefined}
+          className="font-medium text-[var(--color-ink)] underline decoration-[var(--color-accent)]/50 decoration-2 underline-offset-4 transition hover:decoration-[var(--color-accent)] disabled:cursor-progress"
+        >
+          {opening ? "opening it…" : "import it"}
+        </button>
+        {fileInput}
+        {errorText}
+      </>
+    );
+  }
 
   if (variant === "button") {
     return (

@@ -7,62 +7,65 @@ import { HOME_FAQS, TEMPLATE_COUNT_WORDS } from "@/lib/seo";
 jest.mock("next/navigation", () => ({ useRouter: () => ({ push: jest.fn() }) }));
 
 describe("homepage", () => {
-  it("puts resume and cover letter side by side as equals, each with its own way in", () => {
+  it("offers resume and cover letter as two equal ways in, with the same shape", () => {
     render(<Home />);
-    const resume = screen.getByRole("article", { name: "Build your resume" });
-    const letter = screen.getByRole("article", { name: "Write your cover letter" });
-    expect(resume.parentElement).toBe(letter.parentElement);
-    expect(within(resume).getByRole("link", { name: "Build my resume" })).toHaveAttribute("href", "/builder");
-    expect(within(resume).getByRole("button", { name: /Import my resume/ })).toBeInTheDocument();
-    expect(within(letter).getByRole("link", { name: "Write my cover letter" })).toHaveAttribute("href", "/cover-letter/builder");
-    expect(within(letter).getByRole("link", { name: "How it works" })).toHaveAttribute("href", "/cover-letter");
-    // Same shape: a picture, a title, a three-point list, two actions.
-    for (const card of [resume, letter]) {
-      expect(within(card).getAllByRole("listitem")).toHaveLength(3);
-      // Two fanned sheets, decorative — the card's text says what it is.
-      expect(card.querySelectorAll("img")).toHaveLength(2);
-      expect(card.querySelector("img")?.closest("[aria-hidden='true']")).not.toBeNull();
-    }
+    const resume = screen.getByRole("link", { name: "Build my resume" });
+    const letter = screen.getByRole("link", { name: "Write my cover letter" });
+    expect(resume).toHaveAttribute("href", "/builder");
+    expect(letter).toHaveAttribute("href", "/cover-letter/builder");
+    // Same list, same markup: neither reads as the main product.
+    expect(resume.closest("ul")).toBe(letter.closest("ul"));
+    expect(resume.className).toBe(letter.className);
+    expect(resume).toHaveAccessibleDescription(/53 templates|templates/);
+    expect(letter).toHaveAccessibleDescription(/same template and details as your resume/i);
     // Not in the header or footer navigation.
     for (const nav of screen.getAllByRole("navigation")) {
       expect(within(nav).queryByRole("link", { name: /cover letter/i })).not.toBeInTheDocument();
     }
   });
 
-  it("names both products in the heading", () => {
+  it("keeps the search terms in a plain-spoken heading", () => {
     render(<Home />);
     expect(
-      screen.getByRole("heading", { level: 1, name: /free resume & cover letter builder[\s\S]*no sign-up[\s\S]*skip what doesn.t belong/i }),
+      screen.getByRole("heading", { level: 1, name: /a free resume builder, and a cover letter to match/i }),
     ).toBeInTheDocument();
-  });
-
-  it("shows a resume and its cover letter as a matching set, restyled together", async () => {
-    render(<Home />);
-    const set = screen.getByRole("region", { name: "One look, two documents" });
-    expect(within(set).getByRole("img", { name: "Resume in the Atlas template" })).toBeInTheDocument();
-    expect(within(set).getByRole("img", { name: "Cover letter in the Atlas template" })).toBeInTheDocument();
-    await userEvent.click(within(set).getByRole("radio", { name: "Fern" }));
-    expect(within(set).getByRole("radio", { name: "Fern" })).toHaveAttribute("aria-checked", "true");
-    expect(within(set).getByRole("img", { name: "Resume in the Fern template" })).toBeInTheDocument();
-    expect(within(set).getByRole("img", { name: "Cover letter in the Fern template" })).toBeInTheDocument();
-  });
-
-  it("has no numbered steps strip — the two product cards already say how to start", () => {
-    render(<Home />);
-    expect(screen.queryByRole("heading", { name: "Download both" })).not.toBeInTheDocument();
-    expect(screen.queryByText("01")).not.toBeInTheDocument();
+    expect(screen.getByText(/No sign-up, no watermark, nothing to pay at the download button/)).toBeInTheDocument();
   });
 
   it("lets visitors start from the resume they have", () => {
     render(<Home />);
-    expect(screen.getByRole("button", { name: /Import my resume/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "import it" })).toBeInTheDocument();
+    expect(screen.getByTestId("home-import-input")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Can I start from my existing resume?" })).toBeInTheDocument();
   });
 
-  it("shows the live template count in the strip and the feature copy", () => {
+  it("says plainly what the site doesn't do", () => {
     render(<Home />);
-    expect(screen.getByText(`${TEMPLATES.length} templates`)).toBeInTheDocument();
-    expect(screen.getByText(`${TEMPLATE_COUNT_WORDS} templates, one live preview`)).toBeInTheDocument();
+    const section = screen.getByRole("region", { name: "What you won’t find here" });
+    for (const item of ["A sign-up form.", "A watermark.", "A paywall at the download button.", "Your resume on a server."]) {
+      expect(within(section).getByText(item)).toBeInTheDocument();
+    }
+    expect(within(section).getByRole("link", { name: "How private it is" })).toHaveAttribute("href", "/private");
+  });
+
+  it("shows a resume and its cover letter as a matching set, restyled together", async () => {
+    render(<Home />);
+    const set = screen.getByRole("region", { name: "Pick a look once. Both pages follow." });
+    expect(within(set).getByRole("img", { name: "Resume in the Fern template" })).toBeInTheDocument();
+    expect(within(set).getByRole("img", { name: "Cover letter in the Fern template" })).toBeInTheDocument();
+    await userEvent.click(within(set).getByRole("radio", { name: "Marquee" }));
+    expect(within(set).getByRole("radio", { name: "Marquee" })).toHaveAttribute("aria-checked", "true");
+    expect(within(set).getByRole("radio", { name: "Fern" })).toHaveAttribute("aria-checked", "false");
+    expect(within(set).getByRole("img", { name: "Resume in the Marquee template" })).toBeInTheDocument();
+    expect(within(set).getByRole("img", { name: "Cover letter in the Marquee template" })).toBeInTheDocument();
+  });
+
+  it("shows the live template count in the strip and the feature copy, without icon tiles", () => {
+    render(<Home />);
+    expect(screen.getByRole("heading", { name: `${TEMPLATES.length} templates, all free` })).toBeInTheDocument();
+    const details = screen.getByRole("region", { name: "The details" });
+    expect(within(details).getByText(`${TEMPLATE_COUNT_WORDS} templates, one live preview`)).toBeInTheDocument();
+    expect(within(details).queryAllByRole("img")).toHaveLength(0);
     expect(screen.queryByText(/Thirty-one/)).not.toBeInTheDocument();
   });
 

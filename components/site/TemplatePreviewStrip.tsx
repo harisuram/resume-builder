@@ -5,6 +5,7 @@ import Link from "next/link";
 import { TEMPLATES, type TemplateTheme } from "@/components/templates/shared/theme";
 import { TemplateThumb } from "./TemplateThumb";
 import { TemplatePreviewModal } from "./TemplatePreviewModal";
+import { HOME_SERIF } from "./home/serif";
 
 const PREVIEW = TEMPLATES.slice(0, 6);
 
@@ -24,16 +25,23 @@ export function TemplatePreviewStrip() {
   }
 
   return (
-    <div className="mt-16 w-full min-w-0 max-w-4xl">
-      <div className="mb-4 flex items-end justify-between gap-3">
-        <p className="text-[12px] font-medium uppercase tracking-[0.18em] text-[var(--color-ink-faint)]">
-          {TEMPLATES.length} templates
-        </p>
-        <Link href="/templates" className="text-[13px] font-medium text-[var(--color-accent)] hover:underline">
+    <section
+      aria-labelledby="template-strip-heading"
+      className="mt-16 w-full min-w-0 max-w-6xl border-t border-[var(--color-ink)]/15 pt-10 sm:mt-24 sm:pt-12 lg:mt-32"
+    >
+      <div className="mb-7 flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+        <h2 id="template-strip-heading" className={`${HOME_SERIF} text-[32px] leading-tight tracking-[-0.01em] text-[var(--color-ink)] sm:text-[40px]`}>
+          {TEMPLATES.length} templates, all free
+        </h2>
+        <Link
+          href="/templates"
+          className="text-[15px] font-medium text-[var(--color-ink)] underline decoration-[var(--color-ink)]/30 underline-offset-4 hover:decoration-[var(--color-ink)]"
+        >
           See all templates
         </Link>
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      {/* Phones: a row to swipe through, peeking off the edge. */}
+      <div className="-mx-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-6 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-6 [&::-webkit-scrollbar]:hidden">
         {PREVIEW.map((template) => (
           <button
             key={template.id}
@@ -41,7 +49,7 @@ export function TemplatePreviewStrip() {
             aria-haspopup="dialog"
             aria-label={`Preview ${template.name} layout`}
             onClick={(event) => openPreview(template, event.currentTarget)}
-            className="group min-w-0 cursor-pointer overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-left shadow-card transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[var(--color-accent)]/35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]"
+            className="group w-[44%] min-w-0 shrink-0 cursor-pointer snap-start sm:w-auto overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-left shadow-card transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[var(--color-accent)]/35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]"
           >
             <div className="relative aspect-[210/297] w-full overflow-hidden bg-white">
               {/* The button's aria-label already names the template. */}
@@ -57,6 +65,6 @@ export function TemplatePreviewStrip() {
       </div>
 
       {preview && <TemplatePreviewModal theme={preview} onClose={closePreview} />}
-    </div>
+    </section>
   );
 }

@@ -26,6 +26,10 @@
   --preview-glow: color-mix(in srgb, #0d9488 55%, transparent);
   --accent-glow: color-mix(in srgb, var(--color-accent) 50%, transparent);
   --accent-glow-soft: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  /* Home page's hand-made touches: a highlighter stroke and a strip of
+     masking tape holding the sample pages down. */
+  --home-marker: #fde68a;
+  --home-tape: color-mix(in srgb, #e9dcc0 78%, transparent);
   /* Keep in sync with PAGE_WIDTH_PX in lib/page.ts (A4 width @ 96dpi). */
   --resume-page-width: 794px;
 }
@@ -52,6 +56,8 @@
 }
 
 :root[data-theme="dark"] {
+  --home-marker: color-mix(in srgb, #facc15 32%, transparent);
+  --home-tape: color-mix(in srgb, #d6c7a1 38%, transparent);
   --color-paper: #090c14;
   --color-surface: #121826;
   --color-ink: #f1f4fa;

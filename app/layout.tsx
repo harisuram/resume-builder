@@ -37,13 +37,17 @@ const sourceSerif = Source_Serif_4({
   preload: false,
 });
 
-/* Display faces for the names and titles of a few templates. Not preloaded:
+/* Display faces for the names and titles of a few templates (and Fraunces
+ * for the home page's headings). Not preloaded:
  * only a page that renders one of those templates downloads the file. The
  * PDF engine embeds the same families (components/pdf/fonts.ts). */
+/* Two static weights rather than the variable font (several times the
+ * size): 300 for the templates' names (DISPLAY_FONT_WEIGHT), 400 for the
+ * home page's headings. */
 const fraunces = Fraunces({
   variable: "--font-fraunces",
   subsets: ["latin"],
-  weight: "300",
+  weight: ["300", "400"],
   style: ["normal", "italic"],
   display: "swap",
   preload: false,
